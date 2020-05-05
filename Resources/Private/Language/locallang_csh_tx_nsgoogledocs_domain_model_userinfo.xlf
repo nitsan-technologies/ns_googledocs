@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<xliff version="1.0">
+	<file source-language="en" datatype="plaintext" original="messages" date="2020-01-27T12:44:08Z" product-name="ns_googledocs">
+		<header/>
+		<body>
+			<trans-unit id="user_id.description">
+				<source>userId</source>
+			</trans-unit>
+			<trans-unit id="client_id.description">
+				<source>clientId</source>
+			</trans-unit>
+			<trans-unit id="client_secret.description">
+				<source>clientSecret</source>
+			</trans-unit>
+			<trans-unit id="refresh_token.description">
+				<source>refreshToken</source>
+			</trans-unit>
+			<trans-unit id="docs_folder.description">
+				<source>docsFolder</source>
+			</trans-unit>
+		</body>
+	</file>
+</xliff>

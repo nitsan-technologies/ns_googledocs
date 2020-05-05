@@ -1,0 +1,467 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900&display=swap');
+html, body {
+    font-size: 14px;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+}
+
+.form-control::-webkit-input-placeholder {
+    color: #bdbdbd;
+    font-size: 12px;
+}
+
+.form-control:-moz-placeholder {
+    color: #bdbdbd;
+    font-size: 12px;
+}
+
+.form-control::-moz-placeholder {
+    color: #bdbdbd;
+    font-size: 12px;
+}
+
+.form-control:-ms-input-placeholder {
+    color: #bdbdbd;
+    font-size: 12px;
+}
+
+.form-control::placeholder {
+    color: #bdbdbd;
+    font-size: 12px;
+}
+
+#typo3-docheader .typo3-docheader-functions {
+    height: auto;
+}
+
+div#typo3-docbody {
+    top: 90px;
+}
+
+.ns-googledocs-button-bar .button-group {
+    margin-top: 7px;
+    margin-bottom: 7px;
+}
+
+.ns-googledocs-button-bar .button-group .btn {
+    color: #fff;
+    font-size: 12px;
+}
+.ns-googledocs-button-bar .button-group .btn em.fa{
+    margin-right: 5px;
+}
+.ns-googledocs-navigation {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f8f8f8;
+    margin-bottom: 30px;
+}
+
+.ns-googledocs-navigation .navbar-brand {
+    font-size: 24px;
+    color: #fdad37;
+    font-weight: 700;
+    margin-right: 30px;
+}
+
+.ns-googledocs-navigation .navbar {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.ns-googledocs-navigation .navbar-nav .nav-link {
+    color: #000000;
+    text-transform: capitalize;
+    padding: 12px 0px 12px 20px;
+    font-size: 16px;
+}
+
+.ns-googledocs-navigation .nav-link em.fa {
+    margin-right: 12px;
+    font-size: 18px;
+}
+
+.navbar-toggler {
+    background-color: #333;
+}
+
+.ns-googledocs-navigation .nav-item.active>.nav-link, .ns-googledocs-navigation .nav-item:hover>.nav-link {
+    background-color: #e0e0e0;
+}
+
+.ns-googledocs-navigation .navbar-toggler {
+    border-color: #ccc;
+}
+
+.ns-googledocs-navigation .navbar-toggler span {
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3e%3cpath stroke='rgba(255, 255, 255, 0.5)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+.ns-googledocs-button-bar .btn-backup-wizard-modal {
+    margin-top: 5px;
+    font-size: 14px;
+}
+
+.google-docs-wizard-modal .modal-body {
+    overflow-x: hidden;
+}
+
+.modal.fade.in {
+    opacity: 1;
+}
+
+.modal-backdrop.fade.in {
+    opacity: 0.5;
+}
+
+label {
+    font-weight: 400;
+}
+
+.ns-googledocs-last-logs .card-body {
+    background-color: #eee;
+}
+
+.ns-googledocs-last-logs ul li {
+    font-size: 14px;
+    margin-bottom: 10px;
+    color: #333333;
+}
+
+.ns-googledocs-configured-img-wrap {
+    margin-bottom: 15px;
+}
+
+.googledocs-form-wrap .form-check {
+    margin-bottom: 15px;
+}
+
+.googledocs-form-wrap .form-check .form-check-input,
+.ns-googledocs-datatable .form-check .form-check-input,
+.google-docs-wizard-modal .form-check .form-check-input{
+    margin-left: 0;
+    left: 0;
+}
+
+.googledocs-form-wrap .form-group>.btn-danger {
+    margin-bottom: 15px;
+    margin-right: 15px;
+}
+
+.googledocs-form input[type="text"], .googledocs-form select {
+    width: 100%;
+}
+
+.ns-googledocs-progressbar-wrap {
+    margin: 7px 0 15px;
+}
+
+.ns-googledocs-actions-wrap .btn:not(:last-child) {
+    margin-right: 10px;
+}
+
+.ns-googledocs-table-wrap {
+    margin-top: 15px;
+}
+
+.ns-googledocs-datatable {
+    border-color: transparent;
+}
+
+.ns-googledocs-datatable .thead-light tr th, .ns-googledocs-datatable tr td {
+    color: #000;
+}
+
+.ns-googledocs-datatable thead tr th {
+    background-color: #e0e0e0 !important;
+}
+
+.ns-googledocs-datatable tbody tr {
+    background-color: #ffffff;
+}
+
+.ns-googledocs-datatable tbody tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+.ns-googledocs-datatable.table>thead>tr>th {
+    font-weight: 400;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.ns-googledocs-actions-wrap .btn {
+    margin-top: 5px;
+    margin-bottom: 5px;
+    min-width: 63px;
+    padding: 2px 5px;
+}
+
+.ns-googledocs-table-block-wrap .card-header .btn {
+    margin: 6px 0;
+}
+
+.ns-googledocs-premium-extension-blocks .jumbotron h1 {
+    font-weight: 700;
+}
+
+.ns-googledocs-premium-extension-blocks .card-body .card-link {
+    color: #9e9e9e;
+    font-size: 14px;
+}
+
+.ns-googledocs-configured-block .card-body img {
+    max-width: 115px;
+    max-height: 80px;
+}
+
+.navbar-collapse.collapse.in {
+    display: block!important;
+}
+
+.btn-warning {
+    background-color: #f08d34;
+}
+
+.server-cloud-apikey-box-wrap .server-cloud-apikey-box-wrapper {
+    position: relative;
+}
+
+.server-cloud-apikey-box-wrap .server-cloud-apikey-box {
+    background-color: #fafafa;
+    border: 1px solid rgba(0, 0, 0, .125);
+    border-radius: .25rem;
+    padding: 1.25rem;
+    opacity: 0;
+    position: absolute;
+}
+
+.server-cloud-apikey-box-wrap .server-cloud-apikey-box.active {
+    opacity: 1;
+}
+
+.ns-googledocs-table-wrap {
+    overflow-x: auto;
+}
+
+.ns-googledocs-table-wrap .ns-googledocs-datatable {
+    min-width: 950px;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+.ns-googledocs-wizards-stpes-block img {
+    max-width: 210px;
+    margin-bottom: 20px;
+}
+
+.ns-googledocs-wizards-stpes-block p {
+    font-size: 14px;
+}
+
+.ns-googledocs-dashboard-blocks .alert.alert-danger {
+    margin-bottom: 25px;
+}
+
+.google-docs-import-block .card-header {
+    font-weight: 700;
+    color: #ff9800;
+}
+.btn em.fa {
+    margin-right: 10px;
+}
+.dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter {
+    display: inline-block;
+    width: auto;
+}
+
+.dataTables_wrapper .dataTables_length label, .dataTables_wrapper .dataTables_filter label {
+    display: -webkit-inline-box;
+    display: -ms-inline-flexbox;
+    display: -webkit-inline-flex;
+    display: inline-flex;
+    -ms-justify-content: center;
+    justify-content: center;
+    -ms-flex-pack: center;
+    -webkit-align-items: center;
+    -ms-align-items: center;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.dataTables_wrapper .dataTables_length .form-control {
+    margin: 0 15px;
+    min-width: 80px;
+}
+
+.dataTables_wrapper .dataTables_filter .form-control {
+    margin-left: 15px;
+}
+
+.dataTables_wrapper .dataTables_paginate {
+    margin-bottom: 20px;
+}
+
+.dataTables_paginate .paginate_button {
+    padding: 5px 15px;
+    border: 1px solid #bdbdbd;
+    color: #0275d8;
+    cursor: pointer;
+    text-decoration: none;
+    outline: none;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.dataTables_paginate .paginate_button.current, .dataTables_paginate .paginate_button:hover {
+    background-color: #0275d8;
+    color: #fff;
+}
+
+.dataTables_paginate .paginate_button.previous {
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-right: 0;
+}
+
+.dataTables_paginate span .paginate_button {
+    border-left: 0;
+}
+
+.dataTables_paginate .paginate_button.next {
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+    border-left: 0;
+}
+
+.dataTables_wrapper .btn-delete-record {
+    margin-bottom: 20px;
+}
+
+em.field-info-trigger {
+    font-size: 17px;
+    color: rgba(0, 0, 0, 0.5);
+}
+.field-info-text {
+    display: none;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.7);
+    margin-top: 5px;
+}
+.import-doc-Name,
+.import-page-Name {
+    font-weight: 700;
+}
+
+@media(min-width:576px) {
+    .googledocs-form-wrap .form-group>.btn-danger {
+        margin-bottom: 0;
+    }
+}
+
+@media(min-width:768px) {
+    .google-docs-wizard-modal .modal-dialog {
+        max-width: 650px;
+    }
+    .googledocs-form-wrap .form-group:not(:last-child) {
+        margin-bottom: 20px;
+    }
+    .ns-googledocs-table-block-wrap .card-header h5 {
+        margin-bottom: 0;
+    }
+    .ns-googledocs-configured-block .card-body img {
+        max-width: 140px;
+        max-height: 100px;
+        margin-bottom: 15px;
+    }
+    .ns-googledocs-actions-wrap .btn {
+        line-height: normal;
+        padding: 4px 15px;
+        min-width: 80px;
+    }
+    .ns-googledocs-table-block-wrap .card-header .btn {
+        margin: 0;
+    }
+    .nsbackup-logs-modal .modal-dialog {
+        max-width: 600px;
+    }
+    .nsbackup-logs-modal .ns-googledocs-last-logs {
+        width: 90%;
+        margin: 0 auto;
+    }
+    .nsbackup-logs-modal .ns-googledocs-last-logs ul li {
+        margin-bottom: 12px;
+        font-size: 13px;
+    }
+    .ns-googledocs-table-wrap {
+        overflow-x: visible;
+    }
+    .ns-googledocs-table-wrap .ns-googledocs-datatable {
+        min-width: 1px;
+    }
+    #typo3-docheader .typo3-docheader-functions {
+        height: 45px;
+    }
+    div#typo3-docbody {
+        top: 45px;
+    }
+    .ns-googledocs-button-bar .button-group {
+        margin-bottom: 0;
+    }
+    .dataTables_wrapper .dataTables_paginate, .dataTables_wrapper .dataTables_filter {
+        float: right;
+    }
+    .dataTables_paginate .paginate_button {
+        padding: 10px 15px;
+    }
+}
+
+@media(min-width:992px) {
+    .ns-googledocs-navigation .navbar-nav .nav-link {
+        padding: 13px 25px;
+    }
+    .google-docs-wizard-modal .modal-body, .ns-googledocs-general-setting-wrap .card-body {
+        padding-left: 40px;
+        padding-right: 40px;
+        padding-top: 30px;
+    }
+    .google-docs-wizard-modal .modal-dialog {
+        max-width: 850px;
+    }
+    .googledocs-form-wrap .form-group:not(:last-child) {
+        margin-bottom: 30px;
+    }
+    .ns-googledocs-actions-wrap .btn:not(:last-child) {
+        margin-right: 15px;
+    }
+    .ns-googledocs-premium-extension-blocks .jumbotron h1 {
+        font-size: 58px;
+        margin-bottom: 20px;
+    }
+    .ns-googledocs-navigation .nav-link em.fa {
+        margin-right: 10px;
+        font-size: 20px;
+    }
+}
+
+@media(min-width:1200px) {
+    html, body {
+        font-size: 16px;
+    }
+    .ns-googledocs-datatable tr th, .ns-googledocs-datatable tr td {
+        font-size: 14px;
+    }
+}
+
+.module-loading-indicator,
+.module-docheader.t3js-module-docheader {
+    display: none !important;
+}
+.module-docheader+.module-body {
+    padding: 0px !important;
+}

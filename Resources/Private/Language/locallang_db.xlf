@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<xliff version="1.0">
+	<file source-language="en" datatype="plaintext" original="messages" date="2020-01-27T12:44:08Z" product-name="ns_googledocs">
+		<header/>
+		<body>
+			<trans-unit id="tx_nsgoogledocs_domain_model_userinfo">
+				<source>User Info</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_userinfo.user_id">
+				<source>User Id</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_userinfo.client_id">
+				<source>Client Id</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_userinfo.client_secret">
+				<source>Client Secret</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_userinfo.refresh_token">
+				<source>Refresh Token</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_userinfo.import_type">
+				<source>Import Type</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_userinfo.import_type.1">
+				<source>TYPO3 Pages</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_userinfo.import_type.2">
+				<source>Blog (EXT:blog)</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_userinfo.import_type.3">
+				<source>News (EXT:news)</source>
+			</trans-unit>
+		</body>
+	</file>
+</xliff>

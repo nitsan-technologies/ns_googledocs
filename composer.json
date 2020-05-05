@@ -1,0 +1,40 @@
+{
+    "name": "nitsan/ns-googledocs",
+    "type": "typo3-cms-extension",
+    "description": "Import your Google Docs to your TYPO3 site",
+    "homepage": "https://extensions.typo3.org/extension/ns_googledocs/",
+    "license": "GPL-2.0+",
+    "keywords": [
+        "TYPO3 CMS",
+        "Site",
+        "Google",
+        "TYPO3 Google Docs ",
+        "Cloud",
+        "Docs"
+    ],
+    "support": {
+        "issues": "https://github.com/nitsan-technologies/ns_googledocs/issues"
+    },
+    "require": {
+        "typo3/cms-core": ">=8.7.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "NITSAN\\NsGoogledocs\\": "Classes"
+        }
+    },
+    "replace": {
+        "typo3-ter/ns-googledocs": "self.version"
+    },
+    "config": {
+        "vendor-dir": ".Build/vendor/",
+        "bin-dir": ".Build/bin/"
+    },
+    "extra": {
+        "typo3/cms": {
+            "cms-package-dir": "{$vendor-dir}/typo3/cms",
+            "web-dir": ".Build/public",
+            "extension-key": "ns_googledocs"
+        }
+    }
+}

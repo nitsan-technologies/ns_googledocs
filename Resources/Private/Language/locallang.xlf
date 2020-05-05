@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<xliff version="1.0">
+	<file source-language="en" datatype="plaintext" original="messages" date="2020-01-27T12:44:08Z" product-name="ns_googledocs">
+		<header/>
+		<body>
+			<trans-unit id="tx_nsgoogledocs_domain_model_userinfo">
+				<source>User Info</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_userinfo.user_id">
+				<source>User Id</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_userinfo.client_id">
+				<source>Client Id</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_userinfo.client_secret">
+				<source>Client Secret</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_userinfo.refresh_token">
+				<source>Refresh Token</source>
+			</trans-unit>
+			<trans-unit id="import_type.1">
+				<source>TYPO3 Pages</source>
+			</trans-unit>
+			<trans-unit id="import_type.137">
+				<source>Blog (EXT:blog)</source>
+			</trans-unit>
+			<trans-unit id="import_type.254">
+				<source>News (EXT:news)</source>
+			</trans-unit>
+			<trans-unit id="import_type.4">
+				<source>Folder</source>
+			</trans-unit>
+			<trans-unit id="error_msg" xml:space="preserve">
+				<source><![CDATA[Please configure your Google account settings before you use this module, Please go to Global Settings!]]></source>
+			</trans-unit>
+			<trans-unit id="import_access_error_msg" xml:space="preserve">
+				<source><![CDATA[You do not have access to import Google docs on this page type, Go to Global Settings]]></source>
+			</trans-unit>
+			<trans-unit id="import_access_page_error_msg">
+				<source>Please select the page first to import the Google docs.</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_reports">
+				<source>Reports</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_reports.page_type">
+				<source>Page Type</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_reports.import_to_pid">
+				<source>Import To Pid</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_reports.google_docs_name">
+				<source>Google Docs Name</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_reports.import_date">
+				<source>Import Date</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_reports.import_by_user">
+				<source>Import By User</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_reports.google_docs_url">
+				<source>Google Docs Url</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_reports.import_to_cid">
+				<source>Import To Cid</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_reports.google_docs_size">
+				<source>Google Docs Size</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_reports.import_status">
+				<source>Import Status</source>
+			</trans-unit>
+			<trans-unit id="tx_nsgoogledocs_domain_model_reports.google_docs_log">
+				<source>Google Docs Log</source>
+			</trans-unit>
+			<!--Default -->
+			<trans-unit id="global_setting">
+				<source>Global Setting</source>
+			</trans-unit>
+			<trans-unit id="documentaiton">
+				<source>Documentaiton</source>
+			</trans-unit>
+			<trans-unit id="help_support" xml:space="preserve">
+				<source><![CDATA[Help & Support]]></source>
+			</trans-unit>
+			<trans-unit id="donate">
+				<source>Donate</source>
+			</trans-unit>
+			<trans-unit id="ns_google_docs">
+				<source>NS Google Docs</source>
+			</trans-unit>
+			<trans-unit id="dashboard">
+				<source>Dashboard</source>
+			</trans-unit>
+			<trans-unit id="import_google_docs">
+				<source>Import Google Docs</source>
+			</trans-unit>
+			<trans-unit id="reports_logs" xml:space="preserve">
+				<source><![CDATA[Reports & Logs]]></source>
+			</trans-unit>
+			<trans-unit id="premium_extension">
+				<source>Premium Extension</source>
+			</trans-unit>
+			<trans-unit id="ns_google_docs_setup_wizard">
+				<source>NS Google Docs Setup Wizard</source>
+			</trans-unit>
+			<trans-unit id="enter_secret_key">
+				<source>Enter your Google docs secret key</source>
+			</trans-unit>
+			<trans-unit id="enter_client_id">
+				<source>Enter your Google docs Client ID</source>
+			</trans-unit>
+			<trans-unit id="enter_refresh_token">
+				<source>Enter your Google docs Refresh Token</source>
+			</trans-unit>
+			<trans-unit id="where_import">
+				<source>Where do you want to import Google docs?</source>
+			</trans-unit>
+			<trans-unit id="btn_save_settings">
+				<source>Save Settings</source>
+			</trans-unit>
+			<trans-unit id="ns_skip">
+				<source>Skip Setup Wizard For Now</source>
+			</trans-unit>
+			<trans-unit id="btn_skip">
+				<source>Cancel</source>
+			</trans-unit>
+			<trans-unit id="stpes-block" xml:space="preserve">
+				<source><![CDATA[<p>Step 1: Login to https://drive.google.com/drive/</p>
+					<p>Step 2: Go to application</p>
+					<p>Step 3: Get secret keya and API key</p>]]></source>
+			</trans-unit>
+			<trans-unit id="import_about">
+				<source><![CDATA[Import <span class="import-doc-Name">Doc-Name</span> to <span class="import-page-Name">About</span>]]></source>
+			</trans-unit>
+			<trans-unit id="select_column">
+				<source>Please select content column</source>
+			</trans-unit>
+			<trans-unit id="override_colpos_data">
+				<source>Override existing column content?</source>
+			</trans-unit>
+			<trans-unit id="importing">
+				<source>Importing</source>
+			</trans-unit>
+			<trans-unit id="btn_close">
+				<source>Close</source>
+			</trans-unit>
+			<trans-unit id="btn_import_now">
+				<source>Import Now!</source>
+			</trans-unit>
+			<trans-unit id="import-message">
+				<source><![CDATA[Are you sure you want to import <span class="import-doc-Name"> Doc-Name</span> Google doc to <span class="import-page-Name">About</span>]]></source>
+			</trans-unit>
+			<!-- Dashboard -->
+			<trans-unit id="dashboard_premium_features">
+				<source>Premium Features</source>
+			</trans-unit>
+			<trans-unit id="dashboard_premium_features_info">
+				<source>With supporting text below as a natural lead-in to additional content.</source>
+			</trans-unit>
+			<trans-unit id="dashboard_btn_premium_features">
+				<source>Buy Now</source>
+			</trans-unit>
+			<trans-unit id="dashboard_logs">
+				<source>Logs</source>
+			</trans-unit>
+			<trans-unit id="dashboard_imported_page">
+				<source>imported to Page</source>
+			</trans-unit>
+			<trans-unit id="dashboard_at">
+				<source>at</source>
+			</trans-unit>
+			<trans-unit id="dashboard_import_pages" xml:space="preserve">
+				<source>Google Doc Import to PAGES</source>
+			</trans-unit>
+			<trans-unit id="dashboard_import_pages_steps" xml:space="preserve">
+				<source><![CDATA[<p>Step 1: Select Page</p>
+					<p>Step 2: Choose your Google doc</p>
+					<p>Step 3: Click on import button</p>
+					<p>Step 4: Select colpos and Import now button</p>]]></source>
+			</trans-unit>
+			<trans-unit id="dashboard_import_blog" xml:space="preserve">
+				<source>Google Doc Import to BLOG</source>
+			</trans-unit>
+			<trans-unit id="dashboard_import_blog_steps" xml:space="preserve">
+				<source><![CDATA[<p>Step 1: Select Blog Page</p>
+						<p>Step 2: Choose your Google doc</p>
+						<p>Step 3: Click on import button</p>
+						<p>Step 4: Select colpos and Import now button</p>]]></source>
+			</trans-unit>
+			<trans-unit id="dashboard_import_news" xml:space="preserve">
+				<source>Google Doc Import to NEWS</source>
+			</trans-unit>
+			<trans-unit id="dashboard_import_news_steps" xml:space="preserve">
+				<source><![CDATA[<p>Step 1: Select News Storage Folder</p>
+						<p>Step 2: Choose your Google doc</p>
+						<p>Step 3: Click on import button</p>
+						<p>Step 4: Import now button</p>]]></source>
+			</trans-unit>
+			<trans-unit id="dashboard_no_records" xml:space="preserve">
+				<source>Records not found</source>
+			</trans-unit>
+			<!-- Import Google Docs -->
+			<trans-unit id="import_tab">
+				<source>Import Google Docs to</source>
+			</trans-unit>
+			<trans-unit id="import_tab.document_name">
+				<source>Document Name</source>
+			</trans-unit>
+			<trans-unit id="import_tab.last_modified">
+				<source>Last Modified</source>
+			</trans-unit>
+			<trans-unit id="import_tab.docs_type">
+				<source>Docs Type</source>
+			</trans-unit>
+			<trans-unit id="import_tab.owner">
+				<source>Owner</source>
+			</trans-unit>
+			<trans-unit id="import_tab.size">
+				<source>Size</source>
+			</trans-unit>
+			<trans-unit id="import_tab.actions">
+				<source>Actions</source>
+			</trans-unit>
+			<trans-unit id="import_tab.btn_import_now">
+				<source>Import Now</source>
+			</trans-unit>
+			<trans-unit id="import_tab.btn_reimport_now">
+				<source>Re-Import Now</source>
+			</trans-unit>
+			<trans-unit id="import_tab.btn_edit">
+				<source>View/Edit Doc</source>
+			</trans-unit>
+			<!-- Global Settings Tab -->
+			<trans-unit id="global_settings_tab">
+				<source>Global Settings</source>
+			</trans-unit>
+			<trans-unit id="global_settings_tab.client_id">
+				<source>Google Client ID</source>
+			</trans-unit>
+			<trans-unit id="global_settings_tab.client_id_enter">
+				<source>Enter your Google docs client id</source>
+			</trans-unit>
+			<trans-unit id="global_settings_tab.client_id_tooltip">
+				<source>visit for collect/create Client ID</source>
+			</trans-unit>
+			<trans-unit id="global_settings_tab.secret_key">
+				<source>Google Secret Key</source>
+			</trans-unit>
+			<trans-unit id="global_settings_tab.secret_key_enter">
+				<source>Enter your Google docs secret key</source>
+			</trans-unit>
+			<trans-unit id="global_settings_tab.secret_key_tooltip">
+				<source>visit for collect/create Secret Key</source>
+			</trans-unit>
+			<trans-unit id="global_settings_tab.refresh_token">
+				<source>Google Refresh Token</source>
+			</trans-unit>
+			<trans-unit id="global_settings_tab.refresh_token_enter">
+				<source>Enter your Google docs Refresh Token</source>
+			</trans-unit>
+			<trans-unit id="global_settings_tab.refresh_token_tooltip">
+				<source>visit for collect/create Refresh token</source>
+			</trans-unit>
+			<trans-unit id="global_settings_tab.default_docs_path">
+				<source>Default Docs Path</source>
+			</trans-unit>
+			<trans-unit id="global_settings_tab.default_import_to">
+				<source>Default Import To</source>
+			</trans-unit>
+			<trans-unit id="global_settings_tab.default_import_totooltip">
+				<source>Set the import limitation base on record types</source>
+			</trans-unit>
+			<trans-unit id="global_settings_tab.btn_save_settings">
+				<source>Save Settings</source>
+			</trans-unit>
+			<!-- Premium Extension -->
+			<trans-unit id="premium_tab">
+				<source>Premium Extension</source>
+			</trans-unit>
+			<!-- Google_Service_Exception -->
+			<trans-unit id="service.exception">
+				<source>Something went wrong with Google Drive configurations in Global settings or check your Internet connection.</source>
+			</trans-unit>
+			<trans-unit id="listFiles.exception">
+				<source>Something went wrong while fetching Docs from Google Drive. Please verify configuration set at Global Settings.</source>
+			</trans-unit>
+		</body>
+	</file>
+</xliff>

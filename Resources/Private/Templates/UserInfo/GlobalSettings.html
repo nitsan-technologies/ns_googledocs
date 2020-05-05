@@ -1,0 +1,130 @@
+<html xmlns:f="https://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+<f:layout name="Default" />
+<f:section name="content">
+	<f:flashMessages />
+	<div class="ns-googledocs-general-setting-wrap">
+		<f:if condition="{globalSettings.clientException}">
+			<div class="alert alert-danger alert-dismissible show" role="alert">
+				{globalSettings.clientException}
+				<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+		</f:if>
+		<div class="card">
+			<div class="card-header">
+				<h4><f:translate key="global_settings_tab" extensionName="NsGoogledocs" /></h4>
+			</div>
+			<div class="card-body">
+				<div class="googledocs-form-wrap">
+					<div class="row">
+						<div class="col-md-10 col-lg-10">
+							<f:form id="update-user-info-global" class="backupnow-form" action="update" controller="UserInfo" enctype="multipart/form-data">
+								<div class="form-group">
+									<div class="row">
+										<div class="col-md-3" style="text-align: right;">
+											<label for="GoogleClientID"><f:translate key="global_settings_tab.client_id" extensionName="NsGoogledocs" /></label>
+											<em class="fa fa-info-circle field-info-trigger" aria-hidden="true"></em>
+										</div>
+										<div class="col-md-9">
+											<f:form.textfield
+													id="GoogleClientID" 
+													class="form-control" 
+													name="GoogleDocsClientId" 
+													placeholder="{f:translate(key: 'global_settings_tab.client_id_enter', extensionName: 'NsGoogledocs')}" 
+													value="{globalSettings.clientInfo.client_id}"
+													additionalAttributes="{aria-describedby: 'bw-clientid', required: 'required'}"/>
+											<div class="field-info-text">		
+												<span><f:link.external uri="https://console.developers.google.com" target="_blank">https://console.developers.google.com</f:link.external> <f:translate key="global_settings_tab.client_id_tooltip" extensionName="NsGoogledocs" /></span>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="form-group">
+									<div class="row">
+										<div class="col-md-3" style="text-align: right;">
+											<label for="googleSecretKey"><f:translate key="global_settings_tab.secret_key" extensionName="NsGoogledocs" /></label>
+											<em class="fa fa-info-circle field-info-trigger" aria-hidden="true"></em>
+										</div>
+										<div class="col-md-9">
+											<f:form.textfield 
+													id="googleSecretKey"
+													class="form-control" 
+													name="GoogleDocsSecretKey" 
+													placeholder="{f:translate(key: 'global_settings_tab.secret_key_enter', extensionName: 'NsGoogledocs')}" 
+													value="{globalSettings.clientInfo.client_secret}"
+													additionalAttributes="{aria-describedby: 'bw-secretkey', required: 'required'}"/>
+											<div class="field-info-text">
+												<span><f:link.external uri="https://console.developers.google.com" target="_blank">https://console.developers.google.com</f:link.external> <f:translate key="global_settings_tab.secret_key_tooltip" extensionName="NsGoogledocs" /></span>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="form-group">
+									<div class="row">
+										<div class="col-md-3" style="text-align: right;">
+											<label for="GoogleRefreshToken"><f:translate key="global_settings_tab.refresh_token" extensionName="NsGoogledocs" /></label>
+											<em class="fa fa-info-circle field-info-trigger" aria-hidden="true"></em>
+										</div>
+										<div class="col-md-9">
+											<f:form.textarea
+													cols="20" 
+													rows="4"
+													id="GoogleRefreshToken"
+													class="form-control" 
+													name="GoogleDocsRefreshToken" 
+													placeholder="{f:translate(key: 'global_settings_tab.refresh_token_enter', extensionName: 'NsGoogledocs')}" 
+													value="{globalSettings.clientInfo.refresh_token}"
+													additionalAttributes="{aria-describedby: 'bw-refreshtoken', required: 'required'}"/>
+											<div class="field-info-text">
+												<span><f:link.external uri="https://developers.google.com/oauthplayground/" target="_blank">https://developers.google.com/oauthplayground/</f:link.external> <f:translate key="global_settings_tab.refresh_token_tooltip" extensionName="NsGoogledocs" /></span>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="form-group">
+									<div class="row">
+										<div class="col-md-3" style="text-align: right;">
+											<label><f:translate key="global_settings_tab.default_import_to" extensionName="NsGoogledocs" /></label>
+											<em class="fa fa-info-circle field-info-trigger" aria-hidden="true"></em>
+										</div>
+										<div class="col-md-9">
+											<div class="form-check">
+												<f:if condition="{globalSettings.clientInfo.import_type.1}">
+													<f:then>
+														<f:form.checkbox id="defaulttopages" class="form-check-input" name="importType" value="1"  checked="1"  multiple="1"/>
+													</f:then>
+													<f:else>
+														<f:form.checkbox id="defaulttopages" class="form-check-input" name="importType" value="1" multiple="1"/>
+													</f:else>
+												</f:if>
+												<label class="form-check-label" for="defaulttopages">
+													<f:translate key="import_type.1" />
+												</label>
+											</div>
+											<div class="field-info-text">
+												<span><f:translate key="global_settings_tab.default_import_totooltip" extensionName="NsGoogledocs" /></span>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="form-group">
+									<div class="row">
+										<div class="col-md-8 offset-md-4">
+											<button type="submit" class="btn btn-primary">
+												<em class="fa fa-save" aria-hidden="true"></em>
+												<f:translate key="global_settings_tab.btn_save_settings" extensionName="NsGoogledocs" />
+											</button>
+										</div>
+									</div>
+								</div>
+							</f:form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</f:section>
+
+</html>

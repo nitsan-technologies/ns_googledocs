@@ -1,0 +1,221 @@
+<html xmlns:f="https://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+<f:be.container pageTitle="{f:translate(key: 'pagetitle')}" includeRequireJsModules="{0:'TYPO3/CMS/NsGoogledocs/Main'}">
+	<link rel="stylesheet" type="text/css" href="{f:uri.resource(path:'Vendor/bootstrap4.3.1.min.css', extensionName: 'ns_googledocs')}" media="all">
+	<link rel="stylesheet" type="text/css" href="{f:uri.resource(path:'Css/main.css', extensionName: 'ns_googledocs')}" media="all">
+	<div class="typo3-fullDoc">
+		<div id="typo3-docheader">
+			<div class="typo3-docheader-functions">
+				<f:be.buttons.csh />
+				<div class="ns-googledocs-button-bar">
+					<button type="button" class="btn btn-primary btn-backup-wizard-modal" data-toggle="modal"
+						data-target="#googleDocsWizardModal">
+						<em class="fa fa-cogs" aria-hidden="true"></em><f:translate key="global_setting" extensionName="NsGoogledocs" />
+					</button>
+					<div class="button-group float-sm-right">
+						<a href="javascript:;" class="btn btn-success text-white btn-sm"><em class="fa fa-file-o"
+								aria-hidden="true"></em><f:translate key="documentaiton" extensionName="NsGoogledocs" /></a>
+						<a href="javascript:;" class="btn btn-info text-white btn-sm"><em class="fa fa-question"
+								aria-hidden="true"></em><f:translate key="help_support" extensionName="NsGoogledocs" /></a>
+						<a href="javascript:;" class="btn btn-warning text-white btn-sm"><em class="fa fa-dollar"
+								aria-hidden="true"></em><f:translate key="donate" extensionName="NsGoogledocs" /></a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="typo3-docbody">
+			<div id="typo3-inner-docbody">
+				<div class="ns-googledocs-navigation">
+					<nav class="navbar navbar-expand-lg">
+						<a class="navbar-brand" href="javascript:;"><f:translate key="ns_google_docs" extensionName="NsGoogledocs" /></a>
+						<button class="navbar-toggler" type="button" data-toggle="collapse"
+							data-target="#nsbackupNavbar" aria-controls="nsbackupNavbar" aria-expanded="false"
+							aria-label="Toggle navigation">
+							<span class="navbar-toggler-icon"></span>
+						</button>
+						<div class="collapse navbar-collapse" id="nsbackupNavbar" style="height: auto;">
+							<ul class="navbar-nav">
+								<li class="nav-item {f:if(condition: '{activePage} == \'dashboardAction\'', then: 'active')}">
+									<f:link.action action="dashboard"
+										class="nav-link">
+										<em class="fa fa-dashboard" aria-hidden="true"></em><f:translate key="dashboard" extensionName="NsGoogledocs" /></f:link.action>
+								</li>
+								<li class="nav-item {f:if(condition: '{activePage} == \'importAction\'', then: 'active')}">
+									<f:link.action action="import"
+										class="nav-link">
+										<em class="fa fa-cloud-download" aria-hidden="true"></em><f:translate key="import_google_docs" extensionName="NsGoogledocs" />
+									</f:link.action>
+								</li>
+								<li class="nav-item {f:if(condition: '{activePage} == \'globalSettingsAction\'', then: 'active')}">
+									<f:link.action action="globalSettings"
+										class="nav-link">
+										<em class="fa fa-cog" aria-hidden="true"></em><f:translate key="global_setting" extensionName="NsGoogledocs" /></f:link.action>
+								</li>
+								<li class="nav-item {f:if(condition: '{activePage} == \'premiumAction\'', then: 'active')}">
+									<f:link.action action="premium"
+										class="nav-link">
+										<em class="fa fa-empire" aria-hidden="true"></em><f:translate key="premium_extension" extensionName="NsGoogledocs" />
+									</f:link.action>
+								</li>
+							</ul>
+						</div>
+					</nav>
+				</div>
+				<f:render section="content" />
+			</div>
+		</div>
+		<div class="modal google-docs-wizard-modal fade" id="googleDocsWizardModal" tabindex="-1" role="dialog"
+			aria-hidden="true">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title"><f:translate key="ns_google_docs_setup_wizard" extensionName="NsGoogledocs" /></h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						<div class="googledocs-form-wrap">
+							<div class="row">
+								<div class="col-lg-7">
+									<f:form id="update-user-info" action="update" controller="UserInfo" enctype="multipart/form-data">
+										<div class="form-group">
+											<label for="google-docs-secret-key"><f:translate key="enter_secret_key" extensionName="NsGoogledocs" /></label>
+											<div class="input-group">
+												<div class="input-group-prepend">
+													<span class="input-group-text" id="google-docs-secret-key">@</span>
+												</div>
+												<f:form.textfield
+													class="form-control"
+													name="GoogleDocsSecretKey"
+													placeholder="{f:translate(key: 'enter_secret_key', extensionName: 'NsGoogledocs')}"
+													value="{globalSettings.clientInfo.client_secret}"
+													additionalAttributes="{aria-describedby: 'bw-clientsecret', required: 'required'}"/>
+											</div>
+										</div>
+										<div class="form-group">
+											<label for="google-docs-api-key"><f:translate key="enter_client_id" extensionName="NsGoogledocs" /></label>
+											<div class="input-group">
+												<div class="input-group-prepend">
+													<span class="input-group-text" id="google-docs-client-id">@</span>
+												</div>
+												<f:form.textfield
+													class="form-control"
+													name="GoogleDocsClientId"
+													placeholder="{f:translate(key: 'enter_client_id', extensionName: 'NsGoogledocs')}"
+													value="{globalSettings.clientInfo.client_id}"
+													additionalAttributes="{aria-describedby: 'bw-clientid', required: 'required'}"/>
+											</div>
+										</div>
+										<div class="form-group">
+											<label for="google-docs-api-key"><f:translate key="enter_refresh_token" extensionName="NsGoogledocs" /></label>
+											<div class="input-group">
+												<div class="input-group-prepend">
+													<span class="input-group-text" id="google-docs-refresh-token">@</span>
+												</div>
+												<f:form.textfield
+													class="form-control"
+													name="GoogleDocsRefreshToken"
+													placeholder="{f:translate(key: 'enter_refresh_token', extensionName: 'NsGoogledocs')}"
+													value="{globalSettings.clientInfo.refresh_token}"
+													additionalAttributes="{aria-describedby: 'bw-efreshtoken', required: 'required'}"/>
+											</div>
+										</div>
+										<div class="form-group">
+											<label for="google-docs-imaport-type"><f:translate key="where_import" extensionName="NsGoogledocs" /></label>
+											<div class="form-check">
+												<f:if condition="{globalSettings.clientInfo.import_type.1}">
+													<f:then>
+														<f:form.checkbox name="importType" id="imaport-in-pages" value="1"  checked="1"  multiple="1" class="form-check-input" />
+													</f:then>
+													<f:else>
+														<f:form.checkbox name="importType" id="imaport-in-pages" value="1" multiple="1" class="form-check-input" />
+													</f:else>
+												</f:if>
+												<label class="form-check-label" for="imaport-in-pages">
+													<f:translate key="import_type.1" />
+												</label>
+											</div>
+										</div>
+										<div class="form-group">
+											<button type="submit" class="btn btn-danger"><em class="fa fa-save"
+													aria-hidden="true"></em><f:translate key="btn_save_settings" extensionName="NsGoogledocs" /></button>
+											<button type="button" class="btn btn-secondary" data-dismiss="modal"><em class="fa fa-close"
+													aria-hidden="true"></em><f:translate key="btn_skip" extensionName="NsGoogledocs" /></button>
+										</div>
+									</f:form>
+								</div>
+								<div class="col-lg-5">
+									<f:format.html>{googleDocsSetupWizard}</f:format.html>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<f:if condition="{activePage} == 'importAction'">
+			<div class="modal fade google-docs-wizard-modal" id="importGooleDocsModal" role="dialog" tabindex="-1"
+				role="dialog" aria-hidden="true">
+				<div class="modal-dialog" role="document">
+					<div class="modal-content">
+						<f:form id="docsImport" action="docsImport" class="googledocs-form" controller="UserInfo" enctype="multipart/form-data" method="POST" >
+							<f:form.hidden name="googleDocsUrl" id="google-docs-url" value="" />
+							<f:form.hidden name="googleDocsID" id="google-docs-id" value="" />
+							<f:form.hidden name="googleDocsName" id="google-docs-name" value="" />
+							<div class="modal-header">
+								<h5 class="modal-title"><f:format.html><f:translate key="import_about" extensionName="NsGoogledocs" /></f:format.html></h5>
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+									<span aria-hidden="true">&times;</span>
+								</button>
+							</div>
+							<div class="modal-body">
+								<div class="googledocs-form-wrap">
+									<div class="row">
+										<div class="col-12">
+												<div class="form-group">
+													<p><f:format.raw><f:translate key="import-message" extensionName="NsGoogledocs" /></f:format.raw> {globalSettings.docsImportType}?</p>
+												</div>
+												<div class="form-group">
+													<div class="row">
+														<div class="col-lg-5">
+															<label for="select-column"><f:translate key="select_column" extensionName="NsGoogledocs" /></label>
+														</div>
+														<div class="col-lg-7">
+															<f:form.select id="select-column" name="colPos" options="{pageColPos}" optionValueField="colPos" optionLabelField="label" />
+														</div>
+													</div>
+												</div>
+												<div class="form-group ns-googledocs-progressbar-wrap-main hide">
+													<div class="row">
+														<div class="col-lg-4">
+															<label><f:translate key="Importing" extensionName="NsGoogledocs" /></label>
+														</div>
+														<div class="col-lg-8">
+															<div class="ns-googledocs-progressbar-wrap">
+																<div class="progress">
+																	<div id="custom-progress-bar" class="progress-bar bg-success" role="progressbar"
+																		style="width: 1%;" aria-valuenow="1" aria-valuemin="0"
+																		aria-valuemax="100">1%</div>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="modal-footer import-footer">
+								<button type="button" class="btn btn-secondary" data-dismiss="modal"><em class="fa fa-close"
+										aria-hidden="true"></em><f:translate key="btn_close" extensionName="NsGoogledocs" /></button>
+								<button type="submit" class="btn btn-success btn-import-now"><em class="fa fa-download"
+										aria-hidden="true"></em><f:translate key="btn_import_now" extensionName="NsGoogledocs" /></button>
+							</div>
+						</f:form>
+					</div>
+				</div>
+			</div>
+		</f:if>
+	</div>
+</f:be.container>
+</html>

@@ -1,0 +1,18 @@
+
+# Module configuration
+module.tx_nsgoogledocs_tools_nsgoogledocsgoogledocs {
+    view {
+        templateRootPaths {
+            0 = EXT:{extension.extensionKey}/Resources/Private/Templates/
+            1 = {$module.tx_nsgoogledocs_googledocs.view.templateRootPath}
+        }
+        partialRootPaths {
+            0 = EXT:{extension.extensionKey}/Resources/Private/Partials/
+            1 = {$module.tx_nsgoogledocs_googledocs.view.partialRootPath}
+        }
+        layoutRootPaths {
+            0 = EXT:{extension.extensionKey}/Resources/Private/Layouts/
+            1 = {$module.tx_nsgoogledocs_googledocs.view.layoutRootPath}
+        }
+    }
+}
