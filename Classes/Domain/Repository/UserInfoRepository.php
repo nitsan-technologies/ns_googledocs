@@ -164,8 +164,7 @@ class UserInfoRepository extends \TYPO3\CMS\Extbase\Persistence\Repository
             )
             ->set('client_secret', $request['GoogleDocsSecretKey'])
             ->set('client_id', $request['GoogleDocsClientId'])
-            ->set('refresh_token', $request['GoogleDocsRefreshToken'])
-            ->set('google_files_request', $request['GoogleDocsApiRequest']);
+            ->set('refresh_token', $request['GoogleDocsRefreshToken']);
         if ($request['importType'] != '') {
             $queryBuilder->set('import_type', implode(',', $request['importType']));
         } else {
