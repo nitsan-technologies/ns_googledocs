@@ -465,3 +465,8 @@ em.field-info-trigger {
 .module-docheader+.module-body {
     padding: 0px !important;
 }
+.ns-googledocs-table-wrap .dataTables_length,
+.ns-googledocs-table-wrap .dataTables_filter,
+.ns-googledocs-table-wrap .dataTables_paginate {
+    display: none;
+}
