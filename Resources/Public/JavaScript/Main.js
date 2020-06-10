@@ -2,7 +2,7 @@ define([
     'jquery',
     'TYPO3/CMS/Backend/Modal',
     'TYPO3/CMS/NsGoogledocs/Main',
-    'datatables',
+    'TYPO3/CMS/NsGoogledocs/Datatables',
     'TYPO3/CMS/Backend/jquery.clearable'
 ], function ($, Model) {
     $('.btn-import').click(function(e) {
