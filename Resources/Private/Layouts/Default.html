@@ -3,62 +3,42 @@
 	<link rel="stylesheet" type="text/css" href="{f:uri.resource(path:'Vendor/bootstrap4.3.1.min.css', extensionName: 'ns_googledocs')}" media="all">
 	<link rel="stylesheet" type="text/css" href="{f:uri.resource(path:'Css/main.css', extensionName: 'ns_googledocs')}" media="all">
 	<div class="typo3-fullDoc">
-		<div id="typo3-docheader">
-			<div class="typo3-docheader-functions">
-				<f:be.buttons.csh />
-				<div class="ns-googledocs-button-bar">
-					<button type="button" class="btn btn-primary btn-backup-wizard-modal" data-toggle="modal"
-						data-target="#googleDocsWizardModal">
-						<em class="fa fa-cogs" aria-hidden="true"></em><f:translate key="global_setting" extensionName="NsGoogledocs" />
-					</button>
-					<div class="button-group float-sm-right">
-						<a href="javascript:;" class="btn btn-success text-white btn-sm"><em class="fa fa-file-o"
-								aria-hidden="true"></em><f:translate key="documentaiton" extensionName="NsGoogledocs" /></a>
-						<a href="javascript:;" class="btn btn-info text-white btn-sm"><em class="fa fa-question"
-								aria-hidden="true"></em><f:translate key="help_support" extensionName="NsGoogledocs" /></a>
-						<a href="javascript:;" class="btn btn-warning text-white btn-sm"><em class="fa fa-dollar"
-								aria-hidden="true"></em><f:translate key="donate" extensionName="NsGoogledocs" /></a>
-					</div>
-				</div>
-			</div>
-		</div>
 		<div id="typo3-docbody">
-			<div id="typo3-inner-docbody">
-				<div class="ns-googledocs-navigation">
-					<nav class="navbar navbar-expand-lg">
-						<a class="navbar-brand" href="javascript:;"><f:translate key="ns_google_docs" extensionName="NsGoogledocs" /></a>
-						<button class="navbar-toggler" type="button" data-toggle="collapse"
-							data-target="#nsbackupNavbar" aria-controls="nsbackupNavbar" aria-expanded="false"
-							aria-label="Toggle navigation">
-							<span class="navbar-toggler-icon"></span>
-						</button>
-						<div class="collapse navbar-collapse" id="nsbackupNavbar" style="height: auto;">
-							<ul class="navbar-nav">
-								<li class="nav-item {f:if(condition: '{activePage} == \'dashboardAction\'', then: 'active')}">
-									<f:link.action action="dashboard"
-										class="nav-link">
-										<em class="fa fa-dashboard" aria-hidden="true"></em><f:translate key="dashboard" extensionName="NsGoogledocs" /></f:link.action>
-								</li>
-								<li class="nav-item {f:if(condition: '{activePage} == \'importAction\'', then: 'active')}">
-									<f:link.action action="import"
-										class="nav-link">
-										<em class="fa fa-cloud-download" aria-hidden="true"></em><f:translate key="import_google_docs" extensionName="NsGoogledocs" />
-									</f:link.action>
-								</li>
-								<li class="nav-item {f:if(condition: '{activePage} == \'globalSettingsAction\'', then: 'active')}">
-									<f:link.action action="globalSettings"
-										class="nav-link">
-										<em class="fa fa-cog" aria-hidden="true"></em><f:translate key="global_setting" extensionName="NsGoogledocs" /></f:link.action>
-								</li>
-								<li class="nav-item {f:if(condition: '{activePage} == \'premiumAction\'', then: 'active')}">
-									<f:link.action action="premium"
-										class="nav-link">
-										<em class="fa fa-empire" aria-hidden="true"></em><f:translate key="premium_extension" extensionName="NsGoogledocs" />
-									</f:link.action>
-								</li>
-							</ul>
-						</div>
-					</nav>
+			<div id="typo3-inner-docbody" style="padding: 24px;margin-top: 0;transition: border .2s ease;">
+				<div class="ns-ext-navigation-wrap">
+					<a class="navbar-brand ns-ext-name ns-ext-name-desktop" href="javascript:;"><f:translate key="ns_google_docs" extensionName="NsGoogledocs" /></a>
+					<div class="ns-googledocs-navigation ns-ext-navigation">
+						<nav class="navbar navbar-expand-lg">
+							<a class="navbar-brand ns-ext-name" href="javascript:;"><f:translate key="ns_google_docs" extensionName="NsGoogledocs" /></a>
+							<button class="navbar-toggler" type="button" {bootstrapVariable}-toggle="collapse"
+							{bootstrapVariable}-target="#nsbackupNavbar" aria-controls="nsbackupNavbar" aria-expanded="false"
+								aria-label="Toggle navigation">
+								<span class="navbar-toggler__line"></span>
+								<span class="navbar-toggler__line"></span>
+								<span class="navbar-toggler__line"></span>
+							</button>
+							<div class="collapse navbar-collapse" id="nsbackupNavbar" style="height: auto;">
+								<ul class="navbar-nav">
+									<li class="nav-item {f:if(condition: '{activePage} == \'dashboardAction\'', then: 'active')}">
+										<f:link.action action="dashboard"
+											class="nav-link">
+											<em class="fa fa-dashboard" aria-hidden="true"></em><f:translate key="dashboard" extensionName="NsGoogledocs" /></f:link.action>
+									</li>
+									<li class="nav-item {f:if(condition: '{activePage} == \'importAction\'', then: 'active')}">
+										<f:link.action action="import"
+											class="nav-link">
+											<em class="fa fa-cloud-download" aria-hidden="true"></em><f:translate key="import_google_docs" extensionName="NsGoogledocs" />
+										</f:link.action>
+									</li>
+									<li class="nav-item {f:if(condition: '{activePage} == \'globalSettingsAction\'', then: 'active')}">
+										<f:link.action action="globalSettings"
+											class="nav-link">
+											<em class="fa fa-cog" aria-hidden="true"></em><f:translate key="global_setting" extensionName="NsGoogledocs" /></f:link.action>
+									</li>
+								</ul>
+							</div>
+						</nav>
+					</div>
 				</div>
 				<f:render section="content" />
 			</div>
@@ -69,7 +49,7 @@
 				<div class="modal-content">
 					<div class="modal-header">
 						<h5 class="modal-title"><f:translate key="ns_google_docs_setup_wizard" extensionName="NsGoogledocs" /></h5>
-						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<button type="button" class="close" {bootstrapVariable}-dismiss="modal" aria-label="Close">
 							<span aria-hidden="true">&times;</span>
 						</button>
 					</div>
@@ -139,7 +119,7 @@
 										<div class="form-group">
 											<button type="submit" class="btn btn-danger"><em class="fa fa-save"
 													aria-hidden="true"></em><f:translate key="btn_save_settings" extensionName="NsGoogledocs" /></button>
-											<button type="button" class="btn btn-secondary" data-dismiss="modal"><em class="fa fa-close"
+											<button type="button" class="btn btn-secondary" {bootstrapVariable}-dismiss="modal"><em class="fa fa-close"
 													aria-hidden="true"></em><f:translate key="btn_skip" extensionName="NsGoogledocs" /></button>
 										</div>
 									</f:form>
@@ -164,7 +144,7 @@
 							<f:form.hidden name="googleDocsName" id="google-docs-name" value="" />
 							<div class="modal-header">
 								<h5 class="modal-title"><f:format.html><f:translate key="import_about" extensionName="NsGoogledocs" /></f:format.html></h5>
-								<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+								<button type="button" class="close" {bootstrapVariable}-dismiss="modal" aria-label="Close">
 									<span aria-hidden="true">&times;</span>
 								</button>
 							</div>
@@ -206,7 +186,7 @@
 								</div>
 							</div>
 							<div class="modal-footer import-footer">
-								<button type="button" class="btn btn-secondary" data-dismiss="modal"><em class="fa fa-close"
+								<button type="button" class="btn btn-secondary" {bootstrapVariable}-dismiss="modal"><em class="fa fa-close"
 										aria-hidden="true"></em><f:translate key="btn_close" extensionName="NsGoogledocs" /></button>
 								<button type="submit" class="btn btn-success btn-import-now"><em class="fa fa-download"
 										aria-hidden="true"></em><f:translate key="btn_import_now" extensionName="NsGoogledocs" /></button>

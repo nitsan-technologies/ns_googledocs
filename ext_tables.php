@@ -1,4 +1,7 @@
 <?php
+
+use NITSAN\NsGoogledocs\Controller\UserInfoController;
+
 defined('TYPO3_MODE') || die('Access denied.');
 
 call_user_func(
@@ -17,13 +20,17 @@ call_user_func(
                     ];
                 }
             }
+            $userInfo = 'UserInfo';
+            if (version_compare(TYPO3_branch, '10.0', '>=')) {
+                $userInfo = UserInfoController::class;
+            }
             \TYPO3\CMS\Extbase\Utility\ExtensionUtility::registerModule(
                 'NITSAN.NsGoogledocs',
                 'nitsan', // Make module a submodule of 'tools'
                 'googledocs', // Submodule key
                 '', // Position
                 [
-                    'UserInfo' => 'dashboard, import, reports, globalSettings, premium, docsImport, update',
+                    $userInfo => 'dashboard, import, reports, globalSettings, premium, docsImport, update',
                 ],
                 [
                     'access' => 'user,group',

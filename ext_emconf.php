@@ -11,10 +11,10 @@ $EM_CONF['ns_googledocs'] = [
     'uploadfolder' => 0,
     'createDirs' => '',
     'clearCacheOnLoad' => 0,
-    'version' => '1.1.3',
+    'version' => '2.0.0',
     'constraints' => [
         'depends' => [
-            'typo3' => '8.7.0-10.9.99',
+            'typo3' => '8.7.0-11.9.99',
         ],
         'conflicts' => [],
         'suggests' => [],
