@@ -299,7 +299,8 @@ class UserInfoController extends ActionController
         $response = $this->service->files->export($request['googleDocsID'], 'text/html');
         // fetch body from html
         $html = (string) $response->getBody();
-        $html = preg_replace('#<meta content="text/html; charset=UTF-8" http-equiv="content-type">(.*?)</style>#', '', $html);      
+        $html = preg_replace('#<head>(.*?)</head>#', '', $html);   
+        // $html = preg_replace('#<meta content="text/html; charset=UTF-8" http-equiv="content-type">(.*?)</style>#', '', $html);   
         // convert strong tag
         $html = preg_replace('/<span(.*?)font-weight:700(.*?)>(.*?)<\/span>/si', '<span${1}${2}><b>${3}</b></span>', $html);
         // convert italic tag
