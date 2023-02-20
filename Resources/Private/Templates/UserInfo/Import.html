@@ -11,7 +11,7 @@
 							<f:then>
 								<div class="alert alert-danger alert-dismissible show" role="alert">
 									{msgException}
-									<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+									<button type="button" class="close" {bootstrapVariable}-dismiss="alert" aria-label="Close">
 										<span aria-hidden="true">&times;</span>
 									</button>
 								</div>
@@ -41,11 +41,11 @@
 															<td><f:format.date format="d M. Y - H:i">{file.lastModified}</f:format.date></td>
 															<td>{file.owner}</td>
 															<td>
-																<div class="button-group ns-googledocs-actions-wrap">
-																	<a href="#" data-viewurl="{file.ViewURL}" data-fileID="{file.id}" target="_blank" class="btn btn-primary btn-import" data-toggle="modal" data-pageTitle="{globalSettings.pageTitle}" data-fileName="{file.name}" data-target="#importGooleDocsModal">
+																<div class="button-group ns-googledocs-actions-wrap ns-ext-actions-wrap">
+																	<a href="#" data-viewurl="{file.ViewURL}" data-fileID="{file.id}" target="_blank" class="btn btn-gray btn-import" {bootstrapVariable}-toggle="modal" data-pageTitle="{globalSettings.pageTitle}" data-fileName="{file.name}" {bootstrapVariable}-target="#importGooleDocsModal">
 																		<em class="fa fa-download" aria-hidden="true"></em><f:translate key="import_tab.btn_import_now" extensionName="NsGoogledocs" />
 																	</a>
-																	<a href="{file.ViewURL}" target="_blank" class="btn btn-success">
+																	<a href="{file.ViewURL}" target="_blank" class="btn btn-gray">
 																		<em class="fa fa-pencil" aria-hidden="true"></em><f:translate key="import_tab.btn_edit" extensionName="NsGoogledocs" />
 																	</a>
 																</div>
@@ -63,7 +63,7 @@
 					<f:else>
 						<div class="alert alert-danger alert-dismissible show" role="alert">
 							<f:format.html><f:translate key="import_access_error_msg" extensionName="NsGoogledocs" /></f:format.html>
-							<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+							<button type="button" class="close" {bootstrapVariable}-dismiss="alert" aria-label="Close">
 								<span aria-hidden="true">&times;</span>
 							</button>
 						</div>
@@ -73,7 +73,7 @@
 			<f:else>
 				<div class="alert alert-danger alert-dismissible show" role="alert">
 					<f:format.html><f:translate key="import_access_page_error_msg" extensionName="NsGoogledocs" /></f:format.html>
-					<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+					<button type="button" class="close" {bootstrapVariable}-dismiss="alert" aria-label="Close">
 						<span aria-hidden="true">&times;</span>
 					</button>
 				</div>

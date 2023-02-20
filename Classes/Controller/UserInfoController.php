@@ -18,13 +18,20 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Annotation\Inject as inject;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility as transalte;
+use TYPO3\CMS\Core\Resource\ResourceFactory;
 
-session_start();
+if(isset($_SESSION)){
+    session_start();
+}
 if (version_compare(TYPO3_branch, '9.0', '>')) {
-    require_once \TYPO3\CMS\Core\Core\Environment::getPublicPath() . '/typo3conf/ext/ns_googledocs/Classes/google-api-php-client/vendor/autoload.php';
+    if (version_compare(TYPO3_branch, '11.0', '>')) {
+        require_once \TYPO3\CMS\Core\Core\Environment::getPublicPath() . '/typo3conf/ext/ns_googledocs/Classes/google-api-php-client/vendor/autoload.php';
+    } else {
+        require_once \TYPO3\CMS\Core\Core\Environment::getPublicPath() . '/typo3conf/ext/ns_googledocs/Classes/google-api-php-client-old/vendor/autoload.php';
+    }
+
 } else {
-    $siteRoot = PATH_typo3conf;
-    require_once $siteRoot . 'ext/ns_googledocs/Classes/google-api-php-client/vendor/autoload.php';
+    require_once PATH_typo3conf . 'ext/ns_googledocs/Classes/google-api-php-client/vendor/autoload.php';
 }
 /**
  * UserInfoController
@@ -47,6 +54,19 @@ class UserInfoController extends ActionController
     protected $globalSettings = null;
     protected $apiContent = null;
 
+    /**
+     * @var \TYPO3\CMS\Core\Resource\ResourceFactory
+     * @inject
+     */
+    protected $resourceFactory;
+
+    /**
+     * @param \NITSAN\NsGoogledocs\Domain\Repository\UserInfoRepository $userInfoRepository
+     * @return void
+     */
+    public function injectUserInfoRepository(\NITSAN\NsGoogledocs\Domain\Repository\UserInfoRepository $userInfoRepository) {
+        $this->userInfoRepository = $userInfoRepository;
+    }
     /**
      * Initialize Action
      *
@@ -140,6 +160,10 @@ class UserInfoController extends ActionController
      */
     public function dashboardAction()
     {
+        $bootstrapVariable = 'data';
+        if (version_compare(TYPO3_branch, '11.0', '>')) {
+            $bootstrapVariable = 'data-bs';
+        }
         // View assigned
         $assign = [
             'globalSettings' => $this->globalSettings,
@@ -147,6 +171,7 @@ class UserInfoController extends ActionController
             'pageInformation' => $this->pageInformation,
             'sidebarData' => $this->apiContent['dashboardSupportData'],
             'googleDocsSetupWizard' => $this->apiContent['googleDocsSetupWizard'],
+            'bootstrapVariable' => $bootstrapVariable
         ];
         $this->view->assignMultiple($assign);
     }
@@ -225,6 +250,10 @@ class UserInfoController extends ActionController
                     $msgException = transalte::translate('listFiles.exception', 'ns_googledocs');
                 }
             }
+            $bootstrapVariable = 'data';
+            if (version_compare(TYPO3_branch, '11.0', '>')) {
+                $bootstrapVariable = 'data-bs';
+            }
             // View assigned
             $assign = [
                 'pageColPos' => $pageColPos,
@@ -234,6 +263,7 @@ class UserInfoController extends ActionController
                 'pageStatus' => true,
                 'msgException' => $msgException,
                 'googleDocsSetupWizard' => $this->apiContent['googleDocsSetupWizard'],
+                'bootstrapVariable' => $bootstrapVariable
             ];
             $this->view->assignMultiple($assign);
         }
@@ -269,6 +299,8 @@ class UserInfoController extends ActionController
         $response = $this->service->files->export($request['googleDocsID'], 'text/html');
         // fetch body from html
         $html = (string) $response->getBody();
+        $html = preg_replace('#<head>(.*?)</head>#', '', $html);   
+        // $html = preg_replace('#<meta content="text/html; charset=UTF-8" http-equiv="content-type">(.*?)</style>#', '', $html);   
         // convert strong tag
         $html = preg_replace('/<span(.*?)font-weight:700(.*?)>(.*?)<\/span>/si', '<span${1}${2}><b>${3}</b></span>', $html);
         // convert italic tag
@@ -419,7 +451,7 @@ class UserInfoController extends ActionController
     {
         // Resource instance
         $imagesUids = [];
-        $resourceFactory = \TYPO3\CMS\Core\Resource\ResourceFactory::getInstance();
+        $resourceFactory = GeneralUtility::makeInstance(ResourceFactory::class);
         $storage = $resourceFactory->getDefaultStorage();
         $storageFolder = $storage->getRootLevelFolder();
         if (!file_exists($this->globalSettings['siteRoot'] . 'fileadmin/')) {
@@ -475,7 +507,7 @@ class UserInfoController extends ActionController
         $content = preg_replace("/<p[^>]*>(?:\s|&nbsp;)*<\/p>/", '', $content);
         $images = $this->findImage($content);
         $content = '<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /></head><body>' . $content . '</body></html>';
-        $resourceFactory = \TYPO3\CMS\Core\Resource\ResourceFactory::getInstance();
+        $resourceFactory = GeneralUtility::makeInstance(ResourceFactory::class);;
         $dom = new \DOMDocument();
         @$dom->loadHTML($content);
         //Evaluate img tag in HTML
@@ -664,10 +696,15 @@ class UserInfoController extends ActionController
      */
     public function globalSettingsAction()
     {
+        $bootstrapVariable = 'data';
+        if (version_compare(TYPO3_branch, '11.0', '>')) {
+            $bootstrapVariable = 'data-bs';
+        }
         $assign = [
             'globalSettings' => $this->globalSettings,
             'activePage' => $this->actionMethodName,
             'googleDocsSetupWizard' => $this->apiContent['googleDocsSetupWizard'],
+            'bootstrapVariable' => $bootstrapVariable
         ];
         $this->view->assignMultiple($assign);
     }
