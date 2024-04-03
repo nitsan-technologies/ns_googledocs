@@ -1,8 +1,8 @@
 {
     "name": "nitsan/ns-googledocs",
     "type": "typo3-cms-extension",
-    "description": "First-ever feature-rich TYPO3 solution to one-click import your Google Docs to your TYPO3 pages, news and blog. Demo: https://demo.t3planet.com/t3t-extensions/ns-google-docs PRO: http://t3planet.com/ns-google-docs-typo3-extension",
-    "homepage": "https://extensions.typo3.org/extension/ns_googledocs/",
+    "description": "Manually transferring all content from Google Docs to your TYPO3 website can be a boring task, right? We understand your concerns, which is why we've created an efficient solution to simplify this migration process for TYPO3 users. Our innovative solution allows you to import your Google Docs directly into your TYPO3 pages, news, and blogs with just one click, saving you valuable time. *** Live-Demo: https://demo.t3planet.com/t3-extensions/googledocs *** Premium Version, Documentation & Free Support: http://t3planet.com/ns-google-docs-typo3-extension",
+    "homepage": "https://demo.t3planet.com/t3-extensions/googledocs",
     "license": "GPL-2.0+",
     "keywords": [
         "TYPO3 CMS",
