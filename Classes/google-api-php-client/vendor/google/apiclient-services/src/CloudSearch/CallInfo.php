@@ -26,6 +26,14 @@ class CallInfo extends \Google\Collection
   protected $artifactOwnerDataType = '';
   protected $attachedDocumentsType = DocumentInfo::class;
   protected $attachedDocumentsDataType = 'array';
+  /**
+   * @var string[]
+   */
+  public $availableAccessTypes;
+  /**
+   * @var string[]
+   */
+  public $availableAnnotationToolTypes;
   protected $availableReactionsType = ReactionInfo::class;
   protected $availableReactionsDataType = 'array';
   protected $broadcastSessionInfoType = BroadcastSessionInfo::class;
@@ -44,10 +52,6 @@ class CallInfo extends \Google\Collection
    * @var int
    */
   public $maxJoinedDevices;
-  /**
-   * @var string
-   */
-  public $mediaBackendInfo;
   /**
    * @var string
    */
@@ -114,6 +118,34 @@ class CallInfo extends \Google\Collection
   public function getAttachedDocuments()
   {
     return $this->attachedDocuments;
+  }
+  /**
+   * @param string[]
+   */
+  public function setAvailableAccessTypes($availableAccessTypes)
+  {
+    $this->availableAccessTypes = $availableAccessTypes;
+  }
+  /**
+   * @return string[]
+   */
+  public function getAvailableAccessTypes()
+  {
+    return $this->availableAccessTypes;
+  }
+  /**
+   * @param string[]
+   */
+  public function setAvailableAnnotationToolTypes($availableAnnotationToolTypes)
+  {
+    $this->availableAnnotationToolTypes = $availableAnnotationToolTypes;
+  }
+  /**
+   * @return string[]
+   */
+  public function getAvailableAnnotationToolTypes()
+  {
+    return $this->availableAnnotationToolTypes;
   }
   /**
    * @param ReactionInfo[]
@@ -212,20 +244,6 @@ class CallInfo extends \Google\Collection
   public function getMaxJoinedDevices()
   {
     return $this->maxJoinedDevices;
-  }
-  /**
-   * @param string
-   */
-  public function setMediaBackendInfo($mediaBackendInfo)
-  {
-    $this->mediaBackendInfo = $mediaBackendInfo;
-  }
-  /**
-   * @return string
-   */
-  public function getMediaBackendInfo()
-  {
-    return $this->mediaBackendInfo;
   }
   /**
    * @param string

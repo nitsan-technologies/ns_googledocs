@@ -1,4 +1,5 @@
 <?php
+
 namespace NITSAN\NsGoogledocs\Domain\Model;
 
 /***
@@ -16,7 +17,6 @@ namespace NITSAN\NsGoogledocs\Domain\Model;
  */
 class UserInfo extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity
 {
-
     /**
      * clientId
      *

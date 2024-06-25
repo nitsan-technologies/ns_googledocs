@@ -1,5 +1,5 @@
 <html xmlns:f="https://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
-<f:layout name="Default" />
+<f:layout name="{f:if(condition: '{version} == 11', then: 'Defaultv11', else: 'Default')}" />
 <f:section name="content">
 	<f:flashMessages />
 	<div class="ns-googledocs-table-block-wrap">
@@ -62,17 +62,17 @@
 					</f:then>
 					<f:else>
 						<div class="alert alert-danger alert-dismissible show" role="alert">
-							<f:format.html><f:translate key="import_access_error_msg" extensionName="NsGoogledocs" /></f:format.html>
+							<f:format.raw><f:translate key="import_access_error_msg" extensionName="NsGoogledocs" /></f:format.raw>
 							<button type="button" class="close" {bootstrapVariable}-dismiss="alert" aria-label="Close">
 								<span aria-hidden="true">&times;</span>
 							</button>
-						</div>
+						w
 					</f:else>
 				</f:if>
 			</f:then>
 			<f:else>
 				<div class="alert alert-danger alert-dismissible show" role="alert">
-					<f:format.html><f:translate key="import_access_page_error_msg" extensionName="NsGoogledocs" /></f:format.html>
+					<f:format.raw><f:translate key="import_access_page_error_msg" extensionName="NsGoogledocs" /></f:format.raw>
 					<button type="button" class="close" {bootstrapVariable}-dismiss="alert" aria-label="Close">
 						<span aria-hidden="true">&times;</span>
 					</button>

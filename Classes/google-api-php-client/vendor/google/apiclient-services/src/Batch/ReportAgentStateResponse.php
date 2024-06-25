@@ -23,10 +23,32 @@ class ReportAgentStateResponse extends \Google\Collection
   /**
    * @var string
    */
+  public $defaultReportInterval;
+  /**
+   * @var string
+   */
   public $minReportInterval;
   protected $tasksType = AgentTask::class;
   protected $tasksDataType = 'array';
+  /**
+   * @var bool
+   */
+  public $useBatchMonitoredResource;
 
+  /**
+   * @param string
+   */
+  public function setDefaultReportInterval($defaultReportInterval)
+  {
+    $this->defaultReportInterval = $defaultReportInterval;
+  }
+  /**
+   * @return string
+   */
+  public function getDefaultReportInterval()
+  {
+    return $this->defaultReportInterval;
+  }
   /**
    * @param string
    */
@@ -54,6 +76,20 @@ class ReportAgentStateResponse extends \Google\Collection
   public function getTasks()
   {
     return $this->tasks;
+  }
+  /**
+   * @param bool
+   */
+  public function setUseBatchMonitoredResource($useBatchMonitoredResource)
+  {
+    $this->useBatchMonitoredResource = $useBatchMonitoredResource;
+  }
+  /**
+   * @return bool
+   */
+  public function getUseBatchMonitoredResource()
+  {
+    return $this->useBatchMonitoredResource;
   }
 }
 

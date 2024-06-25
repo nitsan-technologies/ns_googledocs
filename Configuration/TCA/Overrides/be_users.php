@@ -1,5 +1,8 @@
 <?php
-if (!defined('TYPO3_MODE')) {
+
+use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
+
+if (!defined('TYPO3')) {
     die('Access denied.');
 }
 $laguageFile = 'LLL:EXT:ns_googledocs/Resources/Private/Language/locallang_db.xlf:';
@@ -50,11 +53,11 @@ $temporaryColumns  = [
 
 ];
 
-\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTCAcolumns(
+ExtensionManagementUtility::addTCAcolumns(
     'be_users',
     $temporaryColumns
 );
-\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addToAllTCAtypes(
+ExtensionManagementUtility::addToAllTCAtypes(
     'be_users',
     'client_id, client_secret, refresh_token, import_type'
 );

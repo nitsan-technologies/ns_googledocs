@@ -27,6 +27,10 @@ class MembershipFeatureSpec extends \Google\Model
   protected $identityserviceDataType = '';
   protected $meshType = ServiceMeshMembershipSpec::class;
   protected $meshDataType = '';
+  protected $originType = Origin::class;
+  protected $originDataType = '';
+  protected $policycontrollerType = PolicyControllerMembershipSpec::class;
+  protected $policycontrollerDataType = '';
 
   /**
    * @param ConfigManagementMembershipSpec
@@ -83,6 +87,34 @@ class MembershipFeatureSpec extends \Google\Model
   public function getMesh()
   {
     return $this->mesh;
+  }
+  /**
+   * @param Origin
+   */
+  public function setOrigin(Origin $origin)
+  {
+    $this->origin = $origin;
+  }
+  /**
+   * @return Origin
+   */
+  public function getOrigin()
+  {
+    return $this->origin;
+  }
+  /**
+   * @param PolicyControllerMembershipSpec
+   */
+  public function setPolicycontroller(PolicyControllerMembershipSpec $policycontroller)
+  {
+    $this->policycontroller = $policycontroller;
+  }
+  /**
+   * @return PolicyControllerMembershipSpec
+   */
+  public function getPolicycontroller()
+  {
+    return $this->policycontroller;
   }
 }
 

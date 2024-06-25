@@ -1,11 +1,11 @@
 <html xmlns:f="https://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
-<f:layout name="Default" />
+<f:layout name="{f:if(condition: '{version} == 11', then: 'Defaultv11', else: 'Default')}" />
 <f:section name="content">
 	<f:flashMessages />
 	<div class="ns-googledocs-dashboard-blocks">
 		<f:if condition="!{globalSettings.clientStatus}">
 			<div class="alert alert-danger alert-dismissible show" role="alert">
-				<f:format.html><f:translate key="error_msg" extensionName="NsGoogledocs" /></f:format.html>
+				<f:format.raw><f:translate key="error_msg" extensionName="NsGoogledocs" /></f:format.raw>
 				<button type="button" class="close" data-dismiss="alert" aria-label="Close">
 					<span aria-hidden="true">&times;</span>
 				</button>
@@ -24,7 +24,7 @@
 				<div class="card bg-light google-docs-import-block" data-mh="google-docs-import-block">
 					<div class="card-header"><f:translate key="dashboard_import_pages" extensionName="NsGoogledocs" /></div>
 					<div class="card-body">
-						<f:format.html><f:translate key="dashboard_import_pages_steps" extensionName="NsGoogledocs" /></f:format.html>
+						<f:format.raw><f:translate key="dashboard_import_pages_steps" extensionName="NsGoogledocs" /></f:format.raw>
 					</div>
 				</div>
 			</div>

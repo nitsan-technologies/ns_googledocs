@@ -86,7 +86,7 @@
 				<source>Donate</source>
 			</trans-unit>
 			<trans-unit id="ns_google_docs">
-				<source>NS Google Docs</source>
+				<source>Google Docs</source>
 			</trans-unit>
 			<trans-unit id="dashboard">
 				<source>Dashboard</source>
@@ -101,7 +101,7 @@
 				<source>Premium Extension</source>
 			</trans-unit>
 			<trans-unit id="ns_google_docs_setup_wizard">
-				<source>NS Google Docs Setup Wizard</source>
+				<source>Google Docs Setup Wizard</source>
 			</trans-unit>
 			<trans-unit id="enter_secret_key">
 				<source>Enter your Google docs secret key</source>

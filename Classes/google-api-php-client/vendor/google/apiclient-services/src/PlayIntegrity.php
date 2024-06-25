@@ -23,7 +23,10 @@ use Google\Client;
  * Service definition for PlayIntegrity (v1).
  *
  * <p>
- * Play Integrity</p>
+ * The Play Integrity API helps you check that you're interacting with your
+ * genuine app on a genuine Android device powered by Google Play services. The
+ * Play Integrity API has replaced SafetyNet Attestation and Android Device
+ * Verification.</p>
  *
  * <p>
  * For more information about this service, see the API
@@ -39,6 +42,7 @@ class PlayIntegrity extends \Google\Service
       "https://www.googleapis.com/auth/playintegrity";
 
   public $v1;
+  public $rootUrlTemplate;
 
   /**
    * Constructs the internal representation of the PlayIntegrity service.
@@ -51,6 +55,7 @@ class PlayIntegrity extends \Google\Service
   {
     parent::__construct($clientOrConfig);
     $this->rootUrl = $rootUrl ?: 'https://playintegrity.googleapis.com/';
+    $this->rootUrlTemplate = $rootUrl ?: 'https://playintegrity.UNIVERSE_DOMAIN/';
     $this->servicePath = '';
     $this->batchPath = 'batch';
     $this->version = 'v1';

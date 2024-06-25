@@ -17,32 +17,33 @@
 
 namespace Google\Service\Integrations\Resource;
 
-use Google\Service\Integrations\GoogleCloudIntegrationsV1alphaListTaskEntitiesResponse;
+use Google\Service\Integrations\GoogleCloudIntegrationsV1alphaGetClientResponse;
 
 /**
  * The "locations" collection of methods.
  * Typical usage is:
  *  <code>
  *   $integrationsService = new Google\Service\Integrations(...);
- *   $locations = $integrationsService->locations;
+ *   $locations = $integrationsService->projects_locations;
  *  </code>
  */
 class ProjectsLocations extends \Google\Service\Resource
 {
   /**
-   * This is a UI only method and will be moved away. Returns a list of common
-   * tasks. (locations.listTaskEntities)
+   * Gets the client configuration for the given project and location resource
+   * name (locations.getClients)
    *
-   * @param string $parent Required. The location resource of the request. This is
-   * not going to be used but preserve the field for future.
+   * @param string $parent Required. Required: The ID of the GCP Project to be
+   * provisioned.
    * @param array $optParams Optional parameters.
-   * @return GoogleCloudIntegrationsV1alphaListTaskEntitiesResponse
+   * @return GoogleCloudIntegrationsV1alphaGetClientResponse
+   * @throws \Google\Service\Exception
    */
-  public function listTaskEntities($parent, $optParams = [])
+  public function getClients($parent, $optParams = [])
   {
     $params = ['parent' => $parent];
     $params = array_merge($params, $optParams);
-    return $this->call('listTaskEntities', [$params], GoogleCloudIntegrationsV1alphaListTaskEntitiesResponse::class);
+    return $this->call('getClients', [$params], GoogleCloudIntegrationsV1alphaGetClientResponse::class);
   }
 }
 

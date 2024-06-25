@@ -1142,3 +1142,8 @@ input[type="color"] ::-webkit-color-swatch {
         padding-top: 15px;
     }
 }
+
+.typo3-fullDoc {
+    overflow: auto;
+    height: 100%;
+}

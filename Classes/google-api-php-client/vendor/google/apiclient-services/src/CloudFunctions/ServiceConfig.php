@@ -27,7 +27,15 @@ class ServiceConfig extends \Google\Collection
   /**
    * @var string
    */
+  public $availableCpu;
+  /**
+   * @var string
+   */
   public $availableMemory;
+  /**
+   * @var string
+   */
+  public $binaryAuthorizationPolicy;
   /**
    * @var string[]
    */
@@ -40,6 +48,10 @@ class ServiceConfig extends \Google\Collection
    * @var int
    */
   public $maxInstanceCount;
+  /**
+   * @var int
+   */
+  public $maxInstanceRequestConcurrency;
   /**
    * @var int
    */
@@ -98,6 +110,20 @@ class ServiceConfig extends \Google\Collection
   /**
    * @param string
    */
+  public function setAvailableCpu($availableCpu)
+  {
+    $this->availableCpu = $availableCpu;
+  }
+  /**
+   * @return string
+   */
+  public function getAvailableCpu()
+  {
+    return $this->availableCpu;
+  }
+  /**
+   * @param string
+   */
   public function setAvailableMemory($availableMemory)
   {
     $this->availableMemory = $availableMemory;
@@ -108,6 +134,20 @@ class ServiceConfig extends \Google\Collection
   public function getAvailableMemory()
   {
     return $this->availableMemory;
+  }
+  /**
+   * @param string
+   */
+  public function setBinaryAuthorizationPolicy($binaryAuthorizationPolicy)
+  {
+    $this->binaryAuthorizationPolicy = $binaryAuthorizationPolicy;
+  }
+  /**
+   * @return string
+   */
+  public function getBinaryAuthorizationPolicy()
+  {
+    return $this->binaryAuthorizationPolicy;
   }
   /**
    * @param string[]
@@ -150,6 +190,20 @@ class ServiceConfig extends \Google\Collection
   public function getMaxInstanceCount()
   {
     return $this->maxInstanceCount;
+  }
+  /**
+   * @param int
+   */
+  public function setMaxInstanceRequestConcurrency($maxInstanceRequestConcurrency)
+  {
+    $this->maxInstanceRequestConcurrency = $maxInstanceRequestConcurrency;
+  }
+  /**
+   * @return int
+   */
+  public function getMaxInstanceRequestConcurrency()
+  {
+    return $this->maxInstanceRequestConcurrency;
   }
   /**
    * @param int

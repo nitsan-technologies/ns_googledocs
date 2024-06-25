@@ -29,7 +29,7 @@ use Google\Service\CloudRetail\GoogleLongrunningOperation;
  * Typical usage is:
  *  <code>
  *   $retailService = new Google\Service\CloudRetail(...);
- *   $userEvents = $retailService->userEvents;
+ *   $userEvents = $retailService->projects_locations_catalogs_userEvents;
  *  </code>
  */
 class ProjectsLocationsCatalogsUserEvents extends \Google\Service\Resource
@@ -48,7 +48,8 @@ class ProjectsLocationsCatalogsUserEvents extends \Google\Service\Resource
    * browser caching of otherwise identical get requests. The name is abbreviated
    * to reduce the payload bytes.
    * @opt_param string prebuiltRule The prebuilt rule name that can convert a
-   * specific type of raw_json. For example: "default_schema/v1.0"
+   * specific type of raw_json. For example: "ga4_bq" rule for the GA4 user event
+   * schema.
    * @opt_param string rawJson An arbitrary serialized JSON string that contains
    * necessary information that can comprise a user event. When this field is
    * specified, the user_event field will be ignored. Note: line-delimited JSON is
@@ -60,6 +61,7 @@ class ProjectsLocationsCatalogsUserEvents extends \Google\Service\Resource
    * @opt_param string userEvent Required. URL encoded UserEvent proto with a
    * length limit of 2,000,000 characters.
    * @return GoogleApiHttpBody
+   * @throws \Google\Service\Exception
    */
   public function collect($parent, $optParams = [])
   {
@@ -79,6 +81,7 @@ class ProjectsLocationsCatalogsUserEvents extends \Google\Service\Resource
    * @param GoogleCloudRetailV2ImportUserEventsRequest $postBody
    * @param array $optParams Optional parameters.
    * @return GoogleLongrunningOperation
+   * @throws \Google\Service\Exception
    */
   public function import($parent, GoogleCloudRetailV2ImportUserEventsRequest $postBody, $optParams = [])
   {
@@ -98,6 +101,7 @@ class ProjectsLocationsCatalogsUserEvents extends \Google\Service\Resource
    * @param GoogleCloudRetailV2PurgeUserEventsRequest $postBody
    * @param array $optParams Optional parameters.
    * @return GoogleLongrunningOperation
+   * @throws \Google\Service\Exception
    */
   public function purge($parent, GoogleCloudRetailV2PurgeUserEventsRequest $postBody, $optParams = [])
   {
@@ -120,6 +124,7 @@ class ProjectsLocationsCatalogsUserEvents extends \Google\Service\Resource
    * @param GoogleCloudRetailV2RejoinUserEventsRequest $postBody
    * @param array $optParams Optional parameters.
    * @return GoogleLongrunningOperation
+   * @throws \Google\Service\Exception
    */
   public function rejoin($parent, GoogleCloudRetailV2RejoinUserEventsRequest $postBody, $optParams = [])
   {
@@ -134,7 +139,14 @@ class ProjectsLocationsCatalogsUserEvents extends \Google\Service\Resource
    * `projects/1234/locations/global/catalogs/default_catalog`.
    * @param GoogleCloudRetailV2UserEvent $postBody
    * @param array $optParams Optional parameters.
+   *
+   * @opt_param bool writeAsync If set to true, the user event will be written
+   * asynchronously after validation, and the API will respond without waiting for
+   * the write. Therefore, silent failures can occur even if the API returns
+   * success. In case of silent failures, error messages can be found in
+   * Stackdriver logs.
    * @return GoogleCloudRetailV2UserEvent
+   * @throws \Google\Service\Exception
    */
   public function write($parent, GoogleCloudRetailV2UserEvent $postBody, $optParams = [])
   {

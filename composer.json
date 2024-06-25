@@ -16,7 +16,8 @@
         "issues": "https://github.com/nitsan-technologies/ns_googledocs/issues"
     },
     "require": {
-        "typo3/cms-core": "^8.0  || ^9.0 || ^10.0 "
+        "typo3/cms-core": "^11.5 || ^12.4",
+        "friendsoftypo3/fontawesome-provider": "^1"
     },
     "autoload": {
         "psr-4": {

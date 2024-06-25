@@ -1,5 +1,5 @@
 <html xmlns:f="https://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
-<f:layout name="Default" />
+<f:layout name="{f:if(condition: '{version} == 11', then: 'Defaultv11', else: 'Default')}" />
 <f:section name="content">
 	<f:flashMessages />
 	<div class="ns-googledocs-general-setting-wrap">

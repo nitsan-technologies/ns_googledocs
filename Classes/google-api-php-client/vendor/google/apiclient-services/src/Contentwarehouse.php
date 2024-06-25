@@ -44,8 +44,10 @@ class Contentwarehouse extends \Google\Service
   public $projects_locations_documents;
   public $projects_locations_documents_documentLinks;
   public $projects_locations_documents_referenceId;
+  public $projects_locations_operations;
   public $projects_locations_ruleSets;
   public $projects_locations_synonymSets;
+  public $rootUrlTemplate;
 
   /**
    * Constructs the internal representation of the Contentwarehouse service.
@@ -58,6 +60,7 @@ class Contentwarehouse extends \Google\Service
   {
     parent::__construct($clientOrConfig);
     $this->rootUrl = $rootUrl ?: 'https://contentwarehouse.googleapis.com/';
+    $this->rootUrlTemplate = $rootUrl ?: 'https://contentwarehouse.UNIVERSE_DOMAIN/';
     $this->servicePath = '';
     $this->batchPath = 'batch';
     $this->version = 'v1';
@@ -99,11 +102,31 @@ class Contentwarehouse extends \Google\Service
         'locations',
         [
           'methods' => [
-            'initialize' => [
+            'getStatus' => [
+              'path' => 'v1/{+location}:getStatus',
+              'httpMethod' => 'GET',
+              'parameters' => [
+                'location' => [
+                  'location' => 'path',
+                  'type' => 'string',
+                  'required' => true,
+                ],
+              ],
+            ],'initialize' => [
               'path' => 'v1/{+location}:initialize',
               'httpMethod' => 'POST',
               'parameters' => [
                 'location' => [
+                  'location' => 'path',
+                  'type' => 'string',
+                  'required' => true,
+                ],
+              ],
+            ],'runPipeline' => [
+              'path' => 'v1/{+name}:runPipeline',
+              'httpMethod' => 'POST',
+              'parameters' => [
+                'name' => [
                   'location' => 'path',
                   'type' => 'string',
                   'required' => true,
@@ -247,6 +270,16 @@ class Contentwarehouse extends \Google\Service
                   'required' => true,
                 ],
               ],
+            ],'lock' => [
+              'path' => 'v1/{+name}:lock',
+              'httpMethod' => 'POST',
+              'parameters' => [
+                'name' => [
+                  'location' => 'path',
+                  'type' => 'string',
+                  'required' => true,
+                ],
+              ],
             ],'patch' => [
               'path' => 'v1/{+name}',
               'httpMethod' => 'PATCH',
@@ -340,6 +373,26 @@ class Contentwarehouse extends \Google\Service
             ],'patch' => [
               'path' => 'v1/{+name}',
               'httpMethod' => 'PATCH',
+              'parameters' => [
+                'name' => [
+                  'location' => 'path',
+                  'type' => 'string',
+                  'required' => true,
+                ],
+              ],
+            ],
+          ]
+        ]
+    );
+    $this->projects_locations_operations = new Contentwarehouse\Resource\ProjectsLocationsOperations(
+        $this,
+        $this->serviceName,
+        'operations',
+        [
+          'methods' => [
+            'get' => [
+              'path' => 'v1/{+name}',
+              'httpMethod' => 'GET',
               'parameters' => [
                 'name' => [
                   'location' => 'path',
