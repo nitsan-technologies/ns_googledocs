@@ -1,14 +1,13 @@
 <?php
 
 $EM_CONF['ns_googledocs'] = [
-    'title' => 'Google Docs',
-    'description' => "Manually transferring all content from Google Docs to your TYPO3 website can be a boring task, right? We understand your concerns, which is why we've created an efficient solution to simplify this migration process for TYPO3 users. Our innovative solution allows you to import your Google Docs directly into your TYPO3 pages, news, and blogs with just one click, saving you valuable time. 
+    'title' => 'Google Docs to TYPO3 Importer',
+    'description' => "Tired of copying content manually from Google Docs to TYPO3? This extension lets you import Google Docs into TYPO3 pages, blogs, and news with a single click—saving time and improving productivity.",
     
-    *** Live-Demo: https://demo.t3planet.com/t3-extensions/googledocs *** Premium Version, Documentation & Free Support: http://t3planet.com/ns-google-docs-typo3-extension",
     'category' => 'module',
-    'author' => 'T3Planet // NITSAN',
-    'author_email' => 'sanjay@nitsan.in',
-    'author_company' => 'T3Planet // NITSAN',
+    'author' => 'Team T3Planet',
+    'author_email' => 'info@t3planet.de',
+    'author_company' => 'T3Planet',
     'state' => 'stable',
     'uploadfolder' => 0,
     'createDirs' => '',
