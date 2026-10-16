@@ -15,6 +15,7 @@ namespace NITSAN\NsGoogledocs\Controller;
  *
  ***/
 
+use NITSAN\NsGoogledocs\Backend\PremiumStrip;
 use NITSAN\NsGoogledocs\Domain\Repository\UserInfoRepository;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -25,6 +26,7 @@ use TYPO3\CMS\Backend\View\BackendLayoutView;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Information\Typo3Version;
+use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
 use TYPO3\CMS\Core\Resource\StorageRepository;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
@@ -49,17 +51,23 @@ class UserInfoController extends ActionController
     protected ModuleTemplateFactory $moduleTemplateFactory;
     protected ResourceFactory $resourceFactory;
     protected StorageRepository $storageRepository;
+    protected PremiumStrip $premiumStrip;
+    protected PageRenderer $pageRenderer;
 
     public function __construct(
         UserInfoRepository $userInfoRepository,
         ModuleTemplateFactory $moduleTemplateFactory,
         ResourceFactory $resourceFactory,
-        StorageRepository $storageRepository
+        StorageRepository $storageRepository,
+        PremiumStrip $premiumStrip,
+        PageRenderer $pageRenderer
     ) {
         $this->userInfoRepository = $userInfoRepository;
         $this->moduleTemplateFactory = $moduleTemplateFactory;
         $this->resourceFactory = $resourceFactory;
         $this->storageRepository = $storageRepository;
+        $this->premiumStrip = $premiumStrip;
+        $this->pageRenderer = $pageRenderer;
     }
 
     /**
@@ -673,7 +681,13 @@ class UserInfoController extends ActionController
 
     protected function initializeModuleTemplate(ServerRequestInterface $request): ModuleTemplate
     {
-        return $this->moduleTemplateFactory->create($request);
+        $moduleTemplate = $this->moduleTemplateFactory->create($request);
+        $premiumStrip = $this->premiumStrip->render();
+        if ($premiumStrip !== '') {
+            $this->pageRenderer->addCssFile(PremiumStrip::STYLESHEET);
+        }
+        $moduleTemplate->assign('premiumStrip', $premiumStrip);
+        return $moduleTemplate;
     }
 
     /**

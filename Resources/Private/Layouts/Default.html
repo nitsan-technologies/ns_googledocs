@@ -34,6 +34,9 @@
 						</nav>
 					</div>
 				</div>
+				<f:if condition="{premiumStrip}">
+					<f:format.raw>{premiumStrip}</f:format.raw>
+				</f:if>
 				<f:render section="content" />
 			</div>
 		</div>

@@ -14,6 +14,7 @@ $EM_CONF['ns_googledocs'] = [
         'depends' => [
             'typo3' => '12.4.0-14.99.99',
             'php' => '8.1.0-8.99.99',
+            'ns_license' => '14.5.4-14.9.99',
         ],
         'conflicts' => [],
         'suggests' => [],

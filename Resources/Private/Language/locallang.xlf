@@ -280,6 +280,15 @@
 			<trans-unit id="premium_tab">
 				<source>Premium Extension</source>
 			</trans-unit>
+			<trans-unit id="premium.strip.headline">
+				<source>You're using the free version of Google Docs</source>
+			</trans-unit>
+			<trans-unit id="premium.strip.description">
+				<source>Unlock premium features and get more out of Google Docs.</source>
+			</trans-unit>
+			<trans-unit id="premium.strip.trial">
+				<source>Start Free Trial</source>
+			</trans-unit>
 			<!-- Google_Service_Exception -->
 			<trans-unit id="service.exception">
 				<source>Something went wrong with Google Drive configurations in Global settings or check your Internet connection.</source>
