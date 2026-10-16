@@ -1,53 +1,55 @@
 <?php
-if (!defined('TYPO3_MODE')) {
-    die('Access denied.');
-}
-$laguageFile = 'LLL:EXT:ns_googledocs/Resources/Private/Language/locallang_db.xlf:';
-// Add some fields to FE Users table to show TCA fields definitions
-$temporaryColumns  = [
-    'client_id'  => [
+
+defined('TYPO3') || die();
+
+$languageFile = 'LLL:EXT:ns_googledocs/Resources/Private/Language/locallang_db.xlf:';
+
+$temporaryColumns = [
+    'client_id' => [
         'exclude' => 0,
-        'label' => $laguageFile . 'tx_nsgoogledocs_domain_model_userinfo.client_id',
+        'label' => $languageFile . 'tx_nsgoogledocs_domain_model_userinfo.client_id',
         'config' => [
-                'type' => 'input',
-                'size' => 40,
-                'eval' => 'trim',
-                'max' => 255,
-            ]
+            'type' => 'input',
+            'size' => 40,
+            'eval' => 'trim',
+            'max' => 255,
+        ],
     ],
-    'client_secret'  => [
+    'client_secret' => [
         'exclude' => 0,
-        'label' => $laguageFile . 'tx_nsgoogledocs_domain_model_userinfo.client_secret',
+        'label' => $languageFile . 'tx_nsgoogledocs_domain_model_userinfo.client_secret',
         'config' => [
-                'type' => 'input',
-                'size' => 40,
-                'eval' => 'trim',
-                'max' => 255,
-            ]
+            'type' => 'input',
+            'size' => 40,
+            'eval' => 'trim',
+            'max' => 255,
+        ],
     ],
-    'refresh_token'  => [
+    'refresh_token' => [
         'exclude' => 0,
-        'label' => $laguageFile . 'tx_nsgoogledocs_domain_model_userinfo.refresh_token',
+        'label' => $languageFile . 'tx_nsgoogledocs_domain_model_userinfo.refresh_token',
         'config' => [
-                'type' => 'input',
-                'size' => 40,
-                'eval' => 'trim',
-                'max' => 255,
-            ]
+            'type' => 'input',
+            'size' => 40,
+            'eval' => 'trim',
+            'max' => 255,
+        ],
     ],
     'import_type' => [
         'exclude' => true,
-        'label' => $laguageFile . 'tx_nsgoogledocs_domain_model_userinfo.import_type',
+        'label' => $languageFile . 'tx_nsgoogledocs_domain_model_userinfo.import_type',
         'config' => [
             'type' => 'select',
             'renderType' => 'selectMultipleSideBySide',
             'items' => [
-                [$laguageFile . 'tx_nsgoogledocs_domain_model_userinfo.import_type.1', 1]
+                [
+                    'label' => $languageFile . 'tx_nsgoogledocs_domain_model_userinfo.import_type.1',
+                    'value' => 1,
+                ],
             ],
             'default' => '1',
         ],
     ],
-
 ];
 
 \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTCAcolumns(

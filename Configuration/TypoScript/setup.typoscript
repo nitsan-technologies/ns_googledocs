@@ -1,18 +1,14 @@
-
-# Module configuration
-module.tx_nsgoogledocs_tools_nsgoogledocsgoogledocs {
+# Backend module Fluid paths
+module.tx_nsgoogledocs {
     view {
         templateRootPaths {
-            0 = EXT:{extension.extensionKey}/Resources/Private/Templates/
-            1 = {$module.tx_nsgoogledocs_googledocs.view.templateRootPath}
+            0 = EXT:ns_googledocs/Resources/Private/Templates/
         }
         partialRootPaths {
-            0 = EXT:{extension.extensionKey}/Resources/Private/Partials/
-            1 = {$module.tx_nsgoogledocs_googledocs.view.partialRootPath}
+            0 = EXT:ns_googledocs/Resources/Private/Partials/
         }
         layoutRootPaths {
-            0 = EXT:{extension.extensionKey}/Resources/Private/Layouts/
-            1 = {$module.tx_nsgoogledocs_googledocs.view.layoutRootPath}
+            0 = EXT:ns_googledocs/Resources/Private/Layouts/
         }
     }
 }

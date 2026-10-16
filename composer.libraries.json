@@ -1,0 +1,23 @@
+{
+    "name": "nitsan/ns-googledocs-libraries",
+    "description": "Isolated Composer install of google/apiclient for Classic (non-Composer) TYPO3 installs of ns_googledocs.",
+    "require": {
+        "php": "^8.1",
+        "google/apiclient": "^2.15"
+    },
+    "scripts": {
+        "pre-autoload-dump": "Google\\Task\\Composer::cleanup"
+    },
+    "config": {
+        "vendor-dir": "vendor",
+        "sort-packages": true,
+        "platform": {
+            "php": "8.2.0"
+        }
+    },
+    "extra": {
+        "google/apiclient-services": [
+            "Drive"
+        ]
+    }
+}

@@ -80,13 +80,16 @@
 				<source>Documentaiton</source>
 			</trans-unit>
 			<trans-unit id="help_support" xml:space="preserve">
-				<source><![CDATA[Help & Support]]></source>
+				<source>Do you need any help &amp; Support?</source>
+			</trans-unit>
+			<trans-unit id="help_support_link">
+				<source>Get Support</source>
 			</trans-unit>
 			<trans-unit id="donate">
 				<source>Donate</source>
 			</trans-unit>
 			<trans-unit id="ns_google_docs">
-				<source>NS Google Docs</source>
+				<source>Google Docs</source>
 			</trans-unit>
 			<trans-unit id="dashboard">
 				<source>Dashboard</source>

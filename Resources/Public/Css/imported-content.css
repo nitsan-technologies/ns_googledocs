@@ -1,0 +1,243 @@
+/**
+ * Frontend styles for Google Docs imported page/news bodytext.
+ * Content is wrapped in .ns-gd-imported on import.
+ */
+
+/* Beat theme wrappers that force centered, narrow text CEs */
+.text-center:has(> .ns-gd-imported),
+.highed:has(.ns-gd-imported),
+.col-lg-8:has(.ns-gd-imported) {
+    text-align: left !important;
+    max-width: 960px;
+    flex: 0 0 auto;
+    width: 100%;
+}
+
+.ns-gd-imported {
+    display: block;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0.5rem 0 1.5rem;
+    color: inherit;
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    text-align: left;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+}
+
+.ns-gd-imported > *:first-child {
+    margin-top: 0;
+}
+
+.ns-gd-imported > *:last-child {
+    margin-bottom: 0;
+}
+
+/* Alignment helpers */
+.ns-gd-imported .ns-gd-align-left,
+.ns-gd-imported .text-left {
+    text-align: left !important;
+}
+
+.ns-gd-imported .ns-gd-align-center,
+.ns-gd-imported .text-center {
+    text-align: center !important;
+}
+
+.ns-gd-imported .ns-gd-align-right,
+.ns-gd-imported .text-right {
+    text-align: right !important;
+}
+
+.ns-gd-imported .ns-gd-align-justify,
+.ns-gd-imported .text-justify {
+    text-align: justify !important;
+}
+
+.ns-gd-imported p {
+    margin: 0 0 0.85em;
+}
+
+.ns-gd-imported h1,
+.ns-gd-imported h2,
+.ns-gd-imported h3,
+.ns-gd-imported h4,
+.ns-gd-imported h5,
+.ns-gd-imported h6 {
+    margin: 1.4em 0 0.55em;
+    line-height: 1.3;
+    font-weight: 700;
+    color: inherit;
+    text-align: left;
+}
+
+.ns-gd-imported h1 { font-size: 1.85em; }
+.ns-gd-imported h2 { font-size: 1.5em; }
+.ns-gd-imported h3 { font-size: 1.25em; }
+.ns-gd-imported h4 { font-size: 1.1em; }
+
+.ns-gd-imported ul,
+.ns-gd-imported ol {
+    margin: 0.75em 0 1em;
+    padding-left: 1.5em;
+    text-align: left;
+}
+
+.ns-gd-imported li {
+    margin: 0.3em 0;
+}
+
+.ns-gd-imported strong,
+.ns-gd-imported b {
+    font-weight: 700;
+}
+
+.ns-gd-imported em,
+.ns-gd-imported i {
+    font-style: italic;
+}
+
+.ns-gd-imported u {
+    text-decoration: underline;
+}
+
+.ns-gd-imported a {
+    color: #1155cc;
+    text-decoration: underline;
+    word-break: break-word;
+}
+
+/* Ticket / support tables from Docs */
+.ns-gd-imported table {
+    width: 100%;
+    max-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 1.25em 0 1.75em;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+    text-align: left;
+    table-layout: fixed;
+}
+
+.ns-gd-imported table th,
+.ns-gd-imported table td {
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    padding: 0.9em 1em;
+    vertical-align: top;
+    text-align: left;
+    word-break: break-word;
+}
+
+.ns-gd-imported table tr:first-child th,
+.ns-gd-imported table tr:first-child td {
+    border-top: 0;
+}
+
+.ns-gd-imported table tr th:first-child,
+.ns-gd-imported table tr td:first-child {
+    border-left: 0;
+}
+
+.ns-gd-imported table tr th:last-child,
+.ns-gd-imported table tr td:last-child {
+    border-right: 0;
+}
+
+.ns-gd-imported table tr:last-child th,
+.ns-gd-imported table tr:last-child td {
+    border-bottom: 0;
+}
+
+/* Label column (Customer / T3Planet) */
+.ns-gd-imported table td:first-child:not([colspan="2"]),
+.ns-gd-imported table th:first-child:not([colspan="2"]) {
+    width: 22%;
+    min-width: 7.5rem;
+    font-weight: 700;
+}
+
+.ns-gd-imported table td[style*="background-color"],
+.ns-gd-imported table th[style*="background-color"] {
+    color: #fff;
+}
+
+.ns-gd-imported table td[style*="background-color"] p,
+.ns-gd-imported table td[style*="background-color"] strong,
+.ns-gd-imported table td[style*="background-color"] span,
+.ns-gd-imported table th[style*="background-color"] p,
+.ns-gd-imported table th[style*="background-color"] strong,
+.ns-gd-imported table th[style*="background-color"] span {
+    color: #fff !important;
+}
+
+.ns-gd-imported table td p:last-child,
+.ns-gd-imported table th p:last-child {
+    margin-bottom: 0;
+}
+
+.ns-gd-imported img {
+    max-width: 100%;
+    height: auto;
+    display: inline-block;
+    margin: 0.65em 0.35em 0.65em 0;
+    border-radius: 6px;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.1);
+}
+
+.ns-gd-imported blockquote {
+    margin: 1em 0;
+    padding: 0.35em 0 0.35em 1em;
+    border-left: 3px solid rgba(15, 23, 42, 0.2);
+}
+
+.ns-gd-imported hr {
+    margin: 1.75em 0;
+    border: 0;
+    border-top: 1px solid rgba(15, 23, 42, 0.12);
+}
+
+@media (max-width: 767.98px) {
+    .ns-gd-imported {
+        font-size: 1rem;
+    }
+
+    .ns-gd-imported table,
+    .ns-gd-imported table tbody,
+    .ns-gd-imported table tr,
+    .ns-gd-imported table td,
+    .ns-gd-imported table th {
+        display: block;
+        width: 100% !important;
+    }
+
+    .ns-gd-imported table {
+        border: 0;
+        box-shadow: none;
+        background: transparent;
+    }
+
+    .ns-gd-imported table tr {
+        margin: 0 0 1rem;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        border-radius: 10px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .ns-gd-imported table td,
+    .ns-gd-imported table th {
+        border: 0;
+        border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .ns-gd-imported table td:last-child,
+    .ns-gd-imported table th:last-child {
+        border-bottom: 0;
+    }
+}

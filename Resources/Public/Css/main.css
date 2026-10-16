@@ -12,7 +12,7 @@
       url('../Fonts/Verdana-Regular.woff') format('woff'),
       url('../Fonts/Verdana-Regular.ttf') format('truetype');
   }
- 
+
    /*Verdana Bold*/
    @font-face {
      font-family: 'Verdana';
@@ -23,7 +23,7 @@
        url('../Fonts/Verdana-Bold.woff') format('woff'),
        url('../Fonts/Verdana-Bold.ttf') format('truetype');
    }
- 
+
   /*SourceSansPro Regular*/
   @font-face {
     font-family: 'SourceSansPro';
@@ -34,15 +34,38 @@
       url('../Fonts/sourcesanspro-regular-webfont.woff') format('woff'),
       url('../Fonts/SourceSansPro-Regular.ttf') format('truetype');
  }
- 
- html, body {
-     font-size: 12px;
- }
- 
- body {
-     font-family: Verdana, Arial, Helvetica, sans-serif;
-     color: #212424;
- }
+
+/* Prefer TYPO3 Core typography tokens (v12–v14); keep layout selectors unchanged */
+/* Shell surfaces follow Core theme tokens (auto light/dark) — beats Bootstrap 4 #fff */
+html,
+body {
+    background-color: var(--typo3-scaffold-bg, var(--module-bg, var(--bs-body-bg, transparent))) !important;
+    color: var(--typo3-scaffold-color, var(--typo3-text-color-base, inherit)) !important;
+}
+
+.typo3-fullDoc,
+#typo3-docbody,
+#typo3-inner-docbody {
+    background-color: var(--module-bg, var(--typo3-surface-container-lowest, var(--bs-body-bg, transparent))) !important;
+    color: var(--typo3-text-color-base, var(--module-color, inherit)) !important;
+}
+
+#typo3-inner-docbody,
+.typo3-fullDoc {
+    font-size: var(--typo3-font-size, 12px);
+    line-height: var(--typo3-line-height, 1.5);
+    font-family: var(--typo3-font-family, Verdana, Arial, Helvetica, sans-serif);
+}
+
+#typo3-inner-docbody h1,
+#typo3-inner-docbody h2,
+#typo3-inner-docbody h3,
+#typo3-inner-docbody h4,
+#typo3-inner-docbody h5,
+#typo3-inner-docbody h6 {
+    font-family: var(--typo3-header-font-family, inherit);
+    font-weight: 400;
+}
 
 .form-control::-webkit-input-placeholder {
     color: #bdbdbd;
@@ -86,72 +109,171 @@ div#typo3-docbody {
     color: #fff;
     font-size: 12px;
 }
+.ns-googledocs-button-bar .button-group .btn .icon,
+.ns-googledocs-button-bar .button-group .btn .t3js-icon,
 .ns-googledocs-button-bar .button-group .btn em.fa{
     margin-right: 5px;
 }
-.ns-googledocs-navigation {
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background-color: #f8f8f8;
-    margin-bottom: 30px;
+/* Module header nav — top-radius tabs sitting on one baseline (design ref) */
+.ns-ext-navigation-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
+/* Full-bleed baseline: cancel #typo3-inner-docbody padding so border spans module width */
+.ns-googledocs-navigation,
+.ns-ext-navigation {
+    box-sizing: border-box;
+    width: calc(100% + 48px);
+    max-width: none;
+    margin: 0 -24px;
+    padding: 0 24px;
+    background-color: transparent;
+    border: 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--typo3-component-border-color, #cdcdcd);
 }
 
 .ns-googledocs-navigation .navbar-brand {
     margin-right: 30px;
 }
 
-.ns-googledocs-navigation .navbar {
-    padding-top: 5px;
-    padding-bottom: 5px;
+.ns-googledocs-navigation .navbar,
+.ns-ext-navigation .navbar {
+    padding: 0;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }
 
 .ns-ext-name {
-    color: #000;
-    font-family: 'SourceSansPro';
-    font-size: 27px;
-    line-height: normal;
+    color: var(--typo3-text-color-base, #000);
+    font-family: var(--typo3-header-font-family, inherit);
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.25;
     padding: 0;
+    margin: 0;
 }
-  
+
 .ns-ext-name-desktop {
     display: none;
 }
 
+.ns-googledocs-navigation .navbar-collapse,
+.ns-ext-navigation .navbar-collapse {
+    flex-grow: 1;
+    width: 100%;
+}
+
+.ns-googledocs-navigation .navbar .navbar-nav,
 .ns-ext-navigation .navbar .navbar-nav {
+    display: flex;
     flex-direction: row;
-    margin-top: 15px;
     flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
 }
 
+.ns-googledocs-navigation .navbar-nav .nav-item,
 .ns-ext-navigation .navbar-nav .nav-item {
-    margin-bottom: 15px;
+    margin: 0;
+    display: flex;
+    align-items: flex-end;
 }
 
-.ns-ext-navigation .navbar-nav .nav-item:not(:last-child) {
-    margin-right: 15px;
+/* Tabs: radius only on top-left + top-right; flat bottom on the shared line */
+.ns-googledocs-navigation .navbar-nav .nav-link,
+.ns-ext-navigation .navbar-nav .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    margin-bottom: -1px; /* sit flush on the navigation bottom border */
+    padding: 0.5rem 1rem;
+    background-color: var(--typo3-state-default-bg, var(--typo3-btn-default-bg, #eaeaea));
+    border: 1px solid var(--typo3-component-border-color, #cdcdcd);
+    border-bottom: 1px solid var(--typo3-component-border-color, #cdcdcd);
+    border-radius: var(--typo3-component-border-radius, 0.375rem) var(--typo3-component-border-radius, 0.375rem) 0 0;
+    color: var(--typo3-state-default-color, var(--typo3-text-color-base, #212424));
+    font-family: var(--typo3-font-family, inherit);
+    font-size: var(--typo3-font-size, 0.75rem);
+    font-weight: 400;
+    line-height: 1.5;
+    text-decoration: none;
+    text-transform: none;
+    white-space: nowrap;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
-.ns-googledocs-navigation .navbar-nav .nav-link {
-    background-color: #fafafa;
-    border: 1px solid #ccc;
-    border-radius: 2px;
-    color: #212424;
-    font-size: 14px;
-    padding: 7px 17px;
-    text-transform: capitalize;
+.ns-googledocs-navigation .nav-link .icon,
+.ns-googledocs-navigation .nav-link .t3js-icon,
+.ns-ext-navigation .nav-link .icon,
+.ns-ext-navigation .nav-link .t3js-icon,
+.ns-googledocs-navigation .nav-link em.fa,
+.ns-ext-navigation .nav-link em.fa {
+    margin-right: 0;
+    font-size: 0.875rem;
+    line-height: 1;
+    color: inherit;
+    opacity: 0.9;
+    display: inline-flex;
+    align-items: center;
+    vertical-align: -0.125em;
 }
 
-.ns-googledocs-navigation .nav-link em.fa {
-    margin-right: 12px;
-    font-size: 18px;
+.ns-googledocs-navigation .nav-link .icon svg,
+.ns-googledocs-navigation .nav-link .t3js-icon svg,
+.ns-ext-navigation .nav-link .icon svg,
+.ns-ext-navigation .nav-link .t3js-icon svg {
+    width: 1em;
+    height: 1em;
+}
+
+/* Inactive hover — keep top-only radius + flat bottom */
+.ns-googledocs-navigation .nav-item:not(.active):hover > .nav-link,
+.ns-googledocs-navigation .nav-item:not(.active):focus-within > .nav-link,
+.ns-ext-navigation .nav-item:not(.active):hover > .nav-link,
+.ns-ext-navigation .nav-item:not(.active):focus-within > .nav-link {
+    background-color: var(--typo3-state-default-hover-bg, var(--typo3-btn-default-hover-bg, #d7d7d7)) !important;
+    border-color: var(--typo3-state-default-hover-border-color, #cdcdcd) !important;
+    border-bottom: 1px solid var(--typo3-state-default-hover-border-color, #cdcdcd) !important;
+    color: var(--typo3-state-default-hover-color, var(--typo3-text-color-base, #212424)) !important;
+}
+
+/* Active tab — primary fill; bottom merges into the shared baseline */
+.ns-googledocs-navigation .nav-item.active > .nav-link,
+.ns-googledocs-navigation .nav-item.active.is-active > .nav-link,
+.ns-ext-navigation .nav-item.active > .nav-link,
+.ns-ext-navigation .nav-item.active.is-active > .nav-link {
+    z-index: 2;
+    background-color: var(--typo3-btn-primary-bg, var(--typo3-state-primary-bg, var(--bs-primary, #214191))) !important;
+    border-color: var(--typo3-btn-primary-border-color, var(--typo3-btn-primary-bg, #214191)) !important;
+    border-bottom: 1px solid var(--typo3-btn-primary-border-color, var(--typo3-btn-primary-bg, #214191)) !important;
+    color: var(--typo3-btn-primary-color, #fff) !important;
+}
+
+.ns-googledocs-navigation .nav-item.active > .nav-link .icon,
+.ns-googledocs-navigation .nav-item.active > .nav-link .t3js-icon,
+.ns-ext-navigation .nav-item.active > .nav-link .icon,
+.ns-ext-navigation .nav-item.active > .nav-link .t3js-icon,
+.ns-googledocs-navigation .nav-item.active > .nav-link em.fa,
+.ns-ext-navigation .nav-item.active > .nav-link em.fa {
+    opacity: 1;
+    color: inherit;
 }
 
 .navbar-toggler {
     background-color: #333;
-}
-
-.ns-googledocs-navigation .nav-item.active>.nav-link, .ns-googledocs-navigation .nav-item:hover>.nav-link {
-    background-color: #e0e0e0;
 }
 
 .ns-googledocs-navigation .navbar-toggler {
@@ -167,7 +289,7 @@ div#typo3-docbody {
     outline: none;
 }
 .ns-ext-navigation .navbar-toggler .navbar-toggler__line {
-    background-color: #212424;
+    background-color: var(--typo3-text-color-base, #212424);
     display: block;
     width: 100%;
     height: 3px;
@@ -190,11 +312,6 @@ div#typo3-docbody {
     -webkit-transform: translateY(-5px) rotate(-136deg);
 }
 
-.ns-ext-navigation .nav-item.active>.nav-link,
-.ns-ext-navigation .nav-item:hover>.nav-link {
-    background-color: #d7d7d7;
-}
-
 .ns-googledocs-navigation .navbar-toggler span {
     background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3e%3cpath stroke='rgba(255, 255, 255, 0.5)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
@@ -207,11 +324,27 @@ div#typo3-docbody {
     margin-top: 15px;
 }
 
-.ns-ext-datatable .thead-light tr th, .ns-ext-datatable tbody tr td {
-    color: #000;
+.ns-ext-datatable .thead-light tr th,
+.ns-ext-datatable tbody tr td {
+    color: var(--typo3-text-color-base, #000);
+    border-color: var(--typo3-component-border-color, #cdcdcd);
 }
 
-.ns-ext-datatable .thead-light tr th, .ns-ext-datatable tbody tr td {
+/* Override Bootstrap 4 .thead-light (#e9ecef) so headers follow Core tokens */
+.ns-ext-datatable thead.thead-light th,
+.ns-ext-datatable .thead-light tr th,
+.ns-googledocs-datatable thead.thead-light th,
+.ns-googledocs-datatable .thead-light tr th,
+.ns-googledocs-table-wrap thead.thead-light th,
+.ns-ext-table-wrap thead.thead-light th,
+.ns-ext-list-table-wrap thead.thead-light th {
+    background-color: var(--typo3-surface-container-low, #eaeaea) !important;
+    color: var(--typo3-text-color-base, #212424) !important;
+    border-color: var(--typo3-component-border-color, #cdcdcd) !important;
+}
+
+.ns-ext-datatable .thead-light tr th,
+.ns-ext-datatable tbody tr td {
     padding-left: 15px;
 }
 
@@ -219,7 +352,8 @@ div#typo3-docbody {
     font-weight: 700;
     padding-top: 10px;
     padding-bottom: 10px;
-    color: #495057;
+    color: var(--typo3-text-color-base, #495057);
+    border-color: var(--typo3-component-border-color, #cdcdcd);
 }
 
 .ns-ext-actions-wrap .btn {
@@ -239,8 +373,11 @@ div#typo3-docbody {
     margin: 6px 0;
 }
 
+.btn .icon,
+.btn .t3js-icon,
 .btn em.fa {
     margin-right: 10px;
+    vertical-align: -0.125em;
 }
 
 .ns-googledocs-button-bar .btn-backup-wizard-modal {
@@ -250,6 +387,413 @@ div#typo3-docbody {
 
 .google-docs-wizard-modal .modal-body {
     overflow-x: hidden;
+}
+
+/*
+ * TYPO3 v14 Core styles .modal as the visible dialog (border, shadow, sized box).
+ * This extension still uses classic Bootstrap markup:
+ *   .modal (fullscreen overlay) > .modal-dialog > .modal-content (the real popup).
+ * Without this reset, Core's .modal chrome appears as an extra rectangle behind
+ * the popup — especially visible in light mode.
+ *
+ * Cross-version palette note (v12 vs v13/v14):
+ * On TYPO3 12, --typo3-component-bg follows prefers-color-scheme (can be dark)
+ * while --typo3-surface-container-* / --typo3-modal-bg only exist in later cores.
+ * Mixing them produced a dark modal-body with light header/footer. Scope a
+ * coherent local palette: prefer modal/surface tokens, never component-bg.
+ */
+.google-docs-wizard-modal {
+    --ns-gd-modal-bg: var(--typo3-modal-bg, var(--typo3-surface-container-lowest, #ffffff));
+    --ns-gd-modal-surface: var(--typo3-surface-container-low, #f7f7f7);
+    --ns-gd-modal-surface-high: var(--typo3-surface-container-high, #e9e9e9);
+    --ns-gd-modal-text: var(--typo3-text-color-base, #212424);
+    --ns-gd-modal-border: #cdcdcd;
+    --ns-gd-modal-input-bg: var(--typo3-input-bg, #ffffff);
+    --ns-gd-modal-input-color: var(--typo3-input-color, #212424);
+    --ns-gd-modal-caret: #495057;
+    --ns-gd-modal-message-bg: var(--typo3-surface-container-low, #f5f5f5);
+    --ns-gd-modal-message-accent: var(--typo3-btn-primary-bg, #214191);
+}
+
+.google-docs-wizard-modal.modal {
+    /* Force viewport overlay — Core v14 styles .modal as the dialog shell;
+       without fixed + full viewport this popup sits in-flow (often at page bottom). */
+    position: fixed !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    inset: 0 !important;
+    z-index: 5000 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    display: none;
+}
+
+.google-docs-wizard-modal.modal.show {
+    /* Flex-center the dialog — reliable on BS4/BS5 and TYPO3 12–14 */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    /*
+     * Dark overlay on the fullscreen shell itself.
+     * TYPO3 v14 Core dropped Bootstrap `.modal-backdrop` styles and uses native
+     * `dialog::backdrop` for Core modals only. BS backdrops also sit at ~1040
+     * while this modal is z-index 5000, so the dimmer was invisible behind the page.
+     * Painting the overlay here works the same on v12, v13 and v14.
+     */
+    background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Avoid double-dimming when Bootstrap still injects .modal-backdrop (v12/v13). */
+body:has(.google-docs-wizard-modal.modal.show) > .modal-backdrop {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.google-docs-wizard-modal .modal-dialog {
+    position: relative;
+    width: calc(100% - 2rem);
+    max-width: 560px;
+    margin: 1.75rem auto !important;
+    pointer-events: none;
+    transform: none !important;
+}
+
+.google-docs-wizard-modal .modal-dialog.modal-dialog-centered {
+    /* Parent .modal.show already centers; avoid BS4 ::before spacer pushing dialog down */
+    display: block !important;
+    align-items: stretch;
+    min-height: 0 !important;
+    height: auto !important;
+}
+
+.google-docs-wizard-modal .modal-dialog.modal-dialog-centered::before {
+    content: none !important;
+    display: none !important;
+}
+
+.google-docs-wizard-modal .modal-content {
+    border: 1px solid var(--ns-gd-modal-border);
+    border-radius: var(--typo3-component-border-radius, .5rem);
+    background-color: var(--ns-gd-modal-bg);
+    color: var(--ns-gd-modal-text);
+    box-shadow: var(--typo3-component-box-shadow-dialog, 0 12px 40px rgba(0, 0, 0, 0.18));
+    pointer-events: auto;
+    overflow: hidden;
+    width: 100%;
+}
+
+.google-docs-wizard-modal .modal-header {
+    position: relative;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1rem 3rem 1rem 1.25rem;
+    background: var(--ns-gd-modal-surface);
+    color: var(--ns-gd-modal-text);
+    border-bottom: 1px solid var(--ns-gd-modal-border);
+}
+
+.google-docs-wizard-modal .modal-header .modal-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    color: var(--ns-gd-modal-text);
+    font-family: var(--typo3-header-font-family, inherit);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.google-docs-wizard-modal .modal-header .modal-title .import-doc-Name,
+.google-docs-wizard-modal .modal-header .modal-title .import-page-Name,
+.google-docs-wizard-modal .ns-gd-import-message .import-doc-Name,
+.google-docs-wizard-modal .ns-gd-import-message .import-page-Name {
+    font-weight: 700;
+    color: var(--ns-gd-modal-text);
+}
+
+.google-docs-wizard-modal .modal-header .close {
+    position: absolute !important;
+    top: 50%;
+    right: 0.75rem;
+    left: auto !important;
+    float: none !important;
+    flex-shrink: 0;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: translateY(-50%);
+    background: transparent;
+    border: 0;
+    border-radius: var(--typo3-component-border-radius, .375rem);
+    font-size: 1.35rem;
+    font-weight: 400;
+    line-height: 1;
+    opacity: 0.65;
+    color: var(--ns-gd-modal-text);
+    cursor: pointer;
+    transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+
+.google-docs-wizard-modal .modal-header .close span {
+    display: block;
+    line-height: 1;
+    margin-top: -1px;
+}
+
+.google-docs-wizard-modal .modal-header .close:hover,
+.google-docs-wizard-modal .modal-header .close:focus {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.06);
+    outline: none;
+}
+
+.google-docs-wizard-modal .modal-body {
+    padding: 1.25rem;
+    background: var(--ns-gd-modal-bg);
+    color: var(--ns-gd-modal-text);
+}
+
+.google-docs-wizard-modal .googledocs-form-wrap {
+    color: var(--ns-gd-modal-text);
+}
+
+.google-docs-wizard-modal .ns-gd-import-message {
+    margin: 0 0 1.1rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--ns-gd-modal-border);
+    border-left: 3px solid var(--ns-gd-modal-message-accent);
+    border-radius: var(--typo3-component-border-radius, .375rem);
+    background: var(--ns-gd-modal-message-bg);
+    color: var(--ns-gd-modal-text);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+}
+
+.google-docs-wizard-modal .ns-gd-import-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.google-docs-wizard-modal .ns-gd-field {
+    margin: 0;
+}
+
+.google-docs-wizard-modal .ns-gd-field > label {
+    display: block;
+    margin: 0 0 0.4rem;
+    color: var(--ns-gd-modal-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.google-docs-wizard-modal .ns-gd-field .form-control,
+.google-docs-wizard-modal .ns-gd-field .form-select,
+.google-docs-wizard-modal .ns-gd-field select {
+    display: block;
+    width: 100%;
+    height: 2.35rem;
+    min-height: 2.35rem;
+    padding: 0 2.25rem 0 0.75rem;
+    background-color: var(--ns-gd-modal-input-bg);
+    background-image: none;
+    border: 1px solid var(--ns-gd-modal-border);
+    border-radius: var(--typo3-input-border-radius, var(--typo3-component-border-radius, .375rem));
+    color: var(--ns-gd-modal-input-color);
+    font-size: var(--typo3-input-font-size, 0.75rem);
+    line-height: 2.35rem;
+    box-shadow: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Caret — fixed colors so hover/focus never hide it on dark fields */
+.google-docs-wizard-modal .ns-gd-select {
+    position: relative;
+}
+
+.google-docs-wizard-modal .ns-gd-select::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 0.85rem;
+    width: 0.75rem;
+    height: 0.5rem;
+    transform: translateY(-50%);
+    pointer-events: none;
+    z-index: 2;
+    background-color: var(--ns-gd-modal-caret);
+    opacity: 0.95;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23000' d='M1.4.6 6 5.2 10.6.6 12 2 6 8 0 2z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23000' d='M1.4.6 6 5.2 10.6.6 12 2 6 8 0 2z'/%3E%3C/svg%3E");
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+}
+
+.google-docs-wizard-modal .ns-gd-select:hover::after,
+.google-docs-wizard-modal .ns-gd-select:focus-within::after {
+    background-color: var(--ns-gd-modal-text);
+    opacity: 1;
+}
+
+.google-docs-wizard-modal .ns-gd-select .form-control,
+.google-docs-wizard-modal .ns-gd-select .form-select,
+.google-docs-wizard-modal .ns-gd-select select {
+    background-image: none !important;
+}
+
+.google-docs-wizard-modal .ns-gd-field .form-control:hover,
+.google-docs-wizard-modal .ns-gd-field .form-select:hover,
+.google-docs-wizard-modal .ns-gd-field select:hover,
+.google-docs-wizard-modal .ns-gd-field .form-control:focus,
+.google-docs-wizard-modal .ns-gd-field .form-select:focus,
+.google-docs-wizard-modal .ns-gd-field select:focus {
+    background-color: var(--ns-gd-modal-input-bg) !important;
+    background-image: none !important;
+    border-color: #bbbbbb;
+    color: var(--ns-gd-modal-input-color) !important;
+    box-shadow: none;
+    outline: 0;
+}
+
+.google-docs-wizard-modal .ns-gd-field .form-control:focus,
+.google-docs-wizard-modal .ns-gd-field .form-select:focus,
+.google-docs-wizard-modal .ns-gd-field select:focus {
+    border-color: var(--typo3-input-focus-border-color, #007bff);
+}
+
+.google-docs-wizard-modal .ns-gd-field--checkbox {
+    margin-top: 0.15rem;
+}
+
+.google-docs-wizard-modal .ns-gd-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin: 0;
+    padding: 0.75rem 0.85rem;
+    background: var(--ns-gd-modal-surface);
+    border: 1px solid var(--ns-gd-modal-border);
+    border-radius: var(--typo3-component-border-radius, .375rem);
+    color: var(--ns-gd-modal-text);
+    font-size: 0.75rem;
+    font-weight: 400;
+    line-height: 1.4;
+    cursor: pointer;
+}
+
+.google-docs-wizard-modal .ns-gd-checkbox input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    padding: 0;
+    vertical-align: middle;
+    accent-color: var(--ns-gd-modal-message-accent);
+    cursor: pointer;
+}
+
+.google-docs-wizard-modal .ns-gd-checkbox span {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.google-docs-wizard-modal .modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.85rem 1.25rem;
+    border-top: 1px solid var(--ns-gd-modal-border);
+    background: var(--ns-gd-modal-surface);
+}
+
+.google-docs-wizard-modal .modal-footer .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: 2.15rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: var(--typo3-component-border-radius, .375rem);
+    font-size: var(--typo3-input-font-size, 0.75rem);
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.google-docs-wizard-modal .modal-footer .btn .fa,
+.google-docs-wizard-modal .modal-footer .btn .icon {
+    margin-right: 0;
+}
+
+.google-docs-wizard-modal .modal-footer .btn-default,
+.google-docs-wizard-modal .modal-footer .btn-secondary {
+    background-color: var(--typo3-btn-default-bg, #eaeaea);
+    border: 1px solid var(--typo3-btn-default-border-color, #cdcdcd);
+    color: var(--typo3-btn-default-color, #212424);
+}
+
+.google-docs-wizard-modal .modal-footer .btn-default:hover,
+.google-docs-wizard-modal .modal-footer .btn-secondary:hover {
+    background-color: var(--typo3-btn-default-hover-bg, #d7d7d7);
+    border-color: var(--typo3-btn-default-hover-border-color, #cdcdcd);
+    color: var(--typo3-btn-default-hover-color, #212424);
+}
+
+.google-docs-wizard-modal .modal-footer .btn-import-now,
+.google-docs-wizard-modal .modal-footer .btn-success {
+    background-color: var(--typo3-btn-success-bg, #79A548);
+    border: 1px solid var(--typo3-btn-success-border-color, #6b9440);
+    color: #fff;
+}
+
+.google-docs-wizard-modal .modal-footer .btn-import-now:hover,
+.google-docs-wizard-modal .modal-footer .btn-success:hover {
+    background-color: var(--typo3-btn-success-hover-bg, #6b9440);
+    border-color: var(--typo3-btn-success-hover-border-color, #5f8438);
+    color: #fff;
+}
+
+.google-docs-wizard-modal .ns-googledocs-progressbar-wrap .progress {
+    height: 1.1rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--ns-gd-modal-surface-high);
+}
+
+.google-docs-wizard-modal .ns-googledocs-progressbar-wrap .progress-bar {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.1rem;
 }
 
 .modal.fade.in {
@@ -267,7 +811,17 @@ label {
 .ns-googledocs-last-logs ul li {
     font-size: 14px;
     margin-bottom: 10px;
-    color: #333333;
+    color: var(--typo3-text-color-base, #333333);
+}
+
+.ns-googledocs-last-logs .custom-card .card-header,
+.ns-googledocs-last-logs .custom-card .card-body {
+    padding: 15px 20px;
+}
+
+.ns-googledocs-last-logs .custom-card .card-header h5 {
+    font-size: 1rem;
+    font-weight: 500;
 }
 
 .ns-googledocs-configured-img-wrap {
@@ -291,7 +845,7 @@ label {
 }
 
 .googledocs-form input[type="text"], .googledocs-form select {
-    width: 100%;
+    width: 75%;
 }
 
 .ns-googledocs-progressbar-wrap {
@@ -306,25 +860,92 @@ label {
     margin-top: 15px;
 }
 
-.ns-googledocs-datatable .thead-light tr th, 
+/* Reports loader: center over table content (TYPO3 v12–v14 / BS4+BS5) */
+.ns-googledocs-table-loading-wrap {
+    position: relative;
+    min-height: 160px;
+}
+
+.ns-googledocs-table-loading-wrap .product-loader {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    background-color: color-mix(in srgb, var(--typo3-surface-container-lowest, #fff) 70%, transparent);
+    pointer-events: none;
+}
+
+.ns-googledocs-table-loading-wrap .product-loader.d-none {
+    display: none !important;
+}
+
+.ns-googledocs-table-loading-wrap.is-loading .ns-googledocs-table-wrap {
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+.ns-googledocs-table-loading-wrap .product-loader .spinner-border {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-width: 0.25em;
+    color: var(--typo3-text-color-base, #212424);
+    border-right-color: transparent;
+}
+
+/* Light fallback when color-mix unsupported */
+@supports not (background-color: color-mix(in srgb, #fff 70%, transparent)) {
+    .ns-googledocs-table-loading-wrap .product-loader {
+        background-color: rgba(255, 255, 255, 0.7);
+    }
+}
+
+.ns-googledocs-table-wrap,
+.ns-ext-table-wrap,
+.ns-ext-list-table-wrap {
+    padding: 0;
+}
+
+.ns-googledocs-datatable .thead-light tr th,
 .ns-googledocs-datatable tr td {
-    color: #212424;
+    color: var(--typo3-text-color-base, #212424);
+    border-color: var(--typo3-component-border-color, #cdcdcd);
 }
 
 .ns-googledocs-datatable thead tr th {
-    border-color: #ccc;
-    background-color: #eaeaea;
+    border-color: var(--typo3-component-border-color, #cdcdcd);
+    border-bottom: var(--typo3-component-border-width, 1px) solid var(--typo3-component-border-color, #cdcdcd);
+    background-color: var(--typo3-surface-container-low, #eaeaea);
     font-weight: 700;
     padding-top: 10px;
     padding-bottom: 10px;
 }
 
 .ns-googledocs-datatable tbody tr {
-    background-color: #ffffff;
+    background-color: var(--typo3-card-bg, #ffffff);
 }
 
 .ns-googledocs-datatable tbody tr:nth-child(even) {
-    background-color: #fafafa;
+    background-color: var(--typo3-surface-container-lowest, #fafafa);
+}
+
+.ns-googledocs-datatable.table,
+.ns-ext-datatable.table {
+    border: var(--typo3-component-border-width, 1px) solid var(--typo3-component-border-color, #cdcdcd);
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: var(--typo3-component-border-radius, .375rem);
+    overflow: hidden;
+}
+
+.ns-googledocs-datatable.table > :not(caption) > * > *,
+.ns-ext-datatable.table > :not(caption) > * > * {
+    border-bottom-color: var(--typo3-component-border-color, #cdcdcd);
 }
 
 .ns-googledocs-datatable.table>thead>tr>th {
@@ -377,13 +998,91 @@ label {
     border: 0;
 }
 
+.ns-googledocs-table-wrap,
+.ns-ext-table-wrap,
+.ns-ext-list-table-wrap {
+    overflow-x: auto;
+    background-color: var(--typo3-card-bg, var(--typo3-component-bg, transparent));
+    border: var(--typo3-component-border-width, 1px) solid var(--typo3-component-border-color, #cdcdcd);
+    border-radius: var(--typo3-component-border-radius, .375rem);
+    color: var(--typo3-text-color-base, inherit);
+    padding: 12px;
+}
+
+.ns-googledocs-table-wrap .ns-googledocs-datatable,
+.ns-ext-table-wrap .ns-ext-datatable,
+.ns-ext-list-table-wrap .ns-ext-datatable,
+.ns-googledocs-table-wrap .table,
+.ns-ext-table-wrap .table,
+.ns-ext-list-table-wrap .table {
+    margin-bottom: 0;
+    border: 0 !important;
+    border-radius: 0;
+    background-color: transparent !important;
+    color: var(--typo3-text-color-base, inherit);
+}
+
+.ns-googledocs-table-wrap .ns-googledocs-datatable {
+    min-width: 950px;
+}
+
+/* Reports/Import search field — beat Bootstrap 4 .form-control #fff */
+#search_input,
+#search-input-field,
+#ns-googledocs__searchform .form-control,
+#filter_form .form-control,
+.dataTables_wrapper .form-control,
+.ns-googledocs-table-wrap input[type="search"],
+.ns-ext-list-table-wrap input[type="search"] {
+    background-color: var(--typo3-input-bg, #fff) !important;
+    border: var(--typo3-input-border-width, 1px) solid var(--typo3-input-border-color, var(--typo3-state-default-border-color, #cdcdcd)) !important;
+    border-radius: var(--typo3-input-border-radius, var(--typo3-component-border-radius, .375rem));
+    color: var(--typo3-input-color, var(--typo3-text-color-base, #212424)) !important;
+    box-shadow: none !important;
+}
+
+#search_input:hover,
+#search-input-field:hover,
+#ns-googledocs__searchform .form-control:hover,
+#filter_form .form-control:hover,
+.dataTables_wrapper .form-control:hover {
+    border-color: var(--typo3-input-hover-border-color, var(--typo3-state-default-hover-border-color, #bbb)) !important;
+}
+
+#search_input:focus,
+#search-input-field:focus,
+#ns-googledocs__searchform .form-control:focus,
+#filter_form .form-control:focus,
+.dataTables_wrapper .form-control:focus {
+    border-color: var(--typo3-input-focus-border-color, var(--typo3-state-primary-focus-border-color, #007bff)) !important;
+    outline: 0;
+    box-shadow: none !important;
+    color: var(--typo3-input-color, var(--typo3-text-color-base, #212424)) !important;
+    background-color: var(--typo3-input-bg, #fff) !important;
+}
+
+#search_input::placeholder,
+#search-input-field::placeholder,
+#filter_form .form-control::placeholder,
+.ns-googledocs-table-wrap input::placeholder {
+    color: var(--typo3-text-color-variant, #8a8a8a) !important;
+    opacity: 1;
+}
+
+#ns-googledocs__searchform label,
+.ns-googledocs-table-wrap .dataTables_filter label,
+.ns-ext-list-table-wrap .dataTables_filter label,
+.ns-ext-list-table-wrap .dataTables_length label {
+    color: var(--typo3-text-color-base, inherit);
+}
+
 .server-cloud-apikey-box-wrap .server-cloud-apikey-box-wrapper {
     position: relative;
 }
 
 .server-cloud-apikey-box-wrap .server-cloud-apikey-box {
-    background-color: #fafafa;
-    border: 1px solid rgba(0, 0, 0, .125);
+    background-color: var(--typo3-card-bg, #fafafa);
+    border: 1px solid var(--typo3-component-border-color, rgba(0, 0, 0, .125));
     border-radius: .25rem;
     padding: 1.25rem;
     opacity: 0;
@@ -392,14 +1091,6 @@ label {
 
 .server-cloud-apikey-box-wrap .server-cloud-apikey-box.active {
     opacity: 1;
-}
-
-.ns-googledocs-table-wrap {
-    overflow-x: auto;
-}
-
-.ns-googledocs-table-wrap .ns-googledocs-datatable {
-    min-width: 950px;
 }
 
 img {
@@ -422,10 +1113,19 @@ img {
 
 .google-docs-import-block .card-header {
     font-weight: 700;
-    color: #ff9800;
+    color: var(--typo3-text-color-base, #212424);
 }
+
+.card.bg-light.google-docs-import-block.custom-card .card-header h5,
+.google-docs-import-block.custom-card .card-header h5 {
+    font-size: 1rem;
+    font-weight: 500;
+}
+.btn .icon,
+.btn .t3js-icon,
 .btn em.fa {
     margin-right: 10px;
+    vertical-align: -0.125em;
 }
 .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter {
     display: inline-block;
@@ -471,8 +1171,9 @@ img {
 
 .dataTables_paginate .paginate_button {
     padding: 5px 15px;
-    border: 1px solid #bdbdbd;
-    color: #0275d8;
+    border: 1px solid var(--typo3-component-border-color, #bdbdbd);
+    background-color: var(--typo3-component-bg, #fff);
+    color: var(--typo3-text-color-link, #0275d8);
     cursor: pointer;
     text-decoration: none;
     outline: none;
@@ -481,7 +1182,8 @@ img {
 }
 
 .dataTables_paginate .paginate_button.current, .dataTables_paginate .paginate_button:hover {
-    background-color: #0275d8;
+    background-color: var(--typo3-btn-primary-bg, #0275d8);
+    border-color: var(--typo3-btn-primary-bg, #0275d8);
     color: #fff;
 }
 
@@ -512,8 +1214,13 @@ em.field-info-trigger {
 .field-info-text {
     display: none;
     font-size: 14px;
-    color: rgba(0, 0, 0, 0.7);
+    color: var(--typo3-text-color-variant, rgba(0, 0, 0, 0.7));
     margin-top: 5px;
+}
+
+.field-info-text p {
+    margin: 0;
+    color: inherit;
 }
 .import-doc-Name,
 .import-page-Name {
@@ -528,7 +1235,7 @@ em.field-info-trigger {
 
 @media(min-width:768px) {
     .google-docs-wizard-modal .modal-dialog {
-        max-width: 650px;
+        max-width: 560px;
     }
     .googledocs-form-wrap .form-group:not(:last-child) {
         margin-bottom: 20px;
@@ -601,22 +1308,33 @@ em.field-info-trigger {
 }
 
 @media(min-width:992px) {
+    .ns-ext-navigation-wrap {
+        gap: 1rem;
+        margin-bottom: 1.75rem;
+    }
+
+    .ns-googledocs-navigation,
     .ns-ext-navigation {
+        box-sizing: border-box;
+        width: calc(100% + 48px);
+        max-width: none;
+        margin: 0 -24px;
+        padding: 0 24px;
         background-color: transparent;
         border: 0;
         border-radius: 0;
-        margin-bottom: 15px;
+        border-bottom: 1px solid var(--typo3-component-border-color, #cdcdcd);
     }
 
     .ns-ext-name-desktop {
         display: block;
-        margin-bottom: 25px;
+        margin-bottom: 0;
     }
-   
+
     .ns-ext-navigation .navbar {
         padding: 0;
     }
-    
+
     .ns-ext-navigation .navbar .navbar-nav {
         margin-top: 0;
     }
@@ -629,13 +1347,13 @@ em.field-info-trigger {
         margin-right: 15px;
     }
 
-    .google-docs-wizard-modal .modal-body, .ns-googledocs-general-setting-wrap .card-body {
+    .ns-googledocs-general-setting-wrap .card-body {
         padding-left: 40px;
         padding-right: 40px;
         padding-top: 30px;
     }
     .google-docs-wizard-modal .modal-dialog {
-        max-width: 850px;
+        max-width: 560px;
     }
     .googledocs-form-wrap .form-group:not(:last-child) {
         margin-bottom: 30px;
@@ -647,9 +1365,14 @@ em.field-info-trigger {
         font-size: 58px;
         margin-bottom: 20px;
     }
-    .ns-googledocs-navigation .nav-link em.fa {
-        margin-right: 10px;
-        font-size: 20px;
+    .ns-googledocs-navigation .nav-link .icon,
+    .ns-googledocs-navigation .nav-link .t3js-icon,
+    .ns-ext-navigation .nav-link .icon,
+    .ns-ext-navigation .nav-link .t3js-icon,
+    .ns-googledocs-navigation .nav-link em.fa,
+    .ns-ext-navigation .nav-link em.fa {
+        margin-right: 0;
+        font-size: 0.875rem;
     }
     .ns-ext-modal .modal-body {
         padding-left: 40px;
@@ -682,7 +1405,7 @@ em.field-info-trigger {
 /*
 New Common Style
 */
-.btn .btn__icon { 
+.btn .btn__icon {
     margin-right: 5px;
     min-width: 20px;
 }
@@ -695,29 +1418,35 @@ New Common Style
 
 .btn-gray,
 .btn-gray.disabled {
-    color: #212424;
-} 
+    color: var(--typo3-btn-default-color, var(--typo3-state-default-color, #212424));
+}
 
 .btn-gray {
-    background-color: #eaeaea;
-    border-color: #ccc;
-    font-size: 12px;
+    background-color: var(--typo3-btn-default-bg, var(--typo3-state-default-bg, #eaeaea));
+    border: var(--typo3-component-border-width, 1px) solid var(--typo3-btn-default-border-color, var(--typo3-state-default-border-color, #cdcdcd));
+    font-size: var(--typo3-input-font-size, 12px);
     padding: 5px 9px;
 }
 
 .btn-gray:focus,
 .btn-gray:hover {
-    background-color: #d7d7d7;
+    background-color: var(--typo3-btn-default-hover-bg, var(--typo3-state-default-hover-bg, #d7d7d7));
+    border-color: var(--typo3-btn-default-hover-border-color, var(--typo3-state-default-hover-border-color, #cdcdcd));
+    color: var(--typo3-btn-default-hover-color, var(--typo3-state-default-hover-color, #212424));
 }
 
 .btn.btn-primary {
-    background-color: #007bff;
-    font-size: 12px;
+    background-color: var(--typo3-btn-primary-bg, #007bff);
+    border-color: var(--typo3-btn-primary-border-color, #007bff);
+    color: var(--typo3-btn-primary-color, #fff);
+    font-size: var(--typo3-input-font-size, 12px);
     padding: 5px 20px;
 }
 
 .btn.btn-primary:hover {
-    background-color: #0062cc;
+    background-color: var(--typo3-btn-primary-hover-bg, #0062cc);
+    border-color: var(--typo3-btn-primary-hover-border-color, #0062cc);
+    color: var(--typo3-btn-primary-hover-color, #fff);
 }
 
 .ns-ext-table-block-wrap .btn.btn-success {
@@ -735,15 +1464,18 @@ New Common Style
 }
 
 .custom-card {
-    border-bottom-left-radius: 2px;
-    border-bottom-right-radius: 2px;
-    border-color: #ccc;
+    border: var(--typo3-component-border-width, 1px) solid var(--typo3-card-border-color, var(--typo3-component-border-color, #cdcdcd));
+    border-radius: var(--typo3-card-border-radius, var(--typo3-component-border-radius, .375rem));
+    background-color: var(--typo3-card-bg, var(--typo3-component-bg, #fff));
     box-shadow: none;
     margin-bottom: 30px;
+    overflow: hidden;
 }
 
 .custom-card .card-header {
-    background-color: #eaeaea;
+    background-color: var(--typo3-surface-container-low, #eaeaea);
+    color: var(--typo3-text-color-base, #212424);
+    border-bottom: var(--typo3-component-border-width, 1px) solid var(--typo3-card-border-color, var(--typo3-component-border-color, #cdcdcd));
     padding: 10px 20px;
     align-items: center;
     display: flex;
@@ -751,28 +1483,48 @@ New Common Style
 }
 
 .custom-card .card-header h5 {
-    color: #212424;
-    font-size: 14px;
+    color: var(--typo3-text-color-base, #212424);
+    font-size: var(--typo3-font-size, 12px);
     font-weight: 700;
     margin-bottom: 0;
 }
 
 .custom-card .card-body {
     padding: 30px 20px;
+    color: var(--typo3-text-color-base, #212424);
+    background-color: var(--typo3-card-bg, var(--typo3-component-bg, #fff));
 }
 .custom-card .card-body > :last-child {
     margin-bottom: 0;
 }
+.custom-card .card-body p,
+.custom-card .card-body li,
+.google-docs-import-block .card-body,
+.google-docs-import-block .card-body p {
+    color: var(--typo3-text-color-base, #212424);
+}
 .ns-ext-form .form-control {
-    border-color: #ccc;
-    border-radius: 2px;
+    border: var(--typo3-input-border-width, 1px) solid var(--typo3-input-border-color, var(--typo3-state-default-border-color, #cdcdcd));
+    border-radius: var(--typo3-input-border-radius, var(--typo3-component-border-radius, .375rem));
     box-shadow: none;
-    color: #212424;
+    color: var(--typo3-input-color, #212424);
+    background-color: var(--typo3-input-bg, #fff);
     height: 32px;
     padding-left: 15px;
 }
-select.form-control:not([multiple][size]):not(.form-select-no-siblings), 
-select.form-control:not([size]):not(.form-select-no-siblings), 
+
+.ns-ext-form .form-control:hover {
+    border-color: var(--typo3-input-hover-border-color, var(--typo3-state-default-hover-border-color, #bbb));
+}
+
+.ns-ext-form .form-control:focus {
+    border-color: var(--typo3-input-focus-border-color, var(--typo3-state-primary-focus-border-color, #007bff));
+    outline: 0;
+    box-shadow: none;
+}
+
+select.form-control:not([multiple][size]):not(.form-select-no-siblings),
+select.form-control:not([size]):not(.form-select-no-siblings),
 select.form-control[size="1"]:not(.form-select-no-siblings) {
     background-image: url('../Icons/actions-chevron-down.svg');
     background-position: right 4px center;
@@ -814,11 +1566,31 @@ select.form-control[size="1"]:not(.form-select-no-siblings) {
 
 .ns-ext-form .field-info-trigger {
     margin-top: 3px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--typo3-text-color-variant, #5c636a);
+    line-height: 1;
 }
 
-.ns-ext-form .field-info-trigger em {
-    font-size: 19px;
-    color: rgb(204, 204, 204);
+.ns-ext-form .field-info-trigger .field-info-icon,
+.ns-ext-form .field-info-trigger svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+    flex-shrink: 0;
+    color: inherit;
+    fill: currentColor;
+}
+
+.ns-ext-form .field-info-trigger svg g,
+.ns-ext-form .field-info-trigger svg path {
+    fill: currentColor;
+}
+
+.ns-ext-form .field-info-trigger:hover {
+    color: var(--typo3-text-color-base, #343a40);
 }
 
 .ns-ext-form .custom-reset {
@@ -831,7 +1603,7 @@ select.form-control[size="1"]:not(.form-select-no-siblings) {
 .ns-ext-form .custom-reset i {
     color: #333;
     font-size: 14px;
-}   
+}
 .ns-ext-form .custom-switch,
 .ns-ext-form .custom-switch label {
     cursor: pointer;
@@ -871,7 +1643,7 @@ select.form-control[size="1"]:not(.form-select-no-siblings) {
 }
 
 .ns-ext-form .custom-switch .custom-control-label::before,
-.ns-ext-form .custom-checkbox .custom-control-label::before, 
+.ns-ext-form .custom-checkbox .custom-control-label::before,
 .ns-ext-form .custom-radio .custom-control-label::before {
     border-color: rgba(0, 0, 0, 0.3);
     border-width: 1px;
@@ -891,7 +1663,7 @@ select.form-control[size="1"]:not(.form-select-no-siblings) {
     padding-left: 30px;
 }
 
-.ns-ext-form .custom-checkbox .custom-control-label::before, 
+.ns-ext-form .custom-checkbox .custom-control-label::before,
 .ns-ext-form .custom-radio .custom-control-label::before {
     left: -30px;
 }
@@ -942,9 +1714,10 @@ select.form-control[size="1"]:not(.form-select-no-siblings) {
 }
 
 .ns-ext-list-table-wrap .dataTables_paginate .paginate_button {
-    border: 1px solid #ccc;
-    border-radius: 0;
-    color: #000;
+    border: 1px solid var(--typo3-component-border-color, #ccc);
+    border-radius: var(--typo3-component-border-radius, .25rem);
+    color: var(--typo3-text-color-base, #000);
+    background-color: var(--typo3-state-default-bg, transparent);
     font-weight: 400;
     padding: 5px 10px;
 }
@@ -956,11 +1729,105 @@ select.form-control[size="1"]:not(.form-select-no-siblings) {
 
 .ns-ext-list-table-wrap .dataTables_paginate .current,
 .ns-ext-list-table-wrap .dataTables_paginate a:hover {
-    background-color: #d7d7d7;
+    background-color: var(--typo3-state-default-hover-bg, #d7d7d7);
+    border-color: var(--typo3-state-default-hover-border-color, #ccc);
+    color: var(--typo3-text-color-base, #000);
 }
 
 .ns-ext-list-table-wrap .dataTables_paginate .disabled {
     opacity: 0.7;
+}
+
+/*
+ * Reports Fluid pagination (.pagination / .page-link).
+ * Bootstrap 4 hardcodes background #fff — override with TYPO3 tokens so
+ * light/dark follow Core automatically (no reliance on data-bs-theme alone).
+ */
+.pagination.pagination-load-wrap {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0;
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.pagination.pagination-load-wrap .page-item {
+    display: flex;
+    margin: 0;
+}
+
+.pagination.pagination-load-wrap .page-link,
+.pagination .page-link {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    margin: 0;
+    padding: 0.35rem 0.75rem !important;
+    background-color: var(--typo3-pagination-bg, var(--typo3-component-bg, #fff)) !important;
+    border: 1px solid var(--typo3-pagination-border-color, var(--typo3-component-border-color, #cdcdcd)) !important;
+    border-radius: 0 !important;
+    color: var(--typo3-pagination-color, var(--typo3-component-color, #212424)) !important;
+    font-size: var(--typo3-pagination-font-size, var(--typo3-font-size, 0.75rem)) !important;
+    font-weight: 600;
+    line-height: 1.3 !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+}
+
+.pagination.pagination-load-wrap .page-item:first-child .page-link,
+.pagination.pagination-load-wrap > li:first-child .page-link {
+    border-top-left-radius: var(--typo3-pagination-border-radius, var(--typo3-component-border-radius, .375rem)) !important;
+    border-bottom-left-radius: var(--typo3-pagination-border-radius, var(--typo3-component-border-radius, .375rem)) !important;
+}
+
+.pagination.pagination-load-wrap .page-item:last-child .page-link,
+.pagination.pagination-load-wrap > li:last-child .page-link {
+    border-top-right-radius: var(--typo3-pagination-border-radius, var(--typo3-component-border-radius, .375rem)) !important;
+    border-bottom-right-radius: var(--typo3-pagination-border-radius, var(--typo3-component-border-radius, .375rem)) !important;
+}
+
+.pagination.pagination-load-wrap .page-item + .page-item .page-link,
+.pagination.pagination-load-wrap > li + li .page-link {
+    margin-left: -1px;
+}
+
+.pagination.pagination-load-wrap .page-item.active .page-link,
+.pagination.pagination-load-wrap li.active .page-link,
+.pagination .page-item.active .page-link {
+    background-color: var(--typo3-pagination-active-bg, var(--typo3-btn-primary-bg, #214191)) !important;
+    border-color: var(--typo3-pagination-active-border-color, var(--typo3-btn-primary-bg, #214191)) !important;
+    color: var(--typo3-pagination-active-color, #fff) !important;
+    z-index: 1;
+}
+
+.pagination.pagination-load-wrap .page-link:hover,
+.pagination.pagination-load-wrap .page-link:focus,
+.pagination .page-link:hover,
+.pagination .page-link:focus {
+    background-color: var(--typo3-pagination-hover-bg, var(--typo3-state-default-hover-bg, #d7d7d7)) !important;
+    border-color: var(--typo3-pagination-hover-border-color, var(--typo3-component-border-color, #bbb)) !important;
+    color: var(--typo3-pagination-hover-color, var(--typo3-text-color-base, #212424)) !important;
+    z-index: 2;
+}
+
+.pagination.pagination-load-wrap .page-item.active .page-link:hover,
+.pagination.pagination-load-wrap li.active .page-link:hover,
+.pagination .page-item.active .page-link:hover {
+    background-color: var(--typo3-pagination-active-bg, var(--typo3-btn-primary-bg, #214191)) !important;
+    border-color: var(--typo3-pagination-active-border-color, var(--typo3-btn-primary-bg, #214191)) !important;
+    color: var(--typo3-pagination-active-color, #fff) !important;
+}
+
+.pagination.pagination-load-wrap .page-item.disabled .page-link,
+.pagination .page-item.disabled .page-link {
+    background-color: var(--typo3-pagination-disabled-bg, var(--typo3-component-bg, #fff)) !important;
+    border-color: var(--typo3-pagination-disabled-border-color, var(--typo3-component-border-color, #cdcdcd)) !important;
+    color: var(--typo3-pagination-disabled-color, #888) !important;
+    pointer-events: none;
 }
 
 .ns-ext-list-table-wrap :last-child {
@@ -978,17 +1845,33 @@ select.form-control[size="1"]:not(.form-select-no-siblings) {
 .ns-ext-datatable .ns-ext-actions-wrap .btn em {
     font-size: 20px;
 }
-.ns-ext-list-table-wrap .ns-ext-datatable tr:nth-child(odd) td {
-    background-color: #fafafa;
+.ns-ext-list-table-wrap .ns-ext-datatable tr:nth-child(odd) td,
+.ns-googledocs-table-wrap .ns-googledocs-datatable tbody tr:nth-child(odd) td,
+.ns-googledocs-table-wrap .ns-ext-datatable tbody tr:nth-child(odd) td,
+.ns-ext-table-wrap .ns-ext-datatable tbody tr:nth-child(odd) td {
+    background-color: var(--typo3-surface-container-lowest, #fafafa) !important;
+    color: var(--typo3-text-color-base, #212424) !important;
 }
-.ns-ext-list-table-wrap .ns-ext-datatable tr:nth-child(even) td {
-    background-color: #fff;
+.ns-ext-list-table-wrap .ns-ext-datatable tr:nth-child(even) td,
+.ns-googledocs-table-wrap .ns-googledocs-datatable tbody tr:nth-child(even) td,
+.ns-googledocs-table-wrap .ns-ext-datatable tbody tr:nth-child(even) td,
+.ns-ext-table-wrap .ns-ext-datatable tbody tr:nth-child(even) td {
+    background-color: var(--typo3-card-bg, #fff) !important;
+    color: var(--typo3-text-color-base, #212424) !important;
 }
 .ns-ext-list-table-wrap .dataTables_wrapper {
     display: block;
     width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
+    color: var(--typo3-text-color-base, inherit);
+}
+
+.ns-ext-list-table-wrap .dataTables_length,
+.ns-ext-list-table-wrap .dataTables_filter,
+.ns-ext-list-table-wrap .dataTables_length label,
+.ns-ext-list-table-wrap .dataTables_filter label {
+    color: var(--typo3-text-color-base, inherit);
 }
 .footer__callout-info {
     align-items: center;
@@ -1012,7 +1895,7 @@ select.form-control[size="1"]:not(.form-select-no-siblings) {
     border-radius: 2px;
     border-color: #ccc;
     box-shadow: none;
-} 
+}
 
 .ns-ext-default-record-table-wrap .panel-default .panel-heading {
     background-color: #ddd;
@@ -1071,7 +1954,7 @@ select.form-control[size="1"]:not(.form-select-no-siblings) {
     padding-bottom: 5px;
 }
 
-table.dataTable thead .sorting_asc:after, 
+table.dataTable thead .sorting_asc:after,
 table.dataTable thead .sorting_desc:after,
 table.dataTable thead .sorting:after {
     content: '';
@@ -1094,7 +1977,7 @@ table.dataTable thead .sorting_asc:after {
     background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='17' viewBox='0 0 12 17'%3E%3Cg transform='translate(-1555 -514.332)'%3E%3Crect  width='12' height='17' transform='translate(1555 514.332)' fill='none'/%3E%3Cpath d='M2.5,0,5,4H0Z' transform='translate(1559 517.332)' fill='%23212424'/%3E%3Cpath  d='M2.5,0,5,4H0Z' transform='translate(1564 529.332) rotate(180)' fill='%23ccc'/%3E%3C/g%3E%3C/svg%3E");
 }
 
-.ns-ext-color-pick-wrap input[type="color"] { 
+.ns-ext-color-pick-wrap input[type="color"] {
     border: 1px solid #ccc;
     border-radius: 2px;
     padding: 2px;
@@ -1125,7 +2008,7 @@ input[type="color"] ::-webkit-color-swatch {
 
 @media(min-width: 768px) {
     .dataTables_wrapper .dataTables_paginate {
-        margin-top: 0;
+        margin-top: 20px;
     }
 }
 @media(min-width: 993px) {
@@ -1141,4 +2024,945 @@ input[type="color"] ::-webkit-color-swatch {
         padding-bottom: 15px;
         padding-top: 15px;
     }
+}
+
+.typo3-fullDoc {
+    overflow: auto;
+    height: 100vh;
+    min-height: 0;
+    background-color: var(--module-bg, var(--typo3-surface-container-lowest, var(--bs-body-bg, transparent))) !important;
+    color: var(--typo3-text-color-base, var(--module-color, inherit)) !important;
+}
+
+.ns_googledocs--modal-large .modal-content {
+    width: 100%;
+}
+
+.ns_googledocs--modal-large {
+    z-index: 1040 !important;
+}
+.ns_googledocs--modal-large .modal-content {
+    height: 90vh;
+    max-width: 1600px;
+}
+
+.scrollable-div {
+    max-height: 400px; /* Set the maximum height */
+    overflow-y: scroll;  /* Enable vertical scroll */
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+    border: 1px solid #ccc; /* Optional: for better visibility */
+
+}
+
+#ns-googledocs__loader.ns-show-overlay {
+    display: block;
+    position: fixed;
+    z-index: 1100;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+}
+
+#ns-googledocs__loader .icon {
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 999;
+}
+
+#ns-googledocs__loader.ns-show-overlay::after {
+    background-color: rgba(0, 0, 0, 0.2);
+    content: "";
+    height: 100%;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 100%;
+}
+
+/*
+ * Dark mode — match TYPO3 Core: dark surfaces + white text.
+ * Bootstrap 4 (bundled in this module) paints body/#fff; override shell + content
+ * under both Core dark selectors (v12 + v13/v14), including when the attribute
+ * is on html or body.
+ */
+html[data-color-scheme=dark],
+html[data-bs-theme=dark],
+html[data-color-scheme=dark] body,
+html[data-bs-theme=dark] body,
+body[data-color-scheme=dark],
+body[data-bs-theme=dark],
+html[data-color-scheme=dark] .typo3-fullDoc,
+html[data-bs-theme=dark] .typo3-fullDoc,
+body[data-color-scheme=dark] .typo3-fullDoc,
+body[data-bs-theme=dark] .typo3-fullDoc,
+[data-color-scheme=dark] .typo3-fullDoc,
+[data-bs-theme=dark] .typo3-fullDoc,
+html[data-color-scheme=dark] #typo3-docbody,
+html[data-bs-theme=dark] #typo3-docbody,
+[data-color-scheme=dark] #typo3-docbody,
+[data-bs-theme=dark] #typo3-docbody,
+html[data-color-scheme=dark] #typo3-inner-docbody,
+html[data-bs-theme=dark] #typo3-inner-docbody,
+[data-color-scheme=dark] #typo3-inner-docbody,
+[data-bs-theme=dark] #typo3-inner-docbody,
+html[data-color-scheme=dark] .module,
+html[data-bs-theme=dark] .module,
+html[data-color-scheme=dark] .module-body,
+html[data-bs-theme=dark] .module-body,
+[data-color-scheme=dark] .module-body,
+[data-bs-theme=dark] .module-body,
+html[data-color-scheme=dark] .module-body-container,
+html[data-bs-theme=dark] .module-body-container,
+html[data-color-scheme=dark] .t3js-module-body,
+html[data-bs-theme=dark] .t3js-module-body,
+html[data-color-scheme=dark] .t3js-module-body-container,
+html[data-bs-theme=dark] .t3js-module-body-container {
+    background-color: var(--typo3-surface-container-lowest, var(--module-bg, #1a1a1a)) !important;
+    background: var(--typo3-surface-container-lowest, var(--module-bg, #1a1a1a)) !important;
+    color: var(--typo3-text-color-base, #fff) !important;
+}
+
+html[data-color-scheme=dark] .typo3-fullDoc,
+html[data-bs-theme=dark] .typo3-fullDoc,
+[data-color-scheme=dark] .typo3-fullDoc,
+[data-bs-theme=dark] .typo3-fullDoc,
+html[data-color-scheme=dark] #typo3-docbody,
+html[data-bs-theme=dark] #typo3-docbody,
+[data-color-scheme=dark] #typo3-docbody,
+[data-bs-theme=dark] #typo3-docbody,
+html[data-color-scheme=dark] #typo3-inner-docbody,
+html[data-bs-theme=dark] #typo3-inner-docbody,
+[data-color-scheme=dark] #typo3-inner-docbody,
+[data-bs-theme=dark] #typo3-inner-docbody {
+    min-height: 0;
+    height: auto;
+}
+
+[data-color-scheme=dark] .ns-ext-name,
+[data-bs-theme=dark] .ns-ext-name,
+[data-color-scheme=dark] #typo3-inner-docbody,
+[data-bs-theme=dark] #typo3-inner-docbody,
+[data-color-scheme=dark] #typo3-inner-docbody p,
+[data-bs-theme=dark] #typo3-inner-docbody p,
+[data-color-scheme=dark] #typo3-inner-docbody li,
+[data-bs-theme=dark] #typo3-inner-docbody li,
+[data-color-scheme=dark] #typo3-inner-docbody label,
+[data-bs-theme=dark] #typo3-inner-docbody label,
+[data-color-scheme=dark] #typo3-inner-docbody h1,
+[data-bs-theme=dark] #typo3-inner-docbody h1,
+[data-color-scheme=dark] #typo3-inner-docbody h2,
+[data-bs-theme=dark] #typo3-inner-docbody h2,
+[data-color-scheme=dark] #typo3-inner-docbody h3,
+[data-bs-theme=dark] #typo3-inner-docbody h3,
+[data-color-scheme=dark] #typo3-inner-docbody h4,
+[data-bs-theme=dark] #typo3-inner-docbody h4,
+[data-color-scheme=dark] #typo3-inner-docbody h5,
+[data-bs-theme=dark] #typo3-inner-docbody h5,
+[data-color-scheme=dark] #typo3-inner-docbody h6,
+[data-bs-theme=dark] #typo3-inner-docbody h6 {
+    color: var(--typo3-text-color-base, #fff) !important;
+}
+
+/* Navigation — connected top-radius tabs on one baseline (dark) */
+html[data-color-scheme=dark] .ns-googledocs-navigation,
+html[data-bs-theme=dark] .ns-googledocs-navigation,
+[data-color-scheme=dark] .ns-googledocs-navigation,
+[data-bs-theme=dark] .ns-googledocs-navigation,
+html[data-color-scheme=dark] .ns-ext-navigation,
+html[data-bs-theme=dark] .ns-ext-navigation,
+[data-color-scheme=dark] .ns-ext-navigation,
+[data-bs-theme=dark] .ns-ext-navigation {
+    background-color: transparent !important;
+    border-color: transparent !important;
+    border-bottom: 1px solid var(--typo3-component-border-color, #5b5b5b) !important;
+}
+
+html[data-color-scheme=dark] .ns-googledocs-navigation .navbar-nav .nav-link,
+html[data-bs-theme=dark] .ns-googledocs-navigation .navbar-nav .nav-link,
+[data-color-scheme=dark] .ns-googledocs-navigation .navbar-nav .nav-link,
+[data-bs-theme=dark] .ns-googledocs-navigation .navbar-nav .nav-link,
+html[data-color-scheme=dark] .ns-ext-navigation .navbar-nav .nav-link,
+html[data-bs-theme=dark] .ns-ext-navigation .navbar-nav .nav-link,
+[data-color-scheme=dark] .ns-ext-navigation .navbar-nav .nav-link,
+[data-bs-theme=dark] .ns-ext-navigation .navbar-nav .nav-link {
+    background-color: var(--typo3-state-default-bg, #2b2b2b) !important;
+    border: 1px solid var(--typo3-component-border-color, #5b5b5b) !important;
+    border-bottom: 1px solid var(--typo3-component-border-color, #5b5b5b) !important;
+    border-radius: var(--typo3-component-border-radius, 0.375rem) var(--typo3-component-border-radius, 0.375rem) 0 0 !important;
+    color: var(--typo3-text-color-base, #fff) !important;
+}
+
+html[data-color-scheme=dark] .ns-googledocs-navigation .nav-item:not(.active):hover > .nav-link,
+html[data-bs-theme=dark] .ns-googledocs-navigation .nav-item:not(.active):hover > .nav-link,
+[data-color-scheme=dark] .ns-googledocs-navigation .nav-item:not(.active):hover > .nav-link,
+[data-bs-theme=dark] .ns-googledocs-navigation .nav-item:not(.active):hover > .nav-link,
+html[data-color-scheme=dark] .ns-ext-navigation .nav-item:not(.active):hover > .nav-link,
+html[data-bs-theme=dark] .ns-ext-navigation .nav-item:not(.active):hover > .nav-link,
+[data-color-scheme=dark] .ns-ext-navigation .nav-item:not(.active):hover > .nav-link,
+[data-bs-theme=dark] .ns-ext-navigation .nav-item:not(.active):hover > .nav-link,
+html[data-color-scheme=dark] .ns-googledocs-navigation .nav-item:not(.active):focus-within > .nav-link,
+html[data-bs-theme=dark] .ns-googledocs-navigation .nav-item:not(.active):focus-within > .nav-link,
+[data-color-scheme=dark] .ns-googledocs-navigation .nav-item:not(.active):focus-within > .nav-link,
+[data-bs-theme=dark] .ns-googledocs-navigation .nav-item:not(.active):focus-within > .nav-link {
+    background-color: var(--typo3-state-default-hover-bg, #3f3f3f) !important;
+    border-color: var(--typo3-state-default-hover-border-color, #6b6b6b) !important;
+    border-bottom: 1px solid var(--typo3-state-default-hover-border-color, #6b6b6b) !important;
+    color: var(--typo3-text-color-base, #fff) !important;
+}
+
+html[data-color-scheme=dark] .ns-googledocs-navigation .nav-item.active > .nav-link,
+html[data-bs-theme=dark] .ns-googledocs-navigation .nav-item.active > .nav-link,
+[data-color-scheme=dark] .ns-googledocs-navigation .nav-item.active > .nav-link,
+[data-bs-theme=dark] .ns-googledocs-navigation .nav-item.active > .nav-link,
+html[data-color-scheme=dark] .ns-googledocs-navigation .nav-item.active.is-active > .nav-link,
+html[data-bs-theme=dark] .ns-googledocs-navigation .nav-item.active.is-active > .nav-link,
+[data-color-scheme=dark] .ns-googledocs-navigation .nav-item.active.is-active > .nav-link,
+[data-bs-theme=dark] .ns-googledocs-navigation .nav-item.active.is-active > .nav-link,
+html[data-color-scheme=dark] .ns-ext-navigation .nav-item.active > .nav-link,
+html[data-bs-theme=dark] .ns-ext-navigation .nav-item.active > .nav-link,
+[data-color-scheme=dark] .ns-ext-navigation .nav-item.active > .nav-link,
+[data-bs-theme=dark] .ns-ext-navigation .nav-item.active > .nav-link,
+html[data-color-scheme=dark] .ns-ext-navigation .nav-item.active.is-active > .nav-link,
+html[data-bs-theme=dark] .ns-ext-navigation .nav-item.active.is-active > .nav-link,
+[data-color-scheme=dark] .ns-ext-navigation .nav-item.active.is-active > .nav-link,
+[data-bs-theme=dark] .ns-ext-navigation .nav-item.active.is-active > .nav-link {
+    background-color: var(--typo3-btn-primary-bg, var(--typo3-state-primary-bg, var(--bs-primary, #214191))) !important;
+    border-color: var(--typo3-btn-primary-border-color, var(--typo3-btn-primary-bg, #214191)) !important;
+    border-bottom: 1px solid var(--typo3-btn-primary-border-color, var(--typo3-btn-primary-bg, #214191)) !important;
+    border-radius: var(--typo3-component-border-radius, 0.375rem) var(--typo3-component-border-radius, 0.375rem) 0 0 !important;
+    color: var(--typo3-btn-primary-color, #fff) !important;
+}
+
+html[data-color-scheme=dark] .ns-googledocs-navigation .nav-link .icon,
+html[data-bs-theme=dark] .ns-googledocs-navigation .nav-link .icon,
+[data-color-scheme=dark] .ns-googledocs-navigation .nav-link .icon,
+[data-bs-theme=dark] .ns-googledocs-navigation .nav-link .icon,
+html[data-color-scheme=dark] .ns-ext-navigation .nav-link .icon,
+html[data-bs-theme=dark] .ns-ext-navigation .nav-link .icon,
+[data-color-scheme=dark] .ns-ext-navigation .nav-link .icon,
+[data-bs-theme=dark] .ns-ext-navigation .nav-link .icon,
+html[data-color-scheme=dark] .ns-googledocs-navigation .nav-link .t3js-icon,
+html[data-bs-theme=dark] .ns-googledocs-navigation .nav-link .t3js-icon,
+[data-color-scheme=dark] .ns-googledocs-navigation .nav-link .t3js-icon,
+[data-bs-theme=dark] .ns-googledocs-navigation .nav-link .t3js-icon,
+html[data-color-scheme=dark] .ns-ext-navigation .nav-link .t3js-icon,
+html[data-bs-theme=dark] .ns-ext-navigation .nav-link .t3js-icon,
+[data-color-scheme=dark] .ns-ext-navigation .nav-link .t3js-icon,
+[data-bs-theme=dark] .ns-ext-navigation .nav-link .t3js-icon,
+html[data-color-scheme=dark] .ns-googledocs-navigation .nav-link em.fa,
+html[data-bs-theme=dark] .ns-googledocs-navigation .nav-link em.fa,
+[data-color-scheme=dark] .ns-googledocs-navigation .nav-link em.fa,
+[data-bs-theme=dark] .ns-googledocs-navigation .nav-link em.fa,
+html[data-color-scheme=dark] .ns-ext-navigation .nav-link em.fa,
+html[data-bs-theme=dark] .ns-ext-navigation .nav-link em.fa,
+[data-color-scheme=dark] .ns-ext-navigation .nav-link em.fa,
+[data-bs-theme=dark] .ns-ext-navigation .nav-link em.fa {
+    color: inherit !important;
+}
+
+html[data-color-scheme=dark] .ns-ext-navigation .navbar-toggler .navbar-toggler__line,
+html[data-bs-theme=dark] .ns-ext-navigation .navbar-toggler .navbar-toggler__line,
+[data-color-scheme=dark] .ns-ext-navigation .navbar-toggler .navbar-toggler__line,
+[data-bs-theme=dark] .ns-ext-navigation .navbar-toggler .navbar-toggler__line {
+    background-color: #fff;
+}
+
+/* Cards — override Bootstrap .card / .bg-light in dark mode */
+[data-color-scheme=dark] .custom-card,
+[data-bs-theme=dark] .custom-card,
+[data-color-scheme=dark] .card,
+[data-bs-theme=dark] .card,
+[data-color-scheme=dark] .card.bg-light,
+[data-bs-theme=dark] .card.bg-light,
+[data-color-scheme=dark] .bg-light,
+[data-bs-theme=dark] .bg-light,
+[data-color-scheme=dark] .google-docs-import-block,
+[data-bs-theme=dark] .google-docs-import-block {
+    background-color: var(--typo3-card-bg, #2b2b2b) !important;
+    border: 1px solid var(--typo3-card-border-color, var(--typo3-component-border-color, #5b5b5b)) !important;
+    color: var(--typo3-text-color-base, #fff) !important;
+}
+
+[data-color-scheme=dark] .custom-card .card-header,
+[data-bs-theme=dark] .custom-card .card-header,
+[data-color-scheme=dark] .card .card-header,
+[data-bs-theme=dark] .card .card-header {
+    background-color: var(--typo3-surface-container-high, #333) !important;
+    border-bottom: 1px solid var(--typo3-card-border-color, var(--typo3-component-border-color, #5b5b5b)) !important;
+    color: var(--typo3-text-color-base, #fff) !important;
+}
+
+[data-color-scheme=dark] .custom-card .card-header h5,
+[data-bs-theme=dark] .custom-card .card-header h5,
+[data-color-scheme=dark] .card .card-header h5,
+[data-bs-theme=dark] .card .card-header h5,
+[data-color-scheme=dark] .google-docs-import-block .card-header,
+[data-bs-theme=dark] .google-docs-import-block .card-header,
+[data-color-scheme=dark] .google-docs-import-block .card-header h5,
+[data-bs-theme=dark] .google-docs-import-block .card-header h5 {
+    color: var(--typo3-text-color-base, #fff) !important;
+}
+
+[data-color-scheme=dark] .custom-card .card-body,
+[data-bs-theme=dark] .custom-card .card-body,
+[data-color-scheme=dark] .card .card-body,
+[data-bs-theme=dark] .card .card-body,
+[data-color-scheme=dark] .google-docs-import-block .card-body,
+[data-bs-theme=dark] .google-docs-import-block .card-body,
+[data-color-scheme=dark] .custom-card .card-body p,
+[data-bs-theme=dark] .custom-card .card-body p,
+[data-color-scheme=dark] .custom-card .card-body li,
+[data-bs-theme=dark] .custom-card .card-body li,
+[data-color-scheme=dark] .google-docs-import-block .card-body p,
+[data-bs-theme=dark] .google-docs-import-block .card-body p,
+[data-color-scheme=dark] .ns-googledocs-last-logs ul li,
+[data-bs-theme=dark] .ns-googledocs-last-logs ul li {
+    background-color: transparent !important;
+    color: var(--typo3-text-color-base, #fff) !important;
+}
+
+[data-color-scheme=dark] .ns-googledocs-last-logs a,
+[data-bs-theme=dark] .ns-googledocs-last-logs a,
+[data-color-scheme=dark] #typo3-inner-docbody a:not(.btn):not(.nav-link),
+[data-bs-theme=dark] #typo3-inner-docbody a:not(.btn):not(.nav-link) {
+    color: var(--typo3-text-color-link, #6aa3ff) !important;
+}
+
+/* Buttons */
+[data-color-scheme=dark] .btn-gray,
+[data-bs-theme=dark] .btn-gray,
+[data-color-scheme=dark] .btn-secondary,
+[data-bs-theme=dark] .btn-secondary,
+[data-color-scheme=dark] .btn-default,
+[data-bs-theme=dark] .btn-default {
+    background-color: var(--typo3-btn-default-bg, #2b2b2b) !important;
+    border-color: var(--typo3-btn-default-border-color, #5b5b5b) !important;
+    color: var(--typo3-btn-default-color, #fff) !important;
+}
+
+[data-color-scheme=dark] .btn-gray:hover,
+[data-bs-theme=dark] .btn-gray:hover,
+[data-color-scheme=dark] .btn-gray:focus,
+[data-bs-theme=dark] .btn-gray:focus {
+    background-color: var(--typo3-btn-default-hover-bg, #3f3f3f) !important;
+    border-color: var(--typo3-btn-default-hover-border-color, #6b6b6b) !important;
+    color: #fff !important;
+}
+
+/* Tables — kill Bootstrap .thead-light / white zebra in dark mode */
+[data-color-scheme=dark] .ns-ext-datatable .thead-light tr th,
+[data-bs-theme=dark] .ns-ext-datatable .thead-light tr th,
+[data-color-scheme=dark] .ns-ext-datatable thead.thead-light th,
+[data-bs-theme=dark] .ns-ext-datatable thead.thead-light th,
+[data-color-scheme=dark] .ns-googledocs-datatable .thead-light tr th,
+[data-bs-theme=dark] .ns-googledocs-datatable .thead-light tr th,
+[data-color-scheme=dark] .ns-googledocs-datatable thead.thead-light th,
+[data-bs-theme=dark] .ns-googledocs-datatable thead.thead-light th,
+[data-color-scheme=dark] .ns-googledocs-table-wrap thead.thead-light th,
+[data-bs-theme=dark] .ns-googledocs-table-wrap thead.thead-light th,
+[data-color-scheme=dark] .ns-ext-table-wrap thead.thead-light th,
+[data-bs-theme=dark] .ns-ext-table-wrap thead.thead-light th,
+[data-color-scheme=dark] .ns-ext-list-table-wrap thead.thead-light th,
+[data-bs-theme=dark] .ns-ext-list-table-wrap thead.thead-light th,
+[data-color-scheme=dark] .ns-googledocs-datatable thead tr th,
+[data-bs-theme=dark] .ns-googledocs-datatable thead tr th,
+[data-color-scheme=dark] .ns-ext-datatable.table > thead > tr > th,
+[data-bs-theme=dark] .ns-ext-datatable.table > thead > tr > th {
+    background-color: var(--typo3-surface-container-low, #333) !important;
+    color: var(--typo3-text-color-base, #fff) !important;
+    border-color: var(--typo3-component-border-color, #5b5b5b) !important;
+}
+
+[data-color-scheme=dark] .ns-ext-datatable tbody tr td,
+[data-bs-theme=dark] .ns-ext-datatable tbody tr td,
+[data-color-scheme=dark] .ns-googledocs-datatable tr td,
+[data-bs-theme=dark] .ns-googledocs-datatable tr td,
+[data-color-scheme=dark] .table,
+[data-bs-theme=dark] .table {
+    color: var(--typo3-text-color-base, #fff) !important;
+    border-color: var(--typo3-component-border-color, #4b4b4b) !important;
+}
+
+[data-color-scheme=dark] .ns-ext-list-table-wrap .ns-ext-datatable tr:nth-child(odd) td,
+[data-bs-theme=dark] .ns-ext-list-table-wrap .ns-ext-datatable tr:nth-child(odd) td,
+[data-color-scheme=dark] .ns-googledocs-table-wrap .ns-googledocs-datatable tbody tr:nth-child(odd) td,
+[data-bs-theme=dark] .ns-googledocs-table-wrap .ns-googledocs-datatable tbody tr:nth-child(odd) td,
+[data-color-scheme=dark] .ns-googledocs-table-wrap .ns-ext-datatable tbody tr:nth-child(odd) td,
+[data-bs-theme=dark] .ns-googledocs-table-wrap .ns-ext-datatable tbody tr:nth-child(odd) td,
+[data-color-scheme=dark] .ns-ext-table-wrap .ns-ext-datatable tbody tr:nth-child(odd) td,
+[data-bs-theme=dark] .ns-ext-table-wrap .ns-ext-datatable tbody tr:nth-child(odd) td {
+    background-color: var(--typo3-surface-container-low, #333) !important;
+    color: #fff !important;
+}
+
+[data-color-scheme=dark] .ns-googledocs-datatable tbody tr,
+[data-bs-theme=dark] .ns-googledocs-datatable tbody tr,
+[data-color-scheme=dark] .ns-ext-list-table-wrap .ns-ext-datatable tr:nth-child(even) td,
+[data-bs-theme=dark] .ns-ext-list-table-wrap .ns-ext-datatable tr:nth-child(even) td,
+[data-color-scheme=dark] .ns-googledocs-table-wrap .ns-googledocs-datatable tbody tr:nth-child(even) td,
+[data-bs-theme=dark] .ns-googledocs-table-wrap .ns-googledocs-datatable tbody tr:nth-child(even) td,
+[data-color-scheme=dark] .ns-googledocs-table-wrap .ns-ext-datatable tbody tr:nth-child(even) td,
+[data-bs-theme=dark] .ns-googledocs-table-wrap .ns-ext-datatable tbody tr:nth-child(even) td,
+[data-color-scheme=dark] .ns-ext-table-wrap .ns-ext-datatable tbody tr:nth-child(even) td,
+[data-bs-theme=dark] .ns-ext-table-wrap .ns-ext-datatable tbody tr:nth-child(even) td {
+    background-color: var(--typo3-card-bg, #2b2b2b) !important;
+    color: #fff !important;
+}
+
+/* Forms */
+[data-color-scheme=dark] .ns-ext-form .form-control,
+[data-bs-theme=dark] .ns-ext-form .form-control,
+[data-color-scheme=dark] .form-control,
+[data-bs-theme=dark] .form-control,
+[data-color-scheme=dark] .form-select,
+[data-bs-theme=dark] .form-select,
+[data-color-scheme=dark] #search_input,
+[data-bs-theme=dark] #search_input,
+[data-color-scheme=dark] #search-input-field,
+[data-bs-theme=dark] #search-input-field,
+[data-color-scheme=dark] #ns-googledocs__searchform .form-control,
+[data-bs-theme=dark] #ns-googledocs__searchform .form-control,
+[data-color-scheme=dark] #filter_form .form-control,
+[data-bs-theme=dark] #filter_form .form-control,
+[data-color-scheme=dark] .dataTables_wrapper .form-control,
+[data-bs-theme=dark] .dataTables_wrapper .form-control,
+[data-color-scheme=dark] .ns-googledocs-table-wrap input[type="search"],
+[data-bs-theme=dark] .ns-googledocs-table-wrap input[type="search"],
+[data-color-scheme=dark] .ns-ext-list-table-wrap input[type="search"],
+[data-bs-theme=dark] .ns-ext-list-table-wrap input[type="search"] {
+    background-color: var(--typo3-input-bg, #1e1e1e) !important;
+    border: 1px solid var(--typo3-input-border-color, #5b5b5b) !important;
+    color: var(--typo3-input-color, #fff) !important;
+    box-shadow: none !important;
+    -webkit-text-fill-color: var(--typo3-input-color, #fff);
+}
+
+[data-color-scheme=dark] #search_input:focus,
+[data-bs-theme=dark] #search_input:focus,
+[data-color-scheme=dark] #search-input-field:focus,
+[data-bs-theme=dark] #search-input-field:focus,
+[data-color-scheme=dark] #ns-googledocs__searchform .form-control:focus,
+[data-bs-theme=dark] #ns-googledocs__searchform .form-control:focus,
+[data-color-scheme=dark] #filter_form .form-control:focus,
+[data-bs-theme=dark] #filter_form .form-control:focus {
+    background-color: var(--typo3-input-bg, #1e1e1e) !important;
+    border-color: var(--typo3-input-focus-border-color, #6b9fff) !important;
+    color: var(--typo3-input-color, #fff) !important;
+}
+
+[data-color-scheme=dark] #search_input::placeholder,
+[data-bs-theme=dark] #search_input::placeholder,
+[data-color-scheme=dark] #search-input-field::placeholder,
+[data-bs-theme=dark] #search-input-field::placeholder,
+[data-color-scheme=dark] #filter_form .form-control::placeholder,
+[data-bs-theme=dark] #filter_form .form-control::placeholder,
+[data-color-scheme=dark] .form-control::placeholder,
+[data-bs-theme=dark] .form-control::placeholder {
+    color: var(--typo3-text-color-variant, #b0b0b0) !important;
+    opacity: 1;
+}
+
+/* Search / table wraps */
+[data-color-scheme=dark] .ns-googledocs-table-wrap,
+[data-bs-theme=dark] .ns-googledocs-table-wrap,
+[data-color-scheme=dark] .ns-ext-table-wrap,
+[data-bs-theme=dark] .ns-ext-table-wrap,
+[data-color-scheme=dark] .ns-ext-list-table-wrap,
+[data-bs-theme=dark] .ns-ext-list-table-wrap {
+    background-color: var(--typo3-card-bg, #2b2b2b) !important;
+    border: 1px solid var(--typo3-component-border-color, #5b5b5b) !important;
+    color: var(--typo3-text-color-base, #fff) !important;
+}
+
+[data-color-scheme=dark] .ns-googledocs-table-wrap .table,
+[data-bs-theme=dark] .ns-googledocs-table-wrap .table,
+[data-color-scheme=dark] .ns-ext-table-wrap .table,
+[data-bs-theme=dark] .ns-ext-table-wrap .table,
+[data-color-scheme=dark] .ns-ext-list-table-wrap .table,
+[data-bs-theme=dark] .ns-ext-list-table-wrap .table,
+[data-color-scheme=dark] .ns-googledocs-table-wrap .ns-googledocs-datatable,
+[data-bs-theme=dark] .ns-googledocs-table-wrap .ns-googledocs-datatable,
+[data-color-scheme=dark] .ns-ext-table-wrap .ns-ext-datatable,
+[data-bs-theme=dark] .ns-ext-table-wrap .ns-ext-datatable,
+[data-color-scheme=dark] .ns-ext-list-table-wrap .ns-ext-datatable,
+[data-bs-theme=dark] .ns-ext-list-table-wrap .ns-ext-datatable {
+    background-color: transparent !important;
+    border: 0 !important;
+    color: var(--typo3-text-color-base, #fff) !important;
+}
+
+[data-color-scheme=dark] .ns-ext-list-table-wrap .dataTables_wrapper,
+[data-bs-theme=dark] .ns-ext-list-table-wrap .dataTables_wrapper,
+[data-color-scheme=dark] .ns-ext-list-table-wrap .dataTables_length,
+[data-bs-theme=dark] .ns-ext-list-table-wrap .dataTables_length,
+[data-color-scheme=dark] .ns-ext-list-table-wrap .dataTables_filter,
+[data-bs-theme=dark] .ns-ext-list-table-wrap .dataTables_filter,
+[data-color-scheme=dark] .ns-ext-list-table-wrap .dataTables_length label,
+[data-bs-theme=dark] .ns-ext-list-table-wrap .dataTables_length label,
+[data-color-scheme=dark] .ns-ext-list-table-wrap .dataTables_filter label,
+[data-bs-theme=dark] .ns-ext-list-table-wrap .dataTables_filter label,
+[data-color-scheme=dark] #ns-googledocs__searchform label,
+[data-bs-theme=dark] #ns-googledocs__searchform label,
+[data-color-scheme=dark] #filter_form .form-label,
+[data-bs-theme=dark] #filter_form .form-label {
+    color: var(--typo3-text-color-base, #fff) !important;
+}
+
+html[data-color-scheme=dark] .field-info-text,
+html[data-bs-theme=dark] .field-info-text,
+[data-color-scheme=dark] .field-info-text,
+[data-bs-theme=dark] .field-info-text,
+html[data-color-scheme=dark] .field-info-text p,
+html[data-bs-theme=dark] .field-info-text p,
+[data-color-scheme=dark] .field-info-text p,
+[data-bs-theme=dark] .field-info-text p,
+[data-color-scheme=dark] .form-text,
+[data-bs-theme=dark] .form-text,
+[data-color-scheme=dark] .text-variant,
+[data-bs-theme=dark] .text-variant,
+[data-color-scheme=dark] .footer__callout-info,
+[data-bs-theme=dark] .footer__callout-info,
+[data-color-scheme=dark] .footer__callout-info p,
+[data-bs-theme=dark] .footer__callout-info p {
+    color: var(--typo3-text-color-variant, #d0d0d0) !important;
+}
+
+html[data-color-scheme=dark] .ns-ext-form .field-info-trigger,
+html[data-bs-theme=dark] .ns-ext-form .field-info-trigger,
+[data-color-scheme=dark] .ns-ext-form .field-info-trigger,
+[data-bs-theme=dark] .ns-ext-form .field-info-trigger,
+body[data-color-scheme=dark] .ns-ext-form .field-info-trigger,
+body[data-bs-theme=dark] .ns-ext-form .field-info-trigger {
+    color: #fff !important;
+}
+
+html[data-color-scheme=dark] .ns-ext-form .field-info-trigger svg,
+html[data-bs-theme=dark] .ns-ext-form .field-info-trigger svg,
+[data-color-scheme=dark] .ns-ext-form .field-info-trigger svg,
+[data-bs-theme=dark] .ns-ext-form .field-info-trigger svg,
+html[data-color-scheme=dark] .ns-ext-form .field-info-trigger svg g,
+html[data-bs-theme=dark] .ns-ext-form .field-info-trigger svg g,
+[data-color-scheme=dark] .ns-ext-form .field-info-trigger svg g,
+[data-bs-theme=dark] .ns-ext-form .field-info-trigger svg g,
+html[data-color-scheme=dark] .ns-ext-form .field-info-trigger svg path,
+html[data-bs-theme=dark] .ns-ext-form .field-info-trigger svg path,
+[data-color-scheme=dark] .ns-ext-form .field-info-trigger svg path,
+[data-bs-theme=dark] .ns-ext-form .field-info-trigger svg path {
+    color: #fff !important;
+    fill: #fff !important;
+}
+
+html[data-color-scheme=dark] .ns-ext-form .field-info-trigger:hover,
+html[data-bs-theme=dark] .ns-ext-form .field-info-trigger:hover,
+[data-color-scheme=dark] .ns-ext-form .field-info-trigger:hover,
+[data-bs-theme=dark] .ns-ext-form .field-info-trigger:hover {
+    color: #fff !important;
+    opacity: 0.85;
+}
+
+[data-color-scheme=dark] .footer__callout-info-icon,
+[data-bs-theme=dark] .footer__callout-info-icon {
+    color: #fff !important;
+}
+
+/* Modals — keep readable in Core dark (explicit BE theme attrs) */
+[data-color-scheme=dark] .google-docs-wizard-modal,
+[data-bs-theme=dark] .google-docs-wizard-modal {
+    --ns-gd-modal-bg: var(--typo3-modal-bg, #2b2b2b);
+    --ns-gd-modal-surface: var(--typo3-surface-container-high, #333333);
+    --ns-gd-modal-surface-high: var(--typo3-surface-container-highest, #3d3d3d);
+    --ns-gd-modal-text: #ffffff;
+    --ns-gd-modal-border: #5b5b5b;
+    --ns-gd-modal-input-bg: var(--typo3-input-bg, #1f1f1f);
+    --ns-gd-modal-input-color: #ffffff;
+    --ns-gd-modal-caret: #ffffff;
+    --ns-gd-modal-message-bg: var(--typo3-surface-container-high, #333333);
+    --ns-gd-modal-message-accent: var(--typo3-btn-primary-bg, #6aa3ff);
+}
+
+[data-color-scheme=dark] .google-docs-wizard-modal .modal-content,
+[data-bs-theme=dark] .google-docs-wizard-modal .modal-content {
+    background-color: var(--ns-gd-modal-bg) !important;
+    border: 1px solid var(--ns-gd-modal-border) !important;
+    color: var(--ns-gd-modal-text) !important;
+}
+
+[data-color-scheme=dark] .google-docs-wizard-modal .modal-header,
+[data-bs-theme=dark] .google-docs-wizard-modal .modal-header,
+[data-color-scheme=dark] .google-docs-wizard-modal .modal-footer,
+[data-bs-theme=dark] .google-docs-wizard-modal .modal-footer {
+    background: var(--ns-gd-modal-surface) !important;
+    color: var(--ns-gd-modal-text) !important;
+    border-color: var(--ns-gd-modal-border) !important;
+}
+
+[data-color-scheme=dark] .google-docs-wizard-modal .modal-body,
+[data-bs-theme=dark] .google-docs-wizard-modal .modal-body {
+    background: var(--ns-gd-modal-bg) !important;
+    color: var(--ns-gd-modal-text) !important;
+}
+
+[data-color-scheme=dark] .google-docs-wizard-modal .modal-header .modal-title,
+[data-bs-theme=dark] .google-docs-wizard-modal .modal-header .modal-title,
+[data-color-scheme=dark] .google-docs-wizard-modal .modal-header .close,
+[data-bs-theme=dark] .google-docs-wizard-modal .modal-header .close,
+[data-color-scheme=dark] .google-docs-wizard-modal .modal-body label,
+[data-bs-theme=dark] .google-docs-wizard-modal .modal-body label,
+[data-color-scheme=dark] .google-docs-wizard-modal .modal-body p,
+[data-bs-theme=dark] .google-docs-wizard-modal .modal-body p,
+[data-color-scheme=dark] .google-docs-wizard-modal .ns-gd-import-message,
+[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-import-message,
+[data-color-scheme=dark] .google-docs-wizard-modal .ns-gd-checkbox,
+[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-checkbox,
+[data-color-scheme=dark] .google-docs-wizard-modal .modal-header .modal-title .import-doc-Name,
+[data-bs-theme=dark] .google-docs-wizard-modal .modal-header .modal-title .import-doc-Name,
+[data-color-scheme=dark] .google-docs-wizard-modal .modal-header .modal-title .import-page-Name,
+[data-bs-theme=dark] .google-docs-wizard-modal .modal-header .modal-title .import-page-Name,
+[data-color-scheme=dark] .google-docs-wizard-modal .ns-gd-import-message .import-doc-Name,
+[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-import-message .import-doc-Name,
+[data-color-scheme=dark] .google-docs-wizard-modal .ns-gd-import-message .import-page-Name,
+[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-import-message .import-page-Name {
+    color: var(--ns-gd-modal-text) !important;
+}
+
+[data-color-scheme=dark] .google-docs-wizard-modal .ns-gd-import-message,
+[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-import-message,
+[data-color-scheme=dark] .google-docs-wizard-modal .ns-gd-checkbox,
+[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-checkbox {
+    background: var(--ns-gd-modal-message-bg) !important;
+    border-color: var(--ns-gd-modal-border) !important;
+}
+
+[data-color-scheme=dark] .google-docs-wizard-modal .ns-gd-import-message,
+[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-import-message {
+    border-left-color: var(--ns-gd-modal-message-accent) !important;
+}
+
+[data-color-scheme=dark] .google-docs-wizard-modal .ns-gd-field .form-control,
+[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-field .form-control,
+[data-color-scheme=dark] .google-docs-wizard-modal .ns-gd-field .form-select,
+[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-field .form-select,
+[data-color-scheme=dark] .google-docs-wizard-modal .ns-gd-field select,
+[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-field select,
+[data-color-scheme=dark] .google-docs-wizard-modal .ns-gd-field .form-control:hover,
+[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-field .form-control:hover,
+[data-color-scheme=dark] .google-docs-wizard-modal .ns-gd-field .form-select:hover,
+[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-field .form-select:hover,
+[data-color-scheme=dark] .google-docs-wizard-modal .ns-gd-field select:hover,
+[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-field select:hover,
+[data-color-scheme=dark] .google-docs-wizard-modal .ns-gd-field .form-control:focus,
+[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-field .form-control:focus,
+[data-color-scheme=dark] .google-docs-wizard-modal .ns-gd-field .form-select:focus,
+[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-field .form-select:focus,
+[data-color-scheme=dark] .google-docs-wizard-modal .ns-gd-field select:focus,
+[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-field select:focus {
+    background-color: var(--ns-gd-modal-input-bg) !important;
+    background-image: none !important;
+    border-color: var(--ns-gd-modal-border) !important;
+    color: var(--ns-gd-modal-input-color) !important;
+}
+
+[data-color-scheme=dark] .google-docs-wizard-modal .ns-gd-select::after,
+[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-select::after,
+[data-color-scheme=dark] .google-docs-wizard-modal .ns-gd-select:hover::after,
+[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-select:hover::after,
+[data-color-scheme=dark] .google-docs-wizard-modal .ns-gd-select:focus-within::after,
+[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-select:focus-within::after,
+html[data-color-scheme=dark] .google-docs-wizard-modal .ns-gd-select::after,
+html[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-select::after,
+html[data-color-scheme=dark] .google-docs-wizard-modal .ns-gd-select:hover::after,
+html[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-select:hover::after,
+html[data-color-scheme=dark] .google-docs-wizard-modal .ns-gd-select:focus-within::after,
+html[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-select:focus-within::after {
+    background-color: var(--ns-gd-modal-caret) !important;
+    opacity: 1 !important;
+}
+
+[data-color-scheme=dark] .google-docs-wizard-modal .modal-header .close:hover,
+[data-bs-theme=dark] .google-docs-wizard-modal .modal-header .close:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-color-scheme=dark] .google-docs-wizard-modal .modal-footer .btn-default,
+[data-bs-theme=dark] .google-docs-wizard-modal .modal-footer .btn-default,
+[data-color-scheme=dark] .google-docs-wizard-modal .modal-footer .btn-secondary,
+[data-bs-theme=dark] .google-docs-wizard-modal .modal-footer .btn-secondary {
+    background-color: var(--typo3-btn-default-bg, #2b2b2b) !important;
+    border-color: var(--typo3-btn-default-border-color, #5b5b5b) !important;
+    color: #fff !important;
+}
+
+[data-color-scheme=dark] .input-group-text,
+[data-bs-theme=dark] .input-group-text {
+    background-color: var(--typo3-surface-container-low, #333) !important;
+    border: 1px solid var(--typo3-component-border-color, #5b5b5b) !important;
+    color: #fff !important;
+}
+
+[data-color-scheme=dark] .ns-googledocs-datatable.table,
+[data-bs-theme=dark] .ns-googledocs-datatable.table,
+[data-color-scheme=dark] .ns-ext-datatable.table,
+[data-bs-theme=dark] .ns-ext-datatable.table {
+    border: 1px solid var(--typo3-component-border-color, #5b5b5b) !important;
+}
+
+/* Wrap owns the outer border — keep nested tables borderless */
+[data-color-scheme=dark] .ns-googledocs-table-wrap .ns-googledocs-datatable.table,
+[data-bs-theme=dark] .ns-googledocs-table-wrap .ns-googledocs-datatable.table,
+[data-color-scheme=dark] .ns-googledocs-table-wrap .ns-ext-datatable.table,
+[data-bs-theme=dark] .ns-googledocs-table-wrap .ns-ext-datatable.table,
+[data-color-scheme=dark] .ns-ext-table-wrap .ns-ext-datatable.table,
+[data-bs-theme=dark] .ns-ext-table-wrap .ns-ext-datatable.table,
+[data-color-scheme=dark] .ns-ext-list-table-wrap .ns-ext-datatable.table,
+[data-bs-theme=dark] .ns-ext-list-table-wrap .ns-ext-datatable.table,
+[data-color-scheme=dark] .ns-ext-list-table-wrap .table,
+[data-bs-theme=dark] .ns-ext-list-table-wrap .table {
+    border: 0 !important;
+}
+
+[data-color-scheme=dark] .ns-googledocs-datatable thead tr th,
+[data-bs-theme=dark] .ns-googledocs-datatable thead tr th,
+[data-color-scheme=dark] .ns-googledocs-datatable tr td,
+[data-bs-theme=dark] .ns-googledocs-datatable tr td,
+[data-color-scheme=dark] .ns-ext-datatable .thead-light tr th,
+[data-bs-theme=dark] .ns-ext-datatable .thead-light tr th,
+[data-color-scheme=dark] .ns-ext-datatable tbody tr td,
+[data-bs-theme=dark] .ns-ext-datatable tbody tr td {
+    border-color: var(--typo3-component-border-color, #5b5b5b) !important;
+}
+
+[data-color-scheme=dark] .ns-ext-list-table-wrap .dataTables_paginate .paginate_button,
+[data-bs-theme=dark] .ns-ext-list-table-wrap .dataTables_paginate .paginate_button,
+[data-color-scheme=dark] .dataTables_paginate .paginate_button,
+[data-bs-theme=dark] .dataTables_paginate .paginate_button,
+html[data-color-scheme=dark] .dataTables_paginate .paginate_button,
+html[data-bs-theme=dark] .dataTables_paginate .paginate_button,
+html[data-color-scheme=dark] .ns-ext-list-table-wrap .dataTables_paginate .paginate_button,
+html[data-bs-theme=dark] .ns-ext-list-table-wrap .dataTables_paginate .paginate_button,
+[data-color-scheme=dark] .pagination .page-link,
+[data-bs-theme=dark] .pagination .page-link,
+html[data-color-scheme=dark] .pagination .page-link,
+html[data-bs-theme=dark] .pagination .page-link {
+    background-color: #2b2b2b !important;
+    border-color: #5b5b5b !important;
+    color: #e8e8e8 !important;
+    box-shadow: none !important;
+}
+
+[data-color-scheme=dark] .dataTables_paginate .paginate_button.previous,
+[data-bs-theme=dark] .dataTables_paginate .paginate_button.previous,
+[data-color-scheme=dark] .dataTables_paginate span .paginate_button,
+[data-bs-theme=dark] .dataTables_paginate span .paginate_button,
+[data-color-scheme=dark] .dataTables_paginate .paginate_button.next,
+[data-bs-theme=dark] .dataTables_paginate .paginate_button.next,
+html[data-color-scheme=dark] .dataTables_paginate .paginate_button.previous,
+html[data-bs-theme=dark] .dataTables_paginate .paginate_button.previous,
+html[data-color-scheme=dark] .dataTables_paginate span .paginate_button,
+html[data-bs-theme=dark] .dataTables_paginate span .paginate_button,
+html[data-color-scheme=dark] .dataTables_paginate .paginate_button.next,
+html[data-bs-theme=dark] .dataTables_paginate .paginate_button.next {
+    border-color: #5b5b5b !important;
+}
+
+[data-color-scheme=dark] .ns-ext-list-table-wrap .dataTables_paginate .paginate_button.current,
+[data-bs-theme=dark] .ns-ext-list-table-wrap .dataTables_paginate .paginate_button.current,
+[data-color-scheme=dark] .dataTables_paginate .paginate_button.current,
+[data-bs-theme=dark] .dataTables_paginate .paginate_button.current,
+[data-color-scheme=dark] .dataTables_paginate .current,
+[data-bs-theme=dark] .dataTables_paginate .current,
+html[data-color-scheme=dark] .dataTables_paginate .paginate_button.current,
+html[data-bs-theme=dark] .dataTables_paginate .paginate_button.current,
+[data-color-scheme=dark] .pagination .page-item.active .page-link,
+[data-bs-theme=dark] .pagination .page-item.active .page-link,
+html[data-color-scheme=dark] .pagination .page-item.active .page-link,
+html[data-bs-theme=dark] .pagination .page-item.active .page-link {
+    background-color: var(--typo3-btn-primary-bg, #214191) !important;
+    border-color: var(--typo3-btn-primary-border-color, #214191) !important;
+    color: #fff !important;
+}
+
+[data-color-scheme=dark] .ns-ext-list-table-wrap .dataTables_paginate .paginate_button:hover:not(.current):not(.disabled),
+[data-bs-theme=dark] .ns-ext-list-table-wrap .dataTables_paginate .paginate_button:hover:not(.current):not(.disabled),
+[data-color-scheme=dark] .dataTables_paginate .paginate_button:hover:not(.current):not(.disabled),
+[data-bs-theme=dark] .dataTables_paginate .paginate_button:hover:not(.current):not(.disabled),
+html[data-color-scheme=dark] .dataTables_paginate .paginate_button:hover:not(.current):not(.disabled),
+html[data-bs-theme=dark] .dataTables_paginate .paginate_button:hover:not(.current):not(.disabled),
+[data-color-scheme=dark] .pagination .page-link:hover,
+[data-bs-theme=dark] .pagination .page-link:hover,
+html[data-color-scheme=dark] .pagination .page-link:hover,
+html[data-bs-theme=dark] .pagination .page-link:hover {
+    background-color: #3f3f3f !important;
+    border-color: #6b6b6b !important;
+    color: #fff !important;
+}
+
+[data-color-scheme=dark] .dataTables_paginate .paginate_button.disabled,
+[data-bs-theme=dark] .dataTables_paginate .paginate_button.disabled,
+[data-color-scheme=dark] .dataTables_paginate .paginate_button.disabled:hover,
+[data-bs-theme=dark] .dataTables_paginate .paginate_button.disabled:hover,
+html[data-color-scheme=dark] .dataTables_paginate .paginate_button.disabled,
+html[data-bs-theme=dark] .dataTables_paginate .paginate_button.disabled,
+[data-color-scheme=dark] .pagination .page-item.disabled .page-link,
+[data-bs-theme=dark] .pagination .page-item.disabled .page-link {
+    background-color: #242424 !important;
+    border-color: #4a4a4a !important;
+    color: #888 !important;
+    cursor: default !important;
+    opacity: 1 !important;
+}
+
+[data-color-scheme=dark] .ns-googledocs-table-wrap .dataTables_length select,
+[data-bs-theme=dark] .ns-googledocs-table-wrap .dataTables_length select,
+[data-color-scheme=dark] .ns-googledocs-table-wrap .dataTables_filter input,
+[data-bs-theme=dark] .ns-googledocs-table-wrap .dataTables_filter input,
+[data-color-scheme=dark] .ns-ext-list-table-wrap .dataTables_length select,
+[data-bs-theme=dark] .ns-ext-list-table-wrap .dataTables_length select,
+[data-color-scheme=dark] .ns-ext-list-table-wrap .dataTables_filter input,
+[data-bs-theme=dark] .ns-ext-list-table-wrap .dataTables_filter input {
+    background-color: var(--typo3-input-bg, #1e1e1e) !important;
+    border: 1px solid var(--typo3-input-border-color, #5b5b5b) !important;
+    color: var(--typo3-input-color, #fff) !important;
+}
+
+[data-color-scheme=dark] .alert,
+[data-bs-theme=dark] .alert,
+html[data-color-scheme=dark] .alert,
+html[data-bs-theme=dark] .alert {
+    border: 1px solid var(--typo3-component-border-color, #5b5b5b);
+}
+
+[data-color-scheme=dark] .scrollable-div,
+[data-bs-theme=dark] .scrollable-div {
+    border: 1px solid var(--typo3-component-border-color, #5b5b5b) !important;
+}
+
+/*
+ * Bootstrap 4 (bundled by this extension) paints light-mode alert colors.
+ * TYPO3 dark mode then overrides text to a light/white token → unreadable
+ * white-on-pink. Force TYPO3 surface tokens for all alert variants.
+ */
+.alert-danger {
+    color: var(--typo3-surface-container-danger-text, #721c24) !important;
+    background-color: var(--typo3-surface-container-danger, #f8d7da) !important;
+    border-color: var(--typo3-state-danger-border-color, #f5c6cb) !important;
+}
+
+.alert-warning {
+    color: var(--typo3-surface-container-warning-text, #856404) !important;
+    background-color: var(--typo3-surface-container-warning, #fff3cd) !important;
+    border-color: var(--typo3-state-warning-border-color, #ffeeba) !important;
+}
+
+.alert-success {
+    color: var(--typo3-surface-container-success-text, #155724) !important;
+    background-color: var(--typo3-surface-container-success, #d4edda) !important;
+    border-color: var(--typo3-state-success-border-color, #c3e6cb) !important;
+}
+
+.alert-info {
+    color: var(--typo3-surface-container-info-text, #0c5460) !important;
+    background-color: var(--typo3-surface-container-info, #d1ecf1) !important;
+    border-color: var(--typo3-state-info-border-color, #bee5eb) !important;
+}
+
+[data-color-scheme=dark] .alert-danger,
+[data-bs-theme=dark] .alert-danger,
+html[data-color-scheme=dark] .alert-danger,
+html[data-bs-theme=dark] .alert-danger,
+body[data-color-scheme=dark] .alert-danger,
+body[data-bs-theme=dark] .alert-danger {
+    color: var(--typo3-surface-container-danger-text, #f8d7da) !important;
+    background-color: var(--typo3-surface-container-danger, #4a1c1f) !important;
+    border-color: var(--typo3-state-danger-border-color, #842029) !important;
+}
+
+[data-color-scheme=dark] .alert-warning,
+[data-bs-theme=dark] .alert-warning,
+html[data-color-scheme=dark] .alert-warning,
+html[data-bs-theme=dark] .alert-warning,
+body[data-color-scheme=dark] .alert-warning,
+body[data-bs-theme=dark] .alert-warning {
+    color: var(--typo3-surface-container-warning-text, #ffe69c) !important;
+    background-color: var(--typo3-surface-container-warning, #432c0c) !important;
+    border-color: var(--typo3-state-warning-border-color, #997404) !important;
+}
+
+[data-color-scheme=dark] .alert-success,
+[data-bs-theme=dark] .alert-success,
+html[data-color-scheme=dark] .alert-success,
+html[data-bs-theme=dark] .alert-success,
+body[data-color-scheme=dark] .alert-success,
+body[data-bs-theme=dark] .alert-success {
+    color: var(--typo3-surface-container-success-text, #a3cfbb) !important;
+    background-color: var(--typo3-surface-container-success, #0f2f1d) !important;
+    border-color: var(--typo3-state-success-border-color, #146c43) !important;
+}
+
+[data-color-scheme=dark] .alert-info,
+[data-bs-theme=dark] .alert-info,
+html[data-color-scheme=dark] .alert-info,
+html[data-bs-theme=dark] .alert-info,
+body[data-color-scheme=dark] .alert-info,
+body[data-bs-theme=dark] .alert-info {
+    color: var(--typo3-surface-container-info-text, #9eeaf9) !important;
+    background-color: var(--typo3-surface-container-info, #032830) !important;
+    border-color: var(--typo3-state-info-border-color, #087990) !important;
+}
+
+[data-color-scheme=dark] .alert .close,
+[data-bs-theme=dark] .alert .close,
+html[data-color-scheme=dark] .alert .close,
+html[data-bs-theme=dark] .alert .close {
+    color: currentColor !important;
+    opacity: 0.85;
+    text-shadow: none;
+}
+
+[data-color-scheme=dark] .alert .btn-close,
+[data-bs-theme=dark] .alert .btn-close,
+html[data-color-scheme=dark] .alert .btn-close,
+html[data-bs-theme=dark] .alert .btn-close {
+    filter: invert(1) grayscale(100%);
+    opacity: 0.85;
+}
+
+[data-color-scheme=dark] #ns-googledocs__loader.ns-show-overlay::after,
+[data-bs-theme=dark] #ns-googledocs__loader.ns-show-overlay::after,
+html[data-color-scheme=dark] #ns-googledocs__loader.ns-show-overlay::after,
+html[data-bs-theme=dark] #ns-googledocs__loader.ns-show-overlay::after {
+    background-color: rgba(0, 0, 0, 0.45);
+}
+
+[data-color-scheme=dark] .ns-googledocs-table-loading-wrap .product-loader,
+[data-bs-theme=dark] .ns-googledocs-table-loading-wrap .product-loader,
+html[data-color-scheme=dark] .ns-googledocs-table-loading-wrap .product-loader,
+html[data-bs-theme=dark] .ns-googledocs-table-loading-wrap .product-loader,
+body[data-color-scheme=dark] .ns-googledocs-table-loading-wrap .product-loader,
+body[data-bs-theme=dark] .ns-googledocs-table-loading-wrap .product-loader {
+    background-color: color-mix(in srgb, var(--typo3-surface-container-lowest, #1e1e1e) 75%, transparent);
+}
+
+@supports not (background-color: color-mix(in srgb, #000 75%, transparent)) {
+    [data-color-scheme=dark] .ns-googledocs-table-loading-wrap .product-loader,
+    [data-bs-theme=dark] .ns-googledocs-table-loading-wrap .product-loader,
+    html[data-color-scheme=dark] .ns-googledocs-table-loading-wrap .product-loader,
+    html[data-bs-theme=dark] .ns-googledocs-table-loading-wrap .product-loader,
+    body[data-color-scheme=dark] .ns-googledocs-table-loading-wrap .product-loader,
+    body[data-bs-theme=dark] .ns-googledocs-table-loading-wrap .product-loader {
+        background-color: rgba(30, 30, 30, 0.75);
+    }
+}
+
+[data-color-scheme=dark] .ns-googledocs-table-loading-wrap .product-loader .spinner-border,
+[data-bs-theme=dark] .ns-googledocs-table-loading-wrap .product-loader .spinner-border,
+html[data-color-scheme=dark] .ns-googledocs-table-loading-wrap .product-loader .spinner-border,
+html[data-bs-theme=dark] .ns-googledocs-table-loading-wrap .product-loader .spinner-border,
+body[data-color-scheme=dark] .ns-googledocs-table-loading-wrap .product-loader .spinner-border,
+body[data-bs-theme=dark] .ns-googledocs-table-loading-wrap .product-loader .spinner-border {
+    color: var(--typo3-text-color-base, #f5f5f5);
+    border-right-color: transparent;
 }

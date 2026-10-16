@@ -1,9 +1,12 @@
 <?php
+
+declare(strict_types=1);
+
 namespace NITSAN\NsGoogledocs\Domain\Repository;
 
 /***
  *
- * This file is part of the "[NITSAN] Googledocs" Extension for TYPO3 CMS.
+ * This file is part of the "Googledocs" Extension for TYPO3 CMS.
  *
  * For the full copyright and license information, please read the
  * LICENSE.txt file that was distributed with this source code.
@@ -11,232 +14,242 @@ namespace NITSAN\NsGoogledocs\Domain\Repository;
  *  (c) 2020
  *
  ***/
-use Doctrine\DBAL\DBALException;
+
+use Doctrine\DBAL\Exception;
+use Doctrine\DBAL\ParameterType;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Persistence\Generic\Typo3QuerySettings;
+use TYPO3\CMS\Extbase\Persistence\Repository;
 
 /**
  * The repository for UserInfos
  */
-class UserInfoRepository extends \TYPO3\CMS\Extbase\Persistence\Repository
+class UserInfoRepository extends Repository
 {
-
-    // change default query settings
-    public function initializeObject()
+    public function initializeObject(): void
     {
-        // get the current settings
-        $querySettings = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Typo3QuerySettings');
-        // change the default setting, whether the storage page ID is ignored by the plugins (FALSE) or not (TRUE - default setting)
+        $querySettings = GeneralUtility::makeInstance(Typo3QuerySettings::class);
         $querySettings->setRespectStoragePage(false);
-        // store the new setting(s)
         $this->setDefaultQuerySettings($querySettings);
     }
 
     /**
-     * @param int $pageID
-     * @param array|null $element
-     * @param array|null $request
+     * @param array<string, mixed> $element
+     * @param array<string, mixed> $request
      */
-    public function insertPageElement($pageID, $element, $request)
+    public function insertPageElement(int $pageID, array $element, array $request): bool
     {
-        $status = 0;
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable('tt_content');
-        switch ($element['CType']) {
+        $connection = GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable('tt_content');
+        $header = $element['header'] ?? '';
+        $headerLayout = $element['header_layout'] ?? 0;
+        $colPos = (int)($request['colPos'] ?? 0);
+
+        switch ($element['CType'] ?? '') {
             case 'image':
-                $queryBuilder
-                    ->insert(
-                        'tt_content',
-                        [
-                            'pid' => $pageID,
-                            'CType' => $element['CType'],
-                            'colPos' => $request['colPos'],
-                            'sys_language_uid' => 0,
-                            'sorting' => $element['sorting'],
-                            'header' => (!is_null($element['header']) ? $element['header'] : ''),
-                            'header_layout' => (!is_null($element['header_layout']) ? $element['header_layout'] : 0),
-                            'image' => count($element['images']),
-                            'imageorient' => $element['imageorient'],
-                            'imagecols' => 1
-                      ]
-                    );
+                $connection->insert(
+                    'tt_content',
+                    [
+                        'pid' => $pageID,
+                        'CType' => $element['CType'],
+                        'colPos' => $colPos,
+                        'sys_language_uid' => 0,
+                        'sorting' => $element['sorting'] ?? 0,
+                        'header' => $header,
+                        'header_layout' => $headerLayout,
+                        'image' => count($element['images'] ?? []),
+                        'imageorient' => $element['imageorient'] ?? 0,
+                        'imagecols' => 1,
+                    ]
+                );
                 break;
             case 'textpic':
-                $queryBuilder
-                    ->insert(
-                        'tt_content',
-                        [
-                            'pid' => $pageID,
-                            'CType' => $element['CType'],
-                            'header' => (!is_null($element['header']) ? $element['header'] : ''),
-                            'header_layout' => (!is_null($element['header_layout']) ? $element['header_layout'] : 0),
-                            'bodytext' => $element['bodytext'],
-                            'colPos' => $request['colPos'],
-                            'sys_language_uid' => 0,
-                            'sorting' => $element['sorting'],
-                            'image' => count($element['images']),
-                            'imageorient' => $element['imageorient'],
-                            'imagecols' => 1
-                      ]
-                    );
+                $connection->insert(
+                    'tt_content',
+                    [
+                        'pid' => $pageID,
+                        'CType' => $element['CType'],
+                        'header' => $header,
+                        'header_layout' => $headerLayout,
+                        'bodytext' => $element['bodytext'] ?? '',
+                        'colPos' => $colPos,
+                        'sys_language_uid' => 0,
+                        'sorting' => $element['sorting'] ?? 0,
+                        'image' => count($element['images'] ?? []),
+                        'imageorient' => $element['imageorient'] ?? 0,
+                        'imagecols' => 1,
+                    ]
+                );
                 break;
             default:
-                $queryBuilder
-                    ->insert(
-                        'tt_content',
-                        [
-                            'pid' => $pageID,
-                            'CType' => $element['CType'],
-                            'header' => (!is_null($element['header']) ? $element['header'] : ''),
-                            'header_layout' => (!is_null($element['header_layout']) ? $element['header_layout'] : 0),
-                            'bodytext' => $element['bodytext'],
-                            'colPos' => $request['colPos'],
-                            'sys_language_uid' => 0,
-                            'sorting' => $element['sorting']
-                      ]
-                    );
+                $connection->insert(
+                    'tt_content',
+                    [
+                        'pid' => $pageID,
+                        'CType' => $element['CType'] ?? 'text',
+                        'header' => $header,
+                        'header_layout' => $headerLayout,
+                        'bodytext' => $element['bodytext'] ?? '',
+                        'colPos' => $colPos,
+                        'sys_language_uid' => 0,
+                        'sorting' => $element['sorting'] ?? 0,
+                    ]
+                );
                 break;
         }
-        // find the last inserted records uid
-        $lastUid =  (int)$queryBuilder->lastInsertId('tt_content');
-        if (($element['CType'] == 'image' || $element['CType'] == 'textpic') && ($lastUid != '' || !is_null($lastUid))) {
-            $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable('sys_file_reference');
+
+        $lastUid = (int)$connection->lastInsertId('tt_content');
+        if (
+            ($element['CType'] === 'image' || $element['CType'] === 'textpic')
+            && $lastUid > 0
+            && !empty($element['images'])
+        ) {
+            $refConnection = GeneralUtility::makeInstance(ConnectionPool::class)
+                ->getConnectionForTable('sys_file_reference');
             foreach ($element['images'] as $key => $img) {
-                $sortingForeign = 1 + $key;
-                $queryBuilder
-                    ->insert(
-                        'sys_file_reference',
-                        [
-                            'uid_local' => $img,
-                            'uid_foreign' => $lastUid,
-                            'tablenames' => 'tt_content',
-                            'fieldname' => 'image',
-                            'sorting_foreign' => $sortingForeign,
-                            'table_local' => 'sys_file'
-                      ]
-                    );
+                $refConnection->insert(
+                    'sys_file_reference',
+                    [
+                        'uid_local' => $img,
+                        'uid_foreign' => $lastUid,
+                        'tablenames' => 'tt_content',
+                        'fieldname' => 'image',
+                        'sorting_foreign' => 1 + (int)$key,
+                        'table_local' => 'sys_file',
+                    ]
+                );
             }
         }
-        if ($lastUid) {
-            return true;
-        } else {
-            return false;
-        }
+
+        return $lastUid > 0;
     }
 
-    /**
-     *
-     * @param int $pid
-     * @return array|null
-     */
-    public function findElementSorting($pid)
+    public function findElementSorting(int $pid): int
     {
-        $finalReports = [];
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable('tt_content')->createQueryBuilder();
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getConnectionForTable('tt_content')
+            ->createQueryBuilder();
         $result = $queryBuilder
             ->addSelectLiteral(
                 $queryBuilder->expr()->max('sorting', 'sorting')
             )
             ->from('tt_content')
             ->where(
-                $queryBuilder->expr()->eq('pid', $pid)
+                $queryBuilder->expr()->eq(
+                    'pid',
+                    $queryBuilder->createNamedParameter($pid, Connection::PARAM_INT)
+                )
             )
-            ->execute()
-            ->fetchAll();
-        if (is_null($result[0]['sorting'])) {
+            ->executeQuery()
+            ->fetchAssociative();
+
+        if (empty($result['sorting'])) {
             return 0;
-        } else {
-            return $result[0]['sorting'];
         }
+
+        return (int)$result['sorting'];
     }
 
     /**
-     *
-     * @param int $userID
-     * @param array|null $request
+     * @param array<string, mixed> $request
      */
-    public function updateDocsConfig($userID, $request)
+    public function updateDocsConfig(int $userID, array $request): bool
     {
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('be_users');
+        if (!isset($request['GoogleDocsClientId']) && !isset($request['GoogleDocsSecretKey'])) {
+            foreach ($request as $value) {
+                if (is_array($value) && (
+                    isset($value['GoogleDocsClientId']) || isset($value['GoogleDocsSecretKey'])
+                )) {
+                    $request = $value;
+                    break;
+                }
+            }
+        }
+
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getQueryBuilderForTable('be_users');
+
         $queryBuilder
             ->update('be_users')
             ->where(
-                $queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($userID, \PDO::PARAM_INT))
+                $queryBuilder->expr()->eq(
+                    'uid',
+                    $queryBuilder->createNamedParameter($userID, ParameterType::INTEGER)
+                )
             )
-            ->set('client_secret', $request['GoogleDocsSecretKey'])
-            ->set('client_id', $request['GoogleDocsClientId'])
-            ->set('refresh_token', $request['GoogleDocsRefreshToken']);
-        if ($request['importType'] != '') {
-            $queryBuilder->set('import_type', implode(',', $request['importType']));
+            ->set('client_secret', (string)($request['GoogleDocsSecretKey'] ?? ''), true, ParameterType::STRING)
+            ->set('client_id', (string)($request['GoogleDocsClientId'] ?? ''), true, ParameterType::STRING)
+            ->set('refresh_token', (string)($request['GoogleDocsRefreshToken'] ?? ''), true, ParameterType::STRING);
+
+        if (!empty($request['importType']) && is_array($request['importType'])) {
+            $queryBuilder->set(
+                'import_type',
+                implode(',', $request['importType']),
+                true,
+                ParameterType::STRING
+            );
         } else {
-            $queryBuilder->set('import_type', '');
+            $queryBuilder->set('import_type', '', true, ParameterType::STRING);
         }
+
         try {
-            $queryBuilder->execute();
-            $error = 0;
-        } catch (DBALException $e) {
-            $error = 1;
-        }
-        if ($error) {
-            return false;
-        } else {
+            $queryBuilder->executeStatement();
             return true;
+        } catch (Exception $e) {
+            return false;
         }
     }
 
-    /**
-     * Remove old entries from database
-     */
-    public function deleteOldApiData()
+    public function deleteOldApiData(): void
     {
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_nsgoogledocs_domain_model_apidata');
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getQueryBuilderForTable('tx_nsgoogledocs_domain_model_apidata');
         $queryBuilder
             ->delete('tx_nsgoogledocs_domain_model_apidata')
             ->where(
                 $queryBuilder->expr()->comparison('last_update', '<', 'DATE_SUB(NOW() , INTERVAL 2 WEEK)')
             )
-            ->execute();
-    }
-    /**
-     *
-     * @return array|null
-     */
-    public function checkApiData()
-    {
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_nsgoogledocs_domain_model_apidata');
-        $queryBuilder
-            ->select('*')
-            ->from('tx_nsgoogledocs_domain_model_apidata');
-        $query = $queryBuilder->execute();
-        return $query->fetch();
+            ->executeStatement();
     }
 
     /**
-     *
-     * @return array|null
+     * @return array<string, mixed>|false
      */
-    public function curlInitCall($url)
+    public function checkApiData(): array|false
+    {
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getQueryBuilderForTable('tx_nsgoogledocs_domain_model_apidata');
+        return $queryBuilder
+            ->select('*')
+            ->from('tx_nsgoogledocs_domain_model_apidata')
+            ->executeQuery()
+            ->fetchAssociative();
+    }
+
+    public function curlInitCall(string $url): string|false
     {
         $curlSession = curl_init();
         curl_setopt($curlSession, CURLOPT_URL, $url);
-        curl_setopt($curlSession, CURLOPT_BINARYTRANSFER, true);
         curl_setopt($curlSession, CURLOPT_RETURNTRANSFER, true);
         $data = curl_exec($curlSession);
         curl_close($curlSession);
 
         return $data;
     }
-    /**
-     *
-     * @param array|null $data
-     */
-    public function insertNewData($data)
-    {
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_nsgoogledocs_domain_model_apidata');
-        $row = $queryBuilder
-            ->insert('tx_nsgoogledocs_domain_model_apidata')
-            ->values($data);
 
-        $query = $queryBuilder->execute();
-        return $query;
+    /**
+     * @param array<string, mixed> $data
+     */
+    public function insertNewData(array $data): int|string
+    {
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getQueryBuilderForTable('tx_nsgoogledocs_domain_model_apidata');
+        $queryBuilder
+            ->insert('tx_nsgoogledocs_domain_model_apidata')
+            ->values($data)
+            ->executeStatement();
+
+        return $queryBuilder->getConnection()->lastInsertId();
     }
 }
