@@ -12,14 +12,13 @@ call_user_func(
             if (!array_key_exists('nitsan', $GLOBALS['TBE_MODULES'])) {
                 $GLOBALS['TBE_MODULES'] = array_slice($GLOBALS['TBE_MODULES'], 0, 1, true) + ['nitsan' => ''] + array_slice($GLOBALS['TBE_MODULES'], 1, count($GLOBALS['TBE_MODULES']) - 1, true);
 
-                if (version_compare(TYPO3_branch, '8.0', '>=')) {
-                    $GLOBALS['TBE_MODULES']['_configuration']['nitsan'] = [
-                        'iconIdentifier' => 'googledocs',
-                        'labels' => 'LLL:EXT:ns_googledocs/Resources/Private/Language/BackendModule.xlf',
-                        'name' => 'nitsan'
-                    ];
-                }
+                $GLOBALS['TBE_MODULES']['_configuration']['nitsan'] = [
+                    'iconIdentifier' => 'googledocs',
+                    'labels' => 'LLL:EXT:ns_googledocs/Resources/Private/Language/BackendModule.xlf',
+                    'name' => 'nitsan'
+                ];
             }
+            // TYPO3 10+ expects FQCN; older Extbase modules use the short controller name
             $userInfo = 'UserInfo';
             if (version_compare(TYPO3_branch, '10.0', '>=')) {
                 $userInfo = UserInfoController::class;
@@ -30,7 +29,8 @@ call_user_func(
                 'googledocs', // Submodule key
                 '', // Position
                 [
-                    $userInfo => 'dashboard, import, reports, globalSettings, premium, docsImport, update',
+                    // Free version: no reportsAction (premium-only)
+                    $userInfo => 'dashboard, import, globalSettings, premium, docsImport, update',
                 ],
                 [
                     'access' => 'user,group',
@@ -42,7 +42,10 @@ call_user_func(
             );
         }
 
-        \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addLLrefForTCAdescr('tx_nsgoogledocs_domain_model_userinfo', 'EXT:ns_googledocs/Resources/Private/Language/locallang_csh_tx_nsgoogledocs_domain_model_userinfo.xlf');
-        \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::allowTableOnStandardPages('tx_nsgoogledocs_domain_model_userinfo');
+        // Credentials live on be_users (see TCA Overrides); register matching CSH
+        \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addLLrefForTCAdescr(
+            'be_users',
+            'EXT:ns_googledocs/Resources/Private/Language/locallang_csh_be_users.xlf'
+        );
     }
 );

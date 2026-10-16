@@ -25,7 +25,7 @@ class UserInfoRepository extends \TYPO3\CMS\Extbase\Persistence\Repository
     public function initializeObject()
     {
         // get the current settings
-        $querySettings = $this->objectManager->get('TYPO3\\CMS\\Extbase\\Persistence\\Generic\\Typo3QuerySettings');
+        $querySettings = $this->objectManager->get(\TYPO3\CMS\Extbase\Persistence\Generic\Typo3QuerySettings::class);
         // change the default setting, whether the storage page ID is ignored by the plugins (FALSE) or not (TRUE - default setting)
         $querySettings->setRespectStoragePage(false);
         // store the new setting(s)
@@ -39,8 +39,14 @@ class UserInfoRepository extends \TYPO3\CMS\Extbase\Persistence\Repository
      */
     public function insertPageElement($pageID, $element, $request)
     {
-        $status = 0;
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable('tt_content');
+        $header = !is_null($element['header'] ?? null) ? (string)$element['header'] : '';
+        // tt_content.header is varchar(255); Google Docs headings can exceed that
+        if (mb_strlen($header) > 255) {
+            $header = mb_substr($header, 0, 255);
+        }
+        $headerLayout = !is_null($element['header_layout'] ?? null) ? $element['header_layout'] : 0;
+        $colPos = (int)($request['colPos'] ?? 0);
         switch ($element['CType']) {
             case 'image':
                 $queryBuilder
@@ -49,12 +55,12 @@ class UserInfoRepository extends \TYPO3\CMS\Extbase\Persistence\Repository
                         [
                             'pid' => $pageID,
                             'CType' => $element['CType'],
-                            'colPos' => $request['colPos'],
+                            'colPos' => $colPos,
                             'sys_language_uid' => 0,
                             'sorting' => $element['sorting'],
-                            'header' => (!is_null($element['header']) ? $element['header'] : ''),
-                            'header_layout' => (!is_null($element['header_layout']) ? $element['header_layout'] : 0),
-                            'image' => count($element['images']),
+                            'header' => $header,
+                            'header_layout' => $headerLayout,
+                            'image' => count($element['images'] ?? []),
                             'imageorient' => $element['imageorient'],
                             'imagecols' => 1
                       ]
@@ -67,13 +73,13 @@ class UserInfoRepository extends \TYPO3\CMS\Extbase\Persistence\Repository
                         [
                             'pid' => $pageID,
                             'CType' => $element['CType'],
-                            'header' => (!is_null($element['header']) ? $element['header'] : ''),
-                            'header_layout' => (!is_null($element['header_layout']) ? $element['header_layout'] : 0),
-                            'bodytext' => $element['bodytext'],
-                            'colPos' => $request['colPos'],
+                            'header' => $header,
+                            'header_layout' => $headerLayout,
+                            'bodytext' => $element['bodytext'] ?? '',
+                            'colPos' => $colPos,
                             'sys_language_uid' => 0,
                             'sorting' => $element['sorting'],
-                            'image' => count($element['images']),
+                            'image' => count($element['images'] ?? []),
                             'imageorient' => $element['imageorient'],
                             'imagecols' => 1
                       ]
@@ -86,10 +92,10 @@ class UserInfoRepository extends \TYPO3\CMS\Extbase\Persistence\Repository
                         [
                             'pid' => $pageID,
                             'CType' => $element['CType'],
-                            'header' => (!is_null($element['header']) ? $element['header'] : ''),
-                            'header_layout' => (!is_null($element['header_layout']) ? $element['header_layout'] : 0),
-                            'bodytext' => $element['bodytext'],
-                            'colPos' => $request['colPos'],
+                            'header' => $header,
+                            'header_layout' => $headerLayout,
+                            'bodytext' => $element['bodytext'] ?? '',
+                            'colPos' => $colPos,
                             'sys_language_uid' => 0,
                             'sorting' => $element['sorting']
                       ]
@@ -130,7 +136,6 @@ class UserInfoRepository extends \TYPO3\CMS\Extbase\Persistence\Repository
      */
     public function findElementSorting($pid)
     {
-        $finalReports = [];
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable('tt_content')->createQueryBuilder();
         $result = $queryBuilder
             ->addSelectLiteral(
@@ -138,15 +143,14 @@ class UserInfoRepository extends \TYPO3\CMS\Extbase\Persistence\Repository
             )
             ->from('tt_content')
             ->where(
-                $queryBuilder->expr()->eq('pid', $pid)
+                $queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter((int)$pid, \PDO::PARAM_INT))
             )
             ->execute()
             ->fetchAll();
-        if (is_null($result[0]['sorting'])) {
+        if (is_null($result[0]['sorting'] ?? null)) {
             return 0;
-        } else {
-            return $result[0]['sorting'];
         }
+        return $result[0]['sorting'];
     }
 
     /**
@@ -165,7 +169,7 @@ class UserInfoRepository extends \TYPO3\CMS\Extbase\Persistence\Repository
             ->set('client_secret', $request['GoogleDocsSecretKey'])
             ->set('client_id', $request['GoogleDocsClientId'])
             ->set('refresh_token', $request['GoogleDocsRefreshToken']);
-        if ($request['importType'] != '') {
+        if (!empty($request['importType']) && is_array($request['importType'])) {
             $queryBuilder->set('import_type', implode(',', $request['importType']));
         } else {
             $queryBuilder->set('import_type', '');
@@ -218,7 +222,6 @@ class UserInfoRepository extends \TYPO3\CMS\Extbase\Persistence\Repository
     {
         $curlSession = curl_init();
         curl_setopt($curlSession, CURLOPT_URL, $url);
-        curl_setopt($curlSession, CURLOPT_BINARYTRANSFER, true);
         curl_setopt($curlSession, CURLOPT_RETURNTRANSFER, true);
         $data = curl_exec($curlSession);
         curl_close($curlSession);
@@ -232,11 +235,9 @@ class UserInfoRepository extends \TYPO3\CMS\Extbase\Persistence\Repository
     public function insertNewData($data)
     {
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_nsgoogledocs_domain_model_apidata');
-        $row = $queryBuilder
+        return $queryBuilder
             ->insert('tx_nsgoogledocs_domain_model_apidata')
-            ->values($data);
-
-        $query = $queryBuilder->execute();
-        return $query;
+            ->values($data)
+            ->execute();
     }
 }

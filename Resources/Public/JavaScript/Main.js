@@ -47,17 +47,16 @@ define([
                 if(result !== '') {
                     var obj = $.parseJSON(result);
                     if (obj.status == true) {
-                        if (obj.affectedRows != '' && obj.affectedRows > 0) {
-                            require(['TYPO3/CMS/Backend/Notification'], function(Notification) {
-                                Notification.warning(obj.affectedRows + ' record(s) deleted before importing Google doc.');
-                            });    
-                        }
                         require(['TYPO3/CMS/Backend/Notification'], function(Notification) {
-                            Notification.success('Well done', 'The document was imported successfully.');
+                            var msg = 'The document was imported successfully.';
+                            if (obj.affectedRows) {
+                                msg += ' (' + obj.affectedRows + ' content element(s))';
+                            }
+                            Notification.success('Well done', msg);
                         });
                     } else {
                         require(['TYPO3/CMS/Backend/Notification'], function(Notification) {
-                            Notification.error('Error', 'The document was not imported successfully.');
+                            Notification.error('Error', obj.message || 'The document was not imported successfully.');
                         });
                     }
                 } else {

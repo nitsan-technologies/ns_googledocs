@@ -43,14 +43,7 @@ class UserInfo extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity
      *
      * @var string
      */
-    protected $importType = 0;
-
-    /**
-     * googleFilesRequest
-     *
-     * @var int
-     */
-    protected $googleFilesRequest = 10;
+    protected $importType = '1';
 
     /**
      * Returns the clientId
@@ -128,32 +121,11 @@ class UserInfo extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity
     /**
      * Sets the importType
      *
-     * @param int $importType
+     * @param string $importType
      * @return void
      */
     public function setImportType($importType)
     {
         $this->importType = $importType;
-    }
-
-    /**
-     * Returns the googleFilesRequest
-     *
-     * @return int $googleFilesRequest
-     */
-    public function getGoogleFilesRequest()
-    {
-        return $this->googleFilesRequest;
-    }
-
-    /**
-     * Sets the googleFilesRequest
-     *
-     * @param int $googleFilesRequest
-     * @return void
-     */
-    public function setGoogleFilesRequest($googleFilesRequest)
-    {
-        $this->googleFilesRequest = $googleFilesRequest;
     }
 }
