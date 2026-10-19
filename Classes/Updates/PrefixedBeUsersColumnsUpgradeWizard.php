@@ -97,12 +97,17 @@ final class PrefixedBeUsersColumnsUpgradeWizard implements UpgradeWizardInterfac
 
     public function getPrerequisites(): array
     {
-        if (class_exists(DatabaseUpdatedPrerequisite::class)) {
-            return [DatabaseUpdatedPrerequisite::class];
+        // Prefer the real EXT:install class on v12/v13: the v14 name is only an alias there
+        // and would bypass DI, breaking the prerequisite constructor.
+        if (class_exists(\TYPO3\CMS\Install\Updates\DatabaseUpdatedPrerequisite::class, false)
+            || !class_exists(DatabaseUpdatedPrerequisite::class)
+        ) {
+            if (class_exists(\TYPO3\CMS\Install\Updates\DatabaseUpdatedPrerequisite::class)) {
+                return [\TYPO3\CMS\Install\Updates\DatabaseUpdatedPrerequisite::class];
+            }
+            return [];
         }
-        if (class_exists(\TYPO3\CMS\Install\Updates\DatabaseUpdatedPrerequisite::class)) {
-            return [\TYPO3\CMS\Install\Updates\DatabaseUpdatedPrerequisite::class];
-        }
+        return [DatabaseUpdatedPrerequisite::class];
         return [];
     }
 
