@@ -36,8 +36,8 @@
 
 ## OAuth tokens
 
-- `updateAction` rejects a refresh token starting with `ya29.` (access token, ~1h lifetime);
-  refresh tokens usually start with `1//` (`GoogleTokenHelper`).
+- Global Settings accepts either a refresh token (usually `1//…`) or an access token (`ya29.…`).
+  Access tokens are applied with `setAccessToken()` and work until they expire (~1h).
 - `Google_Client::refreshToken()` returns `['error' => 'invalid_grant']` instead of throwing; the
   result is checked and explained to the editor. Section reading retries once after a token refresh.
 

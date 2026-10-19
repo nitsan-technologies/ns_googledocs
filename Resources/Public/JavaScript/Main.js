@@ -409,15 +409,6 @@ function initNsGoogledocsUi() {
         .on('submit.nsGdUpdate', '#update-user-info, #update-user-info-global', function (e) {
             e.preventDefault();
             const $form = $(this);
-            const refreshToken = String($form.find('[name="GoogleDocsRefreshToken"]').val() || '').trim();
-            if (refreshToken.indexOf('ya29.') === 0) {
-                Notification.error(
-                    'Invalid refresh token',
-                    'This looks like a short-lived access token (starts with "ya29.") that expires after about one hour. '
-                    + 'Please paste the refresh token instead, which usually starts with "1//".'
-                );
-                return;
-            }
             $.ajax({
                 url: $form.attr('action'),
                 method: 'post',

@@ -9,15 +9,17 @@ namespace NITSAN\NsGoogledocs\Service;
  */
 final class GoogleTokenHelper
 {
-    public const INVALID_REFRESH_TOKEN_MESSAGE = 'The value entered as "Refresh Token" looks like a short-lived OAuth access token '
-        . '(it starts with "ya29."). Access tokens expire after about one hour and then fail with "invalid_grant". '
-        . 'Please paste the refresh token instead — it usually starts with "1//" (e.g. in the OAuth Playground, '
-        . 'use "Exchange authorization code for tokens" and copy the "Refresh token" field).';
+    public const INVALID_GRANT_MESSAGE = 'Google rejected the stored token (invalid_grant). It may have expired or been '
+        . 'revoked. Generate a new token and save it under Global Settings. Note: OAuth apps in "Testing" publishing '
+        . 'status expire refresh tokens after 7 days; access tokens (starting with "ya29.") expire after about one hour.';
 
-    public const INVALID_GRANT_MESSAGE = 'Google rejected the stored refresh token (invalid_grant). The token has expired, '
-        . 'was revoked, or an access token (starting with "ya29.") was saved instead of a refresh token (usually starting '
-        . 'with "1//"). Generate a new refresh token and save it under Global Settings. Note: refresh tokens of OAuth apps '
-        . 'in "Testing" publishing status expire after 7 days.';
+    /**
+     * True when the value is a Google OAuth access token (usable until it expires).
+     */
+    public static function isAccessToken(string $token): bool
+    {
+        return str_starts_with(trim($token), 'ya29.');
+    }
 
     /**
      * @return string|null Error message, or null when the value is acceptable.
@@ -28,11 +30,8 @@ final class GoogleTokenHelper
         if ($token === '') {
             return null;
         }
-        if (str_starts_with($token, 'ya29.')) {
-            return self::INVALID_REFRESH_TOKEN_MESSAGE;
-        }
         if (preg_match('/\s/', $token)) {
-            return 'The refresh token must not contain spaces or line breaks.';
+            return 'The token must not contain spaces or line breaks.';
         }
         return null;
     }

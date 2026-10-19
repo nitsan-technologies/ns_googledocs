@@ -193,9 +193,10 @@ class UserInfoController extends ActionController
     }
 
     /**
-     * Fetch a fresh access token from the stored refresh token. Google_Client::refreshToken()
-     * does not throw on OAuth errors but returns ['error' => 'invalid_grant', ...], so the result
-     * is inspected and turned into an actionable message.
+     * Apply the stored credential: a ya29.* value is used as an access token directly;
+     * otherwise it is treated as a refresh token and exchanged via Google_Client::refreshToken().
+     * Google_Client::refreshToken() does not throw on OAuth errors but returns
+     * ['error' => 'invalid_grant', ...], so the result is inspected.
      */
     protected function refreshAccessToken(): bool
     {
@@ -208,6 +209,26 @@ class UserInfoController extends ActionController
             return false;
         }
         $formatError = GoogleTokenHelper::validateRefreshToken($this->refreshToken);
+        if ($formatError !== null) {
+            $this->tokenError = $formatError;
+            return false;
+        }
+
+        // Access tokens can be pasted into the same field and used until they expire.
+        if (GoogleTokenHelper::isAccessToken($this->refreshToken)) {
+            try {
+                $this->client->setAccessToken([
+                    'access_token' => $this->refreshToken,
+                    'expires_in' => 3600,
+                    'created' => time(),
+                ]);
+            } catch (\Throwable $e) {
+                $this->tokenError = GoogleTokenHelper::explain($e->getMessage());
+                return false;
+            }
+            return true;
+        }
+
         try {
             $token = $this->client->refreshToken($this->refreshToken);
         } catch (\Throwable $e) {
@@ -218,7 +239,7 @@ class UserInfoController extends ActionController
             $raw = is_array($token)
                 ? trim((string)($token['error'] ?? '') . ' ' . (string)($token['error_description'] ?? ''))
                 : '';
-            $this->tokenError = $formatError ?? GoogleTokenHelper::explain($raw !== '' ? $raw : 'invalid_grant');
+            $this->tokenError = GoogleTokenHelper::explain($raw !== '' ? $raw : 'invalid_grant');
             return false;
         }
         return true;
@@ -1131,6 +1152,7 @@ class UserInfoController extends ActionController
             if ($tokenError !== null) {
                 return new JsonResponse(['status' => false, 'error' => $tokenError]);
             }
+            // Access tokens (ya29.*) and refresh tokens (1//…) are both accepted.
             $result = $this->userInfoRepository->updateDocsConfig(
                 (int)($this->globalSettings['clientInfo']['uid'] ?? 0),
                 $request

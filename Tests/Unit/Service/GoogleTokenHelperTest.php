@@ -11,19 +11,28 @@ use PHPUnit\Framework\TestCase;
 final class GoogleTokenHelperTest extends TestCase
 {
     #[Test]
-    public function rejectsAccessTokenAsRefreshToken(): void
+    public function acceptsAccessTokenAndRefreshToken(): void
     {
-        $error = GoogleTokenHelper::validateRefreshToken('ya29.a0AfH6SMBxyz');
-        self::assertNotNull($error);
-        self::assertStringContainsString('1//', $error);
-    }
-
-    #[Test]
-    public function acceptsRefreshTokenAndEmptyValue(): void
-    {
+        self::assertNull(GoogleTokenHelper::validateRefreshToken('ya29.a0AfH6SMBxyz'));
         self::assertNull(GoogleTokenHelper::validateRefreshToken('1//0gAbCdEf-GhIj'));
         self::assertNull(GoogleTokenHelper::validateRefreshToken(' 1//0gAbCdEf '));
         self::assertNull(GoogleTokenHelper::validateRefreshToken(''));
+    }
+
+    #[Test]
+    public function detectsAccessTokenPrefix(): void
+    {
+        self::assertTrue(GoogleTokenHelper::isAccessToken('ya29.a0AfH6SMBxyz'));
+        self::assertTrue(GoogleTokenHelper::isAccessToken('  ya29.token  '));
+        self::assertFalse(GoogleTokenHelper::isAccessToken('1//0gAbCdEf-GhIj'));
+    }
+
+    #[Test]
+    public function rejectsTokenWithWhitespace(): void
+    {
+        $error = GoogleTokenHelper::validateRefreshToken("1//abc\ndef");
+        self::assertNotNull($error);
+        self::assertStringContainsString('spaces', $error);
     }
 
     #[Test]
