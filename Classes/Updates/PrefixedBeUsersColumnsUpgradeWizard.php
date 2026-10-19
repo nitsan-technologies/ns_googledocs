@@ -11,6 +11,18 @@ use TYPO3\CMS\Core\Upgrades\DatabaseUpdatedPrerequisite;
 use TYPO3\CMS\Core\Upgrades\UpgradeWizardInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
+// TYPO3 v12/v13 compatibility: these classes live in EXT:install until v14.
+if (!interface_exists(UpgradeWizardInterface::class)
+    && interface_exists(\TYPO3\CMS\Install\Updates\UpgradeWizardInterface::class)
+) {
+    class_alias(\TYPO3\CMS\Install\Updates\UpgradeWizardInterface::class, UpgradeWizardInterface::class);
+}
+if (!class_exists(DatabaseUpdatedPrerequisite::class)
+    && class_exists(\TYPO3\CMS\Install\Updates\DatabaseUpdatedPrerequisite::class)
+) {
+    class_alias(\TYPO3\CMS\Install\Updates\DatabaseUpdatedPrerequisite::class, DatabaseUpdatedPrerequisite::class);
+}
+
 /**
  * Copies legacy unprefixed be_users credential columns into tx_nsgoogledocs_* fields.
  */
