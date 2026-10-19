@@ -20,11 +20,22 @@ namespace NITSAN\NsGoogledocs\Service;
 final class GoogleDocsSectionParser
 {
     /**
+     * Remove XML declarations / processing instructions that DOMDocument::loadHTML() serializes as
+     * "<!--?xml encoding="UTF-8"-->" (from the common '<?xml encoding' charset hack) or that leak in
+     * from exported markup.
+     */
+    public static function stripXmlArtifacts(string $html): string
+    {
+        $html = (string)(preg_replace('/<!--\?xml[^>]*?-->|<\?xml[^>]*\?>|<\?xml[^>]*>/i', '', $html) ?? $html);
+        return $html;
+    }
+
+    /**
      * @return list<array{index: int, title: string, fallbackTitle: string, headingLevel: int, html: string, hasImages: bool}>
      */
     public function parse(string $html): array
     {
-        $html = trim($html);
+        $html = trim(self::stripXmlArtifacts($html));
         if ($html === '') {
             return [];
         }
@@ -147,7 +158,7 @@ final class GoogleDocsSectionParser
         foreach ($blocks as $node) {
             $parts[] = trim((string)$dom->saveHTML($node->cloneNode(true)));
         }
-        $html = $this->separateBlocks(implode("\n", array_filter($parts, static fn(string $part): bool => $part !== '')));
+        $html = self::stripXmlArtifacts($this->separateBlocks(implode("\n", array_filter($parts, static fn(string $part): bool => $part !== ''))));
         $hasImages = (bool)preg_match('/<img\b/i', $html);
 
         return [
@@ -338,11 +349,27 @@ final class GoogleDocsSectionParser
             return [];
         }
 
-        $wrapper = $dom->createElement('p');
+        // Keep block children (e.g. an H3 nested in the exported H1/H2) as real blocks so
+        // sub-headings stay <h3>…</h3> instead of being flattened into a paragraph.
+        $result = [];
+        $wrapper = null;
         foreach (iterator_to_array($container->childNodes) as $child) {
-            $wrapper->appendChild($dom->importNode($child, true));
+            $imported = $dom->importNode($child, true);
+            if ($imported instanceof \DOMElement && preg_match('/^(?:h[1-6]|p|ul|ol|table|blockquote|hr|div)$/', strtolower($imported->tagName))) {
+                if ($wrapper !== null) {
+                    $result[] = $wrapper;
+                    $wrapper = null;
+                }
+                $result[] = $imported;
+                continue;
+            }
+            $wrapper ??= $dom->createElement('p');
+            $wrapper->appendChild($imported);
         }
-        return [$wrapper];
+        if ($wrapper !== null) {
+            $result[] = $wrapper;
+        }
+        return $result;
     }
 
     /**
@@ -361,11 +388,60 @@ final class GoogleDocsSectionParser
         $parts = preg_split('/<br\s*\/?>/i', $inner, 2);
         $titleHtml = (string)($parts[0] ?? '');
         $bodyHtml = (string)($parts[1] ?? '');
+        if (count($parts) < 2 && $dom instanceof \DOMDocument) {
+            [$titleHtml, $bodyHtml] = $this->splitHeadingInlineRuns($heading, $dom, $titleHtml);
+        }
         $title = $this->normalizeText(html_entity_decode(strip_tags($titleHtml), ENT_QUOTES, 'UTF-8'));
         if ($title === '') {
             $title = $this->normalizeText($heading->textContent ?? '');
         }
         return [$title, $bodyHtml];
+    }
+
+    /**
+     * Google sometimes exports "<h1><span>Title</span><span>Body copy…</span></h1>" (no <br>).
+     * Use the first non-empty inline run as title when the remaining runs read like body copy
+     * (sentence punctuation at the end or longer than 40 characters), so styled title fragments
+     * such as "<span>Hello </span><b>World</b>" are not split.
+     *
+     * @return array{0: string, 1: string}
+     */
+    private function splitHeadingInlineRuns(\DOMElement $heading, \DOMDocument $dom, string $fallbackTitleHtml): array
+    {
+        $runs = [];
+        foreach (iterator_to_array($heading->childNodes) as $child) {
+            if ($this->normalizeText($child->textContent ?? '') === '') {
+                continue;
+            }
+            $runs[] = $child;
+        }
+        // Single wrapper span holding several runs: descend one level.
+        if (count($runs) === 1 && $runs[0] instanceof \DOMElement && strtolower($runs[0]->tagName) === 'span') {
+            $inner = [];
+            foreach (iterator_to_array($runs[0]->childNodes) as $child) {
+                if ($this->normalizeText($child->textContent ?? '') !== '' && $child instanceof \DOMElement) {
+                    $inner[] = $child;
+                }
+            }
+            if (count($inner) >= 2) {
+                $runs = $inner;
+            }
+        }
+        if (count($runs) < 2) {
+            return [$fallbackTitleHtml, ''];
+        }
+        $rest = '';
+        $restText = '';
+        foreach (array_slice($runs, 1) as $run) {
+            $rest .= $dom->saveHTML($run);
+            $restText .= ' ' . ($run->textContent ?? '');
+        }
+        $restText = $this->normalizeText($restText);
+        $looksLikeBody = mb_strlen($restText, 'UTF-8') > 40 || preg_match('/[.!?…:]$/u', $restText);
+        if (!$looksLikeBody) {
+            return [$fallbackTitleHtml, ''];
+        }
+        return [(string)$dom->saveHTML($runs[0]), $rest];
     }
 
     private function normalizeText(string $text): string

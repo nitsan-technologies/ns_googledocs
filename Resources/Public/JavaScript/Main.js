@@ -200,7 +200,8 @@ function initNsGoogledocsUi() {
         $('.btn-import-now').prop('disabled', false);
     }
 
-    function loadDocSections() {
+    function loadDocSections(attempt) {
+        attempt = attempt || 1;
         const $form = $('#docsImport');
         const previewUrl = String($form.attr('data-preview-action') || '').trim();
         const googleDocsId = getStoredGoogleDocsFileId($form);
@@ -220,6 +221,7 @@ function initNsGoogledocsUi() {
             method: 'post',
             data: $form.serialize(),
             dataType: 'json',
+            timeout: 90000,
             success: function (result) {
                 $('.ns-gd-sections-loading').addClass('hide');
                 const obj = parseJsonPayload(result);
@@ -231,9 +233,15 @@ function initNsGoogledocsUi() {
                     );
                 }
             },
-            error: function (xhr) {
+            error: function (xhr, textStatus) {
+                // Network hiccup, timeout or server error on the first open: retry once silently.
+                if (attempt < 2 && (textStatus === 'timeout' || xhr.status === 0 || xhr.status >= 500)) {
+                    loadDocSections(attempt + 1);
+                    return;
+                }
                 $('.ns-gd-sections-loading').addClass('hide');
-                let message = 'Could not read document sections.';
+                let message = 'Could not read document sections'
+                    + (xhr.status ? ' (HTTP ' + xhr.status + ')' : (textStatus ? ' (' + textStatus + ')' : '')) + '.';
                 try {
                     const obj = parseJsonPayload(xhr.responseText);
                     if (obj && obj.error) {
@@ -401,6 +409,15 @@ function initNsGoogledocsUi() {
         .on('submit.nsGdUpdate', '#update-user-info, #update-user-info-global', function (e) {
             e.preventDefault();
             const $form = $(this);
+            const refreshToken = String($form.find('[name="GoogleDocsRefreshToken"]').val() || '').trim();
+            if (refreshToken.indexOf('ya29.') === 0) {
+                Notification.error(
+                    'Invalid refresh token',
+                    'This looks like a short-lived access token (starts with "ya29.") that expires after about one hour. '
+                    + 'Please paste the refresh token instead, which usually starts with "1//".'
+                );
+                return;
+            }
             $.ajax({
                 url: $form.attr('action'),
                 method: 'post',
@@ -410,10 +427,10 @@ function initNsGoogledocsUi() {
                     const obj = parseJsonPayload(result);
                     if (obj && obj.status === true) {
                         Notification.success('Well done', 'Your Configuration was setup successfully.');
+                        window.location.reload();
                     } else {
-                        Notification.error('Error', 'Your Configuration was not setup successfully.');
+                        Notification.error('Error', (obj && obj.error) ? obj.error : 'Your Configuration was not setup successfully.');
                     }
-                    window.location.reload();
                 },
                 error: function () {
                     Notification.error('Error', 'Your Configuration was not setup successfully.');

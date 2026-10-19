@@ -22,7 +22,29 @@
   characters; image-only headings keep the image as body. Untitled sections get `fallbackTitle`
   (body excerpt, else `import_section_untitled`) shown as input placeholder; CE header stays empty.
 - Section HTML is normalized for every CType: H3–H6 "Title<br>body" split into heading + `<p>`,
-  empty `<p>` removed, newline after block ends / `<br>`.
+  empty `<p>` removed, newline after block ends / `<br>`. Block children nested inside an exported
+  H1/H2 (e.g. an `<h3>`) stay real blocks; H3+ are never flattened into `<p>`.
+- Headings exported as `<span>Title</span><span>Body…</span>` (no `<br>`) use the first run as title
+  when the rest reads like body copy (> 40 chars or ends with sentence punctuation).
+- `<!--?xml …-->` / `<?xml …?>` artifacts are stripped (`GoogleDocsSectionParser::stripXmlArtifacts`).
+
+## Page type restriction
+
+`ImportPageTypeGuard`: import allowed only on doktypes from extension setting `allowedImportDoktypes`
+(default `1`). 3, 4, 6, 7, 199, 254, 255 are always blocked. Enforced in `importAction` (UI message
+`import_access_error_msg`) and server-side in `previewSectionsAction` / `docsImportAction`.
+
+## OAuth tokens
+
+- `updateAction` rejects a refresh token starting with `ya29.` (access token, ~1h lifetime);
+  refresh tokens usually start with `1//` (`GoogleTokenHelper`).
+- `Google_Client::refreshToken()` returns `['error' => 'invalid_grant']` instead of throwing; the
+  result is checked and explained to the editor. Section reading retries once after a token refresh.
+
+## Remote marketing blocks
+
+Fetched from `https://composer.t3planet.cloud/API/ExtBackendModuleAPI.php` (old t3terminal host
+answers 301). `RemoteSnippetValidator` drops full HTML documents / error pages, also from cached rows.
 
 ## Free vs premium
 

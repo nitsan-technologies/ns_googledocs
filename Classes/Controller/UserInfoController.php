@@ -18,8 +18,11 @@ namespace NITSAN\NsGoogledocs\Controller;
 use NITSAN\NsGoogledocs\Backend\PremiumStrip;
 use NITSAN\NsGoogledocs\Domain\Repository\UserInfoRepository;
 use NITSAN\NsGoogledocs\Service\GoogleDocsSectionParser;
+use NITSAN\NsGoogledocs\Service\GoogleTokenHelper;
+use NITSAN\NsGoogledocs\Service\ImportPageTypeGuard;
 use NITSAN\NsGoogledocs\Service\RemoteContentFetcher;
 use NITSAN\NsGoogledocs\Service\RemoteHtmlSanitizer;
+use NITSAN\NsGoogledocs\Service\RemoteSnippetValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
@@ -61,6 +64,8 @@ class UserInfoController extends ActionController
     protected RemoteContentFetcher $remoteContentFetcher;
     protected GoogleDocsSectionParser $sectionParser;
     protected bool $apiContentLoaded = false;
+    protected string $refreshToken = '';
+    protected string $tokenError = '';
 
     private const PREVIEW_SESSION_KEY = 'ns_googledocs_import_preview';
 
@@ -126,11 +131,13 @@ class UserInfoController extends ActionController
                 $this->client = new \Google_Client();
                 $this->client->setClientId($clientId);
                 $this->client->setClientSecret($clientSecret);
-                $this->client->refreshToken($refreshToken);
                 $this->client->setAccessType('offline');
+                $this->refreshToken = $refreshToken;
+                $this->refreshAccessToken();
                 $this->service = new \Google_Service_Drive($this->client);
                 $this->globalSettings['clientException'] = false;
             } catch (\Exception $e) {
+                $this->tokenError = GoogleTokenHelper::explain($e->getMessage());
                 $this->globalSettings['clientException'] = transalte::translate('service.exception', 'ns_googledocs');
             }
             $this->globalSettings['clientStatus'] = true;
@@ -186,6 +193,64 @@ class UserInfoController extends ActionController
     }
 
     /**
+     * Fetch a fresh access token from the stored refresh token. Google_Client::refreshToken()
+     * does not throw on OAuth errors but returns ['error' => 'invalid_grant', ...], so the result
+     * is inspected and turned into an actionable message.
+     */
+    protected function refreshAccessToken(): bool
+    {
+        if ($this->client === null) {
+            return false;
+        }
+        $this->tokenError = '';
+        if ($this->refreshToken === '') {
+            $this->tokenError = 'No refresh token is configured. Add it under Global Settings.';
+            return false;
+        }
+        $formatError = GoogleTokenHelper::validateRefreshToken($this->refreshToken);
+        try {
+            $token = $this->client->refreshToken($this->refreshToken);
+        } catch (\Throwable $e) {
+            $this->tokenError = GoogleTokenHelper::explain($e->getMessage());
+            return false;
+        }
+        if (!is_array($token) || isset($token['error']) || empty($token['access_token'])) {
+            $raw = is_array($token)
+                ? trim((string)($token['error'] ?? '') . ' ' . (string)($token['error_description'] ?? ''))
+                : '';
+            $this->tokenError = $formatError ?? GoogleTokenHelper::explain($raw !== '' ? $raw : 'invalid_grant');
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Page type (doktype) of the current page allows imports.
+     */
+    protected function isImportAllowedOnCurrentPage(): bool
+    {
+        if (!is_array($this->pageInformation) || !isset($this->pageInformation['uid'])) {
+            return false;
+        }
+        try {
+            $configured = GeneralUtility::makeInstance(ExtensionConfiguration::class)
+                ->get('ns_googledocs', 'allowedImportDoktypes');
+        } catch (\Throwable) {
+            $configured = '';
+        }
+        return ImportPageTypeGuard::isAllowed(
+            (int)($this->pageInformation['doktype'] ?? 0),
+            ImportPageTypeGuard::parseAllowlist($configured)
+        );
+    }
+
+    protected function getPageTypeDeniedMessage(): string
+    {
+        return (string)(transalte::translate('import_access_error_msg', 'ns_googledocs')
+            ?: 'You do not have access to import Google docs on this page type, Go to Global Settings');
+    }
+
+    /**
      * Load and sanitize remote marketing HTML only for UI actions that need it.
      */
     protected function ensureApiContentLoaded(): void
@@ -198,13 +263,12 @@ class UserInfoController extends ActionController
         $checkApiData = $this->userInfoRepository->checkApiData();
         if (!$checkApiData) {
             $this->userInfoRepository->deleteOldApiData();
-            $googleDocsSetupWizard = 'https://composer.t3terminal.com/API/ExtBackendModuleAPI.php?extKey=ns_googledocs&blockName=GoogleDocsSetupWizard';
-            $dashboardSupportUrl = 'https://composer.t3terminal.com/API/ExtBackendModuleAPI.php?extKey=ns_googledocs&blockName=DashboardSupport';
-            $generalFooterUrl = 'https://composer.t3terminal.com/API/ExtBackendModuleAPI.php?extKey=ns_googledocs&blockName=GeneralFooter';
+            // composer.t3terminal.com answers with "301 Moved Permanently" to this host.
+            $apiBase = 'https://composer.t3planet.cloud/API/ExtBackendModuleAPI.php?extKey=ns_googledocs&blockName=';
 
-            $this->apiContent['googleDocsSetupWizard'] = (string)$this->userInfoRepository->curlInitCall($googleDocsSetupWizard);
-            $this->apiContent['dashboardSupportData'] = (string)$this->userInfoRepository->curlInitCall($dashboardSupportUrl);
-            $this->apiContent['generalFooterData'] = (string)$this->userInfoRepository->curlInitCall($generalFooterUrl);
+            $this->apiContent['googleDocsSetupWizard'] = RemoteSnippetValidator::filter((string)$this->userInfoRepository->curlInitCall($apiBase . 'GoogleDocsSetupWizard'));
+            $this->apiContent['dashboardSupportData'] = RemoteSnippetValidator::filter((string)$this->userInfoRepository->curlInitCall($apiBase . 'DashboardSupport'));
+            $this->apiContent['generalFooterData'] = RemoteSnippetValidator::filter((string)$this->userInfoRepository->curlInitCall($apiBase . 'GeneralFooter'));
 
             $data = [
                 'googleDocsSetupWizard' => $this->apiContent['googleDocsSetupWizard'],
@@ -222,7 +286,9 @@ class UserInfoController extends ActionController
         }
 
         foreach (['googleDocsSetupWizard', 'dashboardSupportData', 'generalFooterData'] as $key) {
-            $this->apiContent[$key] = $this->remoteHtmlSanitizer->sanitize((string)($this->apiContent[$key] ?? ''));
+            // Cached rows may still hold error pages (e.g. "301 Moved Permanently") from older versions.
+            $value = RemoteSnippetValidator::filter((string)($this->apiContent[$key] ?? ''));
+            $this->apiContent[$key] = $value === '' ? '' : $this->remoteHtmlSanitizer->sanitize($value);
         }
     }
 
@@ -280,20 +346,13 @@ class UserInfoController extends ActionController
         } else {
             $this->globalSettings['pageTitle'] = $this->pageInformation['title'] ?? '';
             $this->globalSettings['importStatus'] = false;
-            $doktype = (int)($this->pageInformation['doktype'] ?? 0);
-
-            if ($doktype === 254) {
-                $this->globalSettings['importStatus'] = false;
-            } else {
+            // Only standard pages (configurable allowlist) — no sysfolder, spacer, shortcut, link, mount point, recycler …
+            if ($this->isImportAllowedOnCurrentPage()) {
                 $pageColPos = $this->getBackendLayoutColumns((int)$this->pageUid);
-                if ($doktype === 137) {
-                    $this->globalSettings['importStatus'] = false;
-                } else {
-                    $this->globalSettings['docsImportType'] = transalte::translate('reports_import_type.1', 'ns_googledocs');
-                    $this->globalSettings['docsImportTypeID'] = 1;
-                    if (isset($this->globalSettings['clientInfo']['import_type'][1])) {
-                        $this->globalSettings['importStatus'] = true;
-                    }
+                $this->globalSettings['docsImportType'] = transalte::translate('reports_import_type.1', 'ns_googledocs');
+                $this->globalSettings['docsImportTypeID'] = 1;
+                if (isset($this->globalSettings['clientInfo']['import_type'][1])) {
+                    $this->globalSettings['importStatus'] = true;
                 }
             }
 
@@ -327,8 +386,13 @@ class UserInfoController extends ActionController
                         }
                     }
                     $msgException = false;
-                } catch (\Google_Service_Exception $e) {
+                } catch (\Throwable $e) {
                     $msgException = transalte::translate('listFiles.exception', 'ns_googledocs');
+                    if ($this->tokenError !== '') {
+                        $msgException .= ' ' . $this->tokenError;
+                    } elseif (GoogleTokenHelper::isInvalidGrant($e->getMessage()) || $e->getCode() === 401) {
+                        $msgException .= ' ' . GoogleTokenHelper::explain($e->getMessage() . ($e->getCode() === 401 ? ' "code": 401' : ''));
+                    }
                 }
             }
 
@@ -368,11 +432,18 @@ class UserInfoController extends ActionController
         $request = $this->getPluginRequestArguments();
         $googleDocsId = $this->extractGoogleDocsIdFromArguments($request);
         if ($this->service === null || $googleDocsId === '') {
-            return new JsonResponse(['status' => false, 'error' => 'Missing Google Docs id or client.']);
+            return new JsonResponse([
+                'status' => false,
+                'error' => $this->tokenError !== '' ? $this->tokenError : 'Missing Google Docs id or client.',
+            ]);
+        }
+        $pageDenied = $this->denyImportForPageType($request);
+        if ($pageDenied !== null) {
+            return $pageDenied;
         }
 
         try {
-            $sections = $this->fetchAndParseSections($googleDocsId);
+            $sections = $this->fetchAndParseSectionsWithRetry($googleDocsId);
             $defaultType = $this->normalizeContentElementType($this->getDefaultContentElementType());
             $payload = [];
             $untitledLabel = (string)(transalte::translate('import_section_untitled', 'ns_googledocs') ?: 'Untitled section');
@@ -396,8 +467,84 @@ class UserInfoController extends ActionController
                 'defaultElementType' => $defaultType,
             ]);
         } catch (\Throwable $e) {
-            return new JsonResponse(['status' => false, 'error' => $e->getMessage()]);
+            return new JsonResponse([
+                'status' => false,
+                'error' => 'Could not read document sections: ' . $this->describeGoogleError($e),
+            ]);
         }
+    }
+
+    /**
+     * Server-side page type check for the AJAX endpoints (preview + import).
+     *
+     * @param array<string, mixed> $request
+     */
+    protected function denyImportForPageType(array $request): ?JsonResponse
+    {
+        $pageID = $this->pageUid;
+        if ($pageID <= 0) {
+            $queryParams = $this->request->getQueryParams();
+            $pageID = (int)($request['pageId'] ?? $request['id'] ?? $queryParams['id'] ?? 0);
+        }
+        if ($pageID <= 0) {
+            // Preview without page context: import step enforces the page requirement.
+            return null;
+        }
+        if ((int)($this->pageInformation['uid'] ?? 0) !== $pageID) {
+            $this->pageUid = $pageID;
+            $this->pageInformation = BackendUtilityCore::readPageAccess(
+                $pageID,
+                $GLOBALS['BE_USER']->getPagePermsClause(1)
+            );
+        }
+        if (!is_array($this->pageInformation) || !isset($this->pageInformation['uid'])) {
+            return new JsonResponse(['status' => false, 'error' => 'You do not have access to this page.']);
+        }
+        if (!$this->isImportAllowedOnCurrentPage()) {
+            return new JsonResponse(['status' => false, 'error' => $this->getPageTypeDeniedMessage()]);
+        }
+        return null;
+    }
+
+    /**
+     * Read and parse the Doc; on a failure (expired/missing access token, transient Google or
+     * network error on the first request) refresh the access token once and retry.
+     *
+     * @return list<array{index: int, title: string, fallbackTitle?: string, headingLevel: int, html: string, hasImages: bool}>
+     */
+    protected function fetchAndParseSectionsWithRetry(string $googleDocsId): array
+    {
+        try {
+            return $this->fetchAndParseSections($googleDocsId);
+        } catch (\Throwable $first) {
+            if (GoogleTokenHelper::isInvalidGrant($first->getMessage())) {
+                throw $first;
+            }
+            if (!$this->refreshAccessToken()) {
+                throw new \RuntimeException($this->tokenError, 1760854510, $first);
+            }
+            $this->service = new \Google_Service_Drive($this->client);
+            return $this->fetchAndParseSections($googleDocsId);
+        }
+    }
+
+    protected function describeGoogleError(\Throwable $e): string
+    {
+        if ($this->tokenError !== '') {
+            return $this->tokenError;
+        }
+        $message = trim($e->getMessage());
+        if ($e instanceof \Google_Service_Exception || $e instanceof \Google\Service\Exception) {
+            $errors = $e->getErrors();
+            if (is_array($errors) && isset($errors[0]['message'])) {
+                $message = (string)$errors[0]['message'];
+            }
+            $message = sprintf('Google API error %d: %s', (int)$e->getCode(), $message);
+        }
+        if ($message === '') {
+            $message = get_class($e);
+        }
+        return GoogleTokenHelper::explain($message);
     }
 
     public function docsImportAction(): ResponseInterface
@@ -424,13 +571,20 @@ class UserInfoController extends ActionController
         $googleDocsId = $this->extractGoogleDocsIdFromArguments($request);
 
         if ($this->service === null) {
-            return new JsonResponse(['status' => false, 'error' => 'Google client is not configured for this backend user.']);
+            return new JsonResponse([
+                'status' => false,
+                'error' => $this->tokenError !== '' ? $this->tokenError : 'Google client is not configured for this backend user.',
+            ]);
         }
         if ($googleDocsId === '') {
             return new JsonResponse(['status' => false, 'error' => 'Missing Google Docs file id.']);
         }
         if ($pageID <= 0) {
             return new JsonResponse(['status' => false, 'error' => 'Missing page id. Select a page in the page tree and try again.']);
+        }
+        $pageDenied = $this->denyImportForPageType($request);
+        if ($pageDenied !== null) {
+            return $pageDenied;
         }
 
         $preview = $GLOBALS['BE_USER']->getSessionData(self::PREVIEW_SESSION_KEY);
@@ -444,11 +598,11 @@ class UserInfoController extends ActionController
         } else {
             // Session can drop between preview and import — rebuild sections from the Doc.
             try {
-                $cachedSections = $this->fetchAndParseSections($googleDocsId);
+                $cachedSections = $this->fetchAndParseSectionsWithRetry($googleDocsId);
             } catch (\Throwable $e) {
                 return new JsonResponse([
                     'status' => false,
-                    'error' => 'Could not read document sections: ' . $e->getMessage(),
+                    'error' => 'Could not read document sections: ' . $this->describeGoogleError($e),
                 ]);
             }
         }
@@ -517,7 +671,7 @@ class UserInfoController extends ActionController
             $GLOBALS['BE_USER']->setAndSaveSessionData(self::PREVIEW_SESSION_KEY, null);
         } catch (\Throwable $e) {
             $arr['status'] = false;
-            $arr['error'] = $e->getMessage();
+            $arr['error'] = GoogleTokenHelper::explain($e->getMessage());
         }
 
         return new JsonResponse($arr);
@@ -533,7 +687,7 @@ class UserInfoController extends ActionController
             throw new \RuntimeException('Google Docs export returned empty HTML for this file.', 1760854500);
         }
         $html = $this->normalizeGoogleDocsHtml($rawHtml);
-        $stringbody = html_entity_decode($html, ENT_QUOTES, 'UTF-8');
+        $stringbody = GoogleDocsSectionParser::stripXmlArtifacts(html_entity_decode($html, ENT_QUOTES, 'UTF-8'));
         $stringbody = preg_replace('/<a href="(.*?)q=(.*?)&sa(.*?)">/si', '<a href="$2">', $stringbody) ?? $stringbody;
         if (trim($stringbody) === '') {
             throw new \RuntimeException('Google Docs HTML was empty after normalization.', 1760854501);
@@ -860,7 +1014,7 @@ class UserInfoController extends ActionController
         }
         $stringbody = $body instanceof \DOMNode ? $dom->saveHTML($body) : '';
         $stringbody = preg_replace('/<body>(.*?)<\/body>/si', '${1}', (string)$stringbody) ?? '';
-        $string['bodytext'] = html_entity_decode($stringbody, ENT_QUOTES, 'UTF-8');
+        $string['bodytext'] = GoogleDocsSectionParser::stripXmlArtifacts(html_entity_decode($stringbody, ENT_QUOTES, 'UTF-8'));
         return $string;
     }
 
@@ -893,7 +1047,7 @@ class UserInfoController extends ActionController
         }
         $stringbody = $body instanceof \DOMNode ? $dom->saveHTML($body) : '';
         $stringbody = preg_replace('/<body>(.*?)<\/body>/si', '${1}', (string)$stringbody) ?? '';
-        $string['bodytext'] = html_entity_decode($stringbody, ENT_QUOTES, 'UTF-8');
+        $string['bodytext'] = GoogleDocsSectionParser::stripXmlArtifacts(html_entity_decode($stringbody, ENT_QUOTES, 'UTF-8'));
         return $string;
     }
 
@@ -964,6 +1118,19 @@ class UserInfoController extends ActionController
         $arr = ['status' => false];
 
         if ($request !== []) {
+            $token = (string)($request['GoogleDocsRefreshToken'] ?? '');
+            if ($token === '') {
+                foreach ($request as $value) {
+                    if (is_array($value) && isset($value['GoogleDocsRefreshToken'])) {
+                        $token = (string)$value['GoogleDocsRefreshToken'];
+                        break;
+                    }
+                }
+            }
+            $tokenError = GoogleTokenHelper::validateRefreshToken($token);
+            if ($tokenError !== null) {
+                return new JsonResponse(['status' => false, 'error' => $tokenError]);
+            }
             $result = $this->userInfoRepository->updateDocsConfig(
                 (int)($this->globalSettings['clientInfo']['uid'] ?? 0),
                 $request

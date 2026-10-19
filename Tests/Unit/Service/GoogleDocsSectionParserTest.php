@@ -173,4 +173,36 @@ final class GoogleDocsSectionParserTest extends TestCase
         self::assertStringContainsString("One\nTwo", $text);
         self::assertStringContainsString('<h4>Sub</h4>', $sections[0]['html']);
     }
+
+    #[Test]
+    public function stripsXmlEncodingArtifacts(): void
+    {
+        $html = '<!--?xml encoding="UTF-8"--><h1>Title</h1><?xml encoding="UTF-8"><p>Body</p>';
+        $sections = $this->subject->parse($html);
+
+        self::assertCount(1, $sections);
+        self::assertStringNotContainsString('xml', $sections[0]['html']);
+        self::assertSame('Body', GoogleDocsSectionParser::stripXmlArtifacts('<!--?xml encoding="UTF-8"-->Body'));
+    }
+
+    #[Test]
+    public function keepsHeadingThreeAsHeadingTagInBody(): void
+    {
+        $html = '<h2>Heading 2</h2><p>Intro.</p><h3><span>Heading 3</span></h3><p>More.</p>'
+            . '<h2><span>Other<br>Lead text.<h3>Nested H3</h3>Tail.</span></h2>';
+        $sections = $this->subject->parse($html);
+
+        self::assertCount(2, $sections);
+        self::assertStringContainsString('<h3><span>Heading 3</span></h3>', $sections[0]['html']);
+        self::assertStringContainsString('Nested H3</h3>', $sections[1]['html']);
+        self::assertStringNotContainsString('<p><h3', $sections[1]['html']);
+    }
+
+    #[Test]
+    public function doesNotSplitShortStyledTitleRuns(): void
+    {
+        $sections = $this->subject->parse('<h1><span>Hello </span><span>World</span></h1><p>Body</p>');
+
+        self::assertSame('Hello World', $sections[0]['title']);
+    }
 }
