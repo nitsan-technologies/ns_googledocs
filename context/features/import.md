@@ -13,6 +13,17 @@
    `sys_file_reference`. Public URLs must stay absolute-path (`/fileadmin/...`), never protocol-relative
    (`//fileadmin/...`).
 
+## Section import (v14 dialog) — rules
+
+- Placement: DataHandler ignores incoming `sorting` for new records (positive pid = top of page).
+  `docsImportAction` inserts the first CE after `findLastContentElementUidInColumn(pid, colPos)`
+  (`pid = -uid`) and chains each next CE after the previous one → appended, document order.
+- `GoogleDocsSectionParser` drops headings that are empty after removing `\p{Cf}` / `\p{Z}`
+  characters; image-only headings keep the image as body. Untitled sections get `fallbackTitle`
+  (body excerpt, else `import_section_untitled`) shown as input placeholder; CE header stays empty.
+- Section HTML is normalized for every CType: H3–H6 "Title<br>body" split into heading + `<p>`,
+  empty `<p>` removed, newline after block ends / `<br>`.
+
 ## Free vs premium
 
 This free codebase only ships page import. Premium features (if any) stay on the commercial product page; the
