@@ -8,14 +8,19 @@ namespace NITSAN\NsGoogledocs\Service;
  * Splits Google Docs HTML into sections by Heading 1 / Heading 2 (Reformation / v14).
  *
  * Google Docs exports often include empty H1/H2 nodes and zero-width spaces; those are ignored
- * so the import dialog does not show duplicate blank rows.
+ * so the import dialog does not show duplicate blank rows. Sections without a real heading
+ * (lead-in content, image-only headings) carry a "fallbackTitle" taken from their body text.
+ *
+ * Section HTML is normalized for all CTypes: sub-headings (H3–H6) that Google exports as
+ * "Title<br>body" are split into heading + paragraph, empty paragraphs are dropped and block
+ * elements / <br> are separated by newlines so plain-text renderings never glue lines together.
  *
  * @see https://docs.t3planet.de/en/latest/ExtNsGoogleDocs/Reformation/Index
  */
 final class GoogleDocsSectionParser
 {
     /**
-     * @return list<array{index: int, title: string, headingLevel: int, html: string, hasImages: bool}>
+     * @return list<array{index: int, title: string, fallbackTitle: string, headingLevel: int, html: string, hasImages: bool}>
      */
     public function parse(string $html): array
     {
@@ -48,6 +53,15 @@ final class GoogleDocsSectionParser
                 $headingTitle = $this->extractHeadingTitle($node);
                 // Google Docs often emits empty heading tags — do not open a new section for them.
                 if ($headingTitle === '') {
+                    // A heading holding only an image keeps the image as body content.
+                    if ($node->getElementsByTagName('img')->length > 0) {
+                        if (!$started) {
+                            $started = true;
+                            $currentTitle = '';
+                            $currentLevel = 1;
+                        }
+                        $currentNodes[] = $this->createParagraphFromChildren($dom, $node);
+                    }
                     continue;
                 }
                 if ($started || $this->nodesHaveContent($currentNodes)) {
@@ -124,28 +138,22 @@ final class GoogleDocsSectionParser
 
     /**
      * @param list<\DOMNode> $nodes
-     * @return array{index: int, title: string, headingLevel: int, html: string, hasImages: bool}
+     * @return array{index: int, title: string, fallbackTitle: string, headingLevel: int, html: string, hasImages: bool}
      */
     private function buildSection(\DOMDocument $dom, string $title, int $headingLevel, array $nodes): array
     {
-        $fragment = $dom->createDocumentFragment();
-        foreach ($nodes as $node) {
-            $fragment->appendChild($node->cloneNode(true));
+        $blocks = $this->normalizeBlockNodes($dom, $nodes);
+        $parts = [];
+        foreach ($blocks as $node) {
+            $parts[] = trim((string)$dom->saveHTML($node->cloneNode(true)));
         }
-        $tmp = $dom->createElement('div');
-        if ($fragment->hasChildNodes()) {
-            $tmp->appendChild($fragment);
-        }
-        $html = '';
-        foreach (iterator_to_array($tmp->childNodes) as $child) {
-            $html .= $dom->saveHTML($child);
-        }
-        $html = trim($html);
+        $html = $this->separateBlocks(implode("\n", array_filter($parts, static fn(string $part): bool => $part !== '')));
         $hasImages = (bool)preg_match('/<img\b/i', $html);
 
         return [
             'index' => 0,
             'title' => $title,
+            'fallbackTitle' => $title === '' ? $this->buildFallbackTitle($blocks) : '',
             'headingLevel' => $headingLevel,
             'html' => $html,
             'hasImages' => $hasImages,
@@ -153,7 +161,93 @@ final class GoogleDocsSectionParser
     }
 
     /**
-     * @param array{index: int, title: string, headingLevel: int, html: string, hasImages: bool} $section
+     * Drop empty blocks and split "Title<br>body" sub-headings (H3–H6) into heading + paragraph.
+     *
+     * @param list<\DOMNode> $nodes
+     * @return list<\DOMNode>
+     */
+    private function normalizeBlockNodes(\DOMDocument $dom, array $nodes): array
+    {
+        $result = [];
+        foreach ($nodes as $node) {
+            if ($node instanceof \DOMElement && in_array(strtolower($node->tagName), ['hr', 'table'], true)) {
+                $result[] = $node;
+                continue;
+            }
+            if ($this->isIgnorableEmptyNode($node)) {
+                continue;
+            }
+            if (!$node instanceof \DOMElement || !preg_match('/^h[3-6]$/', strtolower($node->tagName))) {
+                $result[] = $node;
+                continue;
+            }
+
+            [$title, $bodyHtml] = $this->splitHeadingInnerHtml($node);
+            if ($title === '') {
+                // Only an image (empty headings are dropped above).
+                $result[] = $this->createParagraphFromChildren($dom, $node);
+                continue;
+            }
+            if (trim($bodyHtml) === '') {
+                $result[] = $node;
+                continue;
+            }
+            $heading = $dom->createElement(strtolower($node->tagName));
+            $heading->appendChild($dom->createTextNode($title));
+            $result[] = $heading;
+            foreach ($this->collectHeadingLeftoverNodes($node, $title) as $leftover) {
+                if (!$this->isIgnorableEmptyNode($leftover)) {
+                    $result[] = $leftover;
+                }
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Newline after block ends and <br>, so strip_tags()-based renderings (backend preview,
+     * search, plain text) keep headings, paragraphs and list items on separate lines.
+     */
+    private function separateBlocks(string $html): string
+    {
+        $html = (string)(preg_replace('#(<br\s*/?>|</(?:p|h[1-6]|li|ul|ol|blockquote|tr|table)>)(?!\n)#i', "$1\n", $html) ?? $html);
+        return trim($html);
+    }
+
+    /**
+     * @param list<\DOMNode> $blocks
+     */
+    private function buildFallbackTitle(array $blocks): string
+    {
+        foreach ($blocks as $node) {
+            $text = $this->normalizeText($node->textContent ?? '');
+            if ($text === '') {
+                continue;
+            }
+            if (mb_strlen($text, 'UTF-8') <= 60) {
+                return $text;
+            }
+            $cut = mb_substr($text, 0, 60, 'UTF-8');
+            $lastSpace = mb_strrpos($cut, ' ', 0, 'UTF-8');
+            if ($lastSpace !== false && $lastSpace > 30) {
+                $cut = mb_substr($cut, 0, $lastSpace, 'UTF-8');
+            }
+            return rtrim($cut, " ,.;:-") . '…';
+        }
+        return '';
+    }
+
+    private function createParagraphFromChildren(\DOMDocument $dom, \DOMElement $source): \DOMElement
+    {
+        $p = $dom->createElement('p');
+        foreach (iterator_to_array($source->childNodes) as $child) {
+            $p->appendChild($child->cloneNode(true));
+        }
+        return $p;
+    }
+
+    /**
+     * @param array{index: int, title: string, fallbackTitle: string, headingLevel: int, html: string, hasImages: bool} $section
      */
     private function sectionIsWorthKeeping(array $section): bool
     {
@@ -194,7 +288,7 @@ final class GoogleDocsSectionParser
             return true;
         }
         if ($node instanceof \DOMElement) {
-            $hasImg = $node->getElementsByTagName('img')->length > 0;
+            $hasImg = strtolower($node->tagName) === 'img' || $node->getElementsByTagName('img')->length > 0;
             return $this->normalizeText($node->textContent) === '' && !$hasImg;
         }
         return true;
@@ -276,8 +370,15 @@ final class GoogleDocsSectionParser
 
     private function normalizeText(string $text): string
     {
-        // Strip NBSP / zero-width / BOM that Google Docs often leaves in "empty" headings.
-        $text = str_replace(["\u{00A0}", "\u{200B}", "\u{200C}", "\u{200D}", "\u{FEFF}"], ' ', $text);
-        return trim($text);
+        // Drop invisible format characters (ZWSP, ZWJ/ZWNJ, word joiner, soft hyphen, BOM) and
+        // collapse all Unicode separators (NBSP, ideographic / narrow spaces …) that Google Docs
+        // leaves in "empty" headings.
+        $normalized = preg_replace('/\p{Cf}+/u', '', $text);
+        $normalized = $normalized !== null ? preg_replace('/[\s\p{Z}]+/u', ' ', $normalized) : null;
+        if ($normalized === null) {
+            // Invalid UTF-8: fall back to the known offenders.
+            $normalized = str_replace(["\u{00A0}", "\u{200B}", "\u{200C}", "\u{200D}", "\u{2060}", "\u{FEFF}"], ' ', $text);
+        }
+        return trim($normalized);
     }
 }

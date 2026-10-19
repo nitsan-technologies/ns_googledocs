@@ -375,10 +375,15 @@ class UserInfoController extends ActionController
             $sections = $this->fetchAndParseSections($googleDocsId);
             $defaultType = $this->normalizeContentElementType($this->getDefaultContentElementType());
             $payload = [];
+            $untitledLabel = (string)(transalte::translate('import_section_untitled', 'ns_googledocs') ?: 'Untitled section');
             foreach ($sections as $section) {
+                $fallbackTitle = trim((string)($section['fallbackTitle'] ?? ''));
                 $payload[] = [
                     'index' => $section['index'],
                     'title' => $section['title'],
+                    // Shown as placeholder for sections without a real heading (lead-in / image-only),
+                    // so the dialog never renders a blank row; the CE header stays empty unless edited.
+                    'fallbackTitle' => $fallbackTitle !== '' ? $fallbackTitle : $untitledLabel,
                     'headingLevel' => $section['headingLevel'],
                     'hasImages' => $section['hasImages'],
                     'defaultType' => $defaultType,
@@ -519,7 +524,7 @@ class UserInfoController extends ActionController
     }
 
     /**
-     * @return list<array{index: int, title: string, headingLevel: int, html: string, hasImages: bool}>
+     * @return list<array{index: int, title: string, fallbackTitle?: string, headingLevel: int, html: string, hasImages: bool}>
      */
     protected function fetchAndParseSections(string $googleDocsId): array
     {
@@ -538,6 +543,7 @@ class UserInfoController extends ActionController
             $sections = [[
                 'index' => 0,
                 'title' => '',
+                'fallbackTitle' => '',
                 'headingLevel' => 1,
                 'html' => $stringbody,
                 'hasImages' => (bool)preg_match('/<img\b/i', $stringbody),

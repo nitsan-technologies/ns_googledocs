@@ -153,6 +153,9 @@
 			<trans-unit id="import_col_title">
 				<source>Element Title</source>
 			</trans-unit>
+			<trans-unit id="import_section_untitled">
+				<source>Untitled section</source>
+			</trans-unit>
 			<trans-unit id="element_type.header">
 				<source>Header</source>
 			</trans-unit>
