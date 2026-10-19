@@ -20,6 +20,7 @@ use Doctrine\DBAL\ParameterType;
 use NITSAN\NsGoogledocs\Service\RemoteContentFetcher;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Log\LogManager;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -40,6 +41,8 @@ class UserInfoRepository extends Repository
      */
     private array $lastDataHandlerErrors = [];
 
+    private int $lastInsertedUid = 0;
+
     public function __construct(
         private readonly ?RemoteContentFetcher $remoteContentFetcher = null
     ) {
@@ -54,6 +57,14 @@ class UserInfoRepository extends Repository
         return $this->lastDataHandlerErrors;
     }
 
+    /**
+     * uid of the tt_content record created by the last successful insertPageElement() call.
+     */
+    public function getLastInsertedUid(): int
+    {
+        return $this->lastInsertedUid;
+    }
+
     public function initializeObject(): void
     {
         $querySettings = GeneralUtility::makeInstance(Typo3QuerySettings::class);
@@ -62,24 +73,29 @@ class UserInfoRepository extends Repository
     }
 
     /**
+     * Create one tt_content record via DataHandler.
+     *
+     * DataHandler ignores an incoming "sorting" value for new records: a positive pid
+     * always places the record at the TOP of the page (v12–v14), a negative pid
+     * (-uid) places it directly AFTER that record. Pass $insertAfterUid to append.
+     *
      * @param array<string, mixed> $element
      * @param array<string, mixed> $request
+     * @param int $insertAfterUid tt_content uid to insert after; 0 = top of the page
      */
-    public function insertPageElement(int $pageID, array $element, array $request): bool
+    public function insertPageElement(int $pageID, array $element, array $request, int $insertAfterUid = 0): bool
     {
         $contentId = StringUtility::getUniqueId('NEW');
         $header = (string)($element['header'] ?? '');
         $headerLayout = (int)($element['header_layout'] ?? 0);
         $colPos = (int)($request['colPos'] ?? 0);
         $cType = (string)($element['CType'] ?? 'text');
-        $sorting = (int)($element['sorting'] ?? 0);
 
         $record = [
-            'pid' => $pageID,
+            'pid' => $insertAfterUid > 0 ? -$insertAfterUid : $pageID,
             'CType' => $cType,
             'colPos' => $colPos,
             'sys_language_uid' => 0,
-            'sorting' => $sorting,
             'header' => $header,
             'header_layout' => $headerLayout,
         ];
@@ -122,6 +138,7 @@ class UserInfoRepository extends Repository
         }
 
         $this->lastDataHandlerErrors = [];
+        $this->lastInsertedUid = 0;
         $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
         if (isset($GLOBALS['BE_USER']) && is_object($GLOBALS['BE_USER'])) {
             $dataHandler->BE_USER = $GLOBALS['BE_USER'];
@@ -140,12 +157,16 @@ class UserInfoRepository extends Repository
 
         $newUid = (int)($dataHandler->substNEWwithIDs[$contentId] ?? 0);
         if ($newUid > 0) {
+            $this->lastInsertedUid = $newUid;
             return true;
         }
 
         // Fallback: DataHandler may rewrite NEW keys; accept any substituted tt_content uid.
         foreach ($dataHandler->substNEWwithIDs as $newIdKey => $uid) {
             if (str_starts_with((string)$newIdKey, 'NEW') && (int)$uid > 0) {
+                if (($dataHandler->substNEWwithIDs_table[$newIdKey] ?? 'tt_content') === 'tt_content') {
+                    $this->lastInsertedUid = (int)$uid;
+                }
                 return true;
             }
         }
@@ -157,6 +178,36 @@ class UserInfoRepository extends Repository
             'map' => $dataHandler->substNEWwithIDs,
         ]);
         return false;
+    }
+
+    /**
+     * uid of the last default-language live tt_content record in a page column
+     * (highest sorting), hidden records included, deleted ones excluded. 0 = column is empty.
+     */
+    public function findLastContentElementUidInColumn(int $pid, int $colPos): int
+    {
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getQueryBuilderForTable('tt_content');
+        $queryBuilder->getRestrictions()
+            ->removeAll()
+            ->add(GeneralUtility::makeInstance(DeletedRestriction::class));
+        $uid = $queryBuilder
+            ->select('uid')
+            ->from('tt_content')
+            ->where(
+                $queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter($pid, Connection::PARAM_INT)),
+                $queryBuilder->expr()->eq('colPos', $queryBuilder->createNamedParameter($colPos, Connection::PARAM_INT)),
+                $queryBuilder->expr()->eq('sys_language_uid', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)),
+                $queryBuilder->expr()->eq('t3ver_oid', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)),
+                $queryBuilder->expr()->eq('t3ver_wsid', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT))
+            )
+            ->orderBy('sorting', 'DESC')
+            ->addOrderBy('uid', 'DESC')
+            ->setMaxResults(1)
+            ->executeQuery()
+            ->fetchOne();
+
+        return (int)$uid;
     }
 
     public function findElementSorting(int $pid): int

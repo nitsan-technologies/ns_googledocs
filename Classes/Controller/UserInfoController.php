@@ -461,8 +461,10 @@ class UserInfoController extends ActionController
         }
 
         try {
-            $baseSorting = $this->userInfoRepository->findElementSorting($pageID);
-            $i = 1;
+            // DataHandler ignores "sorting" on new records (positive pid = top of page).
+            // Chain inserts after the last CE of the target column to keep document order.
+            $colPos = (int)($request['colPos'] ?? 0);
+            $insertAfterUid = $this->userInfoRepository->findLastContentElementUidInColumn($pageID, $colPos);
             $imported = 0;
             foreach ($cachedSections as $section) {
                 $index = (int)$section['index'];
@@ -478,10 +480,9 @@ class UserInfoController extends ActionController
                     (string)($choice['CType'] ?? $this->getDefaultContentElementType())
                 );
                 $header = trim((string)($choice['header'] ?? $section['title'] ?? ''));
-                $element = $this->buildElementFromSection($section, $cType, $header, $baseSorting + ($i * 256));
-                $i++;
+                $element = $this->buildElementFromSection($section, $cType, $header);
 
-                $result = $this->userInfoRepository->insertPageElement($pageID, $element, $request);
+                $result = $this->userInfoRepository->insertPageElement($pageID, $element, $request, $insertAfterUid);
                 if (!$result) {
                     $errors = $this->userInfoRepository->getLastDataHandlerErrors();
                     return new JsonResponse([
@@ -493,6 +494,10 @@ class UserInfoController extends ActionController
                     ]);
                 }
                 $imported++;
+                $newUid = $this->userInfoRepository->getLastInsertedUid();
+                $insertAfterUid = $newUid > 0
+                    ? $newUid
+                    : $this->userInfoRepository->findLastContentElementUidInColumn($pageID, $colPos);
             }
 
             if ($imported === 0) {
@@ -615,10 +620,10 @@ class UserInfoController extends ActionController
     }
 
     /**
-     * @param array{index: int, title: string, headingLevel: int, html: string, hasImages: bool} $section
+     * @param array{index: int, title: string, fallbackTitle?: string, headingLevel: int, html: string, hasImages: bool} $section
      * @return array<string, mixed>
      */
-    protected function buildElementFromSection(array $section, string $cType, string $header, int $sorting): array
+    protected function buildElementFromSection(array $section, string $cType, string $header): array
     {
         $html = (string)($section['html'] ?? '');
         $headingLevel = (int)($section['headingLevel'] ?? 1);
@@ -626,7 +631,6 @@ class UserInfoController extends ActionController
             'CType' => $cType,
             'header' => $header,
             'header_layout' => $headingLevel > 0 ? $headingLevel : 1,
-            'sorting' => $sorting,
             'imageorient' => 0,
         ];
 

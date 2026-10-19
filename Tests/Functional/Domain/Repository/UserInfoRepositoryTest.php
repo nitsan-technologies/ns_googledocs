@@ -73,4 +73,40 @@ final class UserInfoRepositoryTest extends FunctionalTestCase
         self::assertSame(0, (int)$row['colPos']);
         self::assertGreaterThan(0, (int)$row['uid']);
     }
+    #[Test]
+    public function insertPageElementAfterUidAppendsInDocumentOrder(): void
+    {
+        $this->importCSVDataSet(__DIR__ . '/Fixtures/tt_content.csv');
+        /** @var UserInfoRepository $repository */
+        $repository = $this->get(UserInfoRepository::class);
+
+        $afterUid = $repository->findLastContentElementUidInColumn(1, 0);
+        self::assertSame(2, $afterUid, 'Last CE of colPos 0 (highest sorting) is the insert target');
+
+        foreach (['First imported', 'Second imported'] as $header) {
+            self::assertTrue($repository->insertPageElement(
+                1,
+                ['CType' => 'text', 'header' => $header, 'bodytext' => '<p>x</p>'],
+                ['colPos' => 0],
+                $afterUid
+            ));
+            $afterUid = $repository->getLastInsertedUid();
+            self::assertGreaterThan(0, $afterUid);
+        }
+
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getQueryBuilderForTable('tt_content');
+        $headers = $queryBuilder
+            ->select('header')
+            ->from('tt_content')
+            ->where(
+                $queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter(1, Connection::PARAM_INT)),
+                $queryBuilder->expr()->eq('colPos', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT))
+            )
+            ->orderBy('sorting')
+            ->executeQuery()
+            ->fetchFirstColumn();
+
+        self::assertSame(['Existing one', 'Existing two', 'First imported', 'Second imported'], $headers);
+    }
 }
