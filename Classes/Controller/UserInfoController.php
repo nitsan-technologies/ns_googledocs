@@ -34,6 +34,7 @@ use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Page\PageRenderer;
+use TYPO3\CMS\Core\Resource\FileInterface;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
 use TYPO3\CMS\Core\Resource\StorageRepository;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
@@ -1017,6 +1018,9 @@ class UserInfoController extends ActionController
                     }
                     $src->removeAttribute('src');
                     $src->setAttribute('src', $publicUrl);
+                    // Google Docs often exports width="0" height="0" (real size only in style).
+                    // Those attributes make the FE render invisible images — replace with file size.
+                    $this->normalizeImportedImageDimensions($src, $file);
                 }
             }
         }
@@ -1071,6 +1075,46 @@ class UserInfoController extends ActionController
         $stringbody = preg_replace('/<body>(.*?)<\/body>/si', '${1}', (string)$stringbody) ?? '';
         $string['bodytext'] = GoogleDocsSectionParser::stripXmlArtifacts(html_entity_decode($stringbody, ENT_QUOTES, 'UTF-8'));
         return $string;
+    }
+
+    /**
+     * Google Docs HTML often ships &lt;img width="0" height="0"&gt; with the real size only in
+     * style="width:…px;height:…px". After style stripping those zeros hide the image on the FE.
+     */
+    protected function normalizeImportedImageDimensions(\DOMElement $img, FileInterface $file): void
+    {
+        $width = (int)$img->getAttribute('width');
+        $height = (int)$img->getAttribute('height');
+        if ($width > 0 && $height > 0) {
+            return;
+        }
+
+        $fileWidth = (int)($file->getProperty('width') ?? 0);
+        $fileHeight = (int)($file->getProperty('height') ?? 0);
+        if ($fileWidth <= 0 || $fileHeight <= 0) {
+            $localPath = $file->getForLocalProcessing(false);
+            if (is_string($localPath) && $localPath !== '' && is_file($localPath)) {
+                $exif = @getimagesize($localPath);
+                if (is_array($exif)) {
+                    $fileWidth = (int)($exif[0] ?? 0);
+                    $fileHeight = (int)($exif[1] ?? 0);
+                }
+            }
+        }
+
+        if ($fileWidth > 0 && $fileHeight > 0) {
+            $img->setAttribute('width', (string)$fileWidth);
+            $img->setAttribute('height', (string)$fileHeight);
+            return;
+        }
+
+        // Last resort: drop zero dimensions so the browser uses intrinsic size.
+        if ($width <= 0) {
+            $img->removeAttribute('width');
+        }
+        if ($height <= 0) {
+            $img->removeAttribute('height');
+        }
     }
 
     public function findImageMimeType(string $docType): string
@@ -1244,6 +1288,29 @@ class UserInfoController extends ActionController
         $html = (string)(preg_replace('/<span(.*?)font-weight:700(.*?)>(.*?)<\/span>/si', '<span${1}${2}><b>${3}</b></span>', $html) ?? $html);
         $html = (string)(preg_replace('/<span(.*?)font-style:italic(.*?)>(.*?)<\/span>/si', '<span${1}${2}><i>${3}</i></span>', $html) ?? $html);
         $html = (string)(preg_replace('/<span(.*?)text-decoration:underline(.*?)>(.*?)<\/span>/si', '<span${1}${2}><u>${3}</u></span>', $html) ?? $html);
+        // Promote CSS width/height on <img> to real attributes before style stripping — Google
+        // Docs often uses width="0" height="0" with the visible size only in style="…px".
+        $html = (string)(preg_replace_callback(
+            '/<img\b([^>]*?)style="([^"]*)"([^>]*)>/i',
+            static function (array $m): string {
+                $before = $m[1];
+                $style = $m[2];
+                $after = $m[3];
+                $attrs = $before . $after;
+                if (preg_match('/(?:^|;)\s*width\s*:\s*([\d.]+)\s*px/i', $style, $wm)
+                    && (!preg_match('/\bwidth\s*=\s*"(?!0(?:\.0+)?)[^"]*"/i', $attrs))
+                ) {
+                    $attrs .= ' width="' . (int)round((float)$wm[1]) . '"';
+                }
+                if (preg_match('/(?:^|;)\s*height\s*:\s*([\d.]+)\s*px/i', $style, $hm)
+                    && (!preg_match('/\bheight\s*=\s*"(?!0(?:\.0+)?)[^"]*"/i', $attrs))
+                ) {
+                    $attrs .= ' height="' . (int)round((float)$hm[1]) . '"';
+                }
+                return '<img' . $attrs . '>';
+            },
+            $html
+        ) ?? $html);
         // Strip style/id attributes without consuming the trailing "/>" of void tags (which
         // previously left "<hr/" that RTE then expanded to the invalid "<hr/ />").
         $html = (string)(preg_replace('/\s(?:style|id)="[^"]*"/i', '', $html) ?? $html);
