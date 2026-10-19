@@ -28,7 +28,7 @@ function showImportModal(modalElement) {
     }
 
     const bs = getBootstrapModalApi();
-    if (bs) {
+    if (bs && typeof bs.Modal.getOrCreateInstance === 'function') {
         bs.Modal.getOrCreateInstance(modalElement, {
             backdrop: false,
             keyboard: true,
@@ -49,11 +49,17 @@ function closeModalElement(modalElement) {
     }
 
     const bs = getBootstrapModalApi();
-    if (bs) {
-        bs.Modal.getOrCreateInstance(modalElement).hide();
-        return;
+    if (bs && typeof bs.Modal.getOrCreateInstance === 'function') {
+        try {
+            bs.Modal.getOrCreateInstance(modalElement).hide();
+        } catch (err) {
+            // fall through to the manual cleanup below
+        }
     }
 
+    // Always force the closed state: the modal may have been opened by the manual
+    // fallback in showImportModal() (no Bootstrap instance to hide) or by another
+    // Bootstrap build, so Modal#hide() alone can be a no-op.
     modalElement.classList.remove('show');
     modalElement.style.display = 'none';
     modalElement.setAttribute('aria-hidden', 'true');
@@ -172,12 +178,20 @@ function initNsGoogledocsUi() {
             });
 
             const title = section.title || '';
+            // Sections without a real heading show their body excerpt as placeholder
+            // instead of a blank title cell; the header stays empty unless edited.
+            const fallbackTitle = title === '' ? String(section.fallbackTitle || '') : '';
+            const escapeAttr = function (value) {
+                return $('<div>').text(value).html().replace(/"/g, '&quot;');
+            };
             const row = ''
                 + '<tr data-section-index="' + index + '">'
-                + '<td><input type="checkbox" class="form-check-input" name="' + prefix + '[sections][' + index + '][enabled]" value="1" checked="checked" /></td>'
+                + '<td class="ns-gd-section-enabled-cell"><input type="checkbox" class="ns-gd-section-enabled" name="' + prefix + '[sections][' + index + '][enabled]" value="1" checked="checked" /></td>'
                 + '<td><select class="form-select form-control" name="' + prefix + '[sections][' + index + '][CType]">' + typeOptionsHtml + '</select></td>'
                 + '<td><input type="text" class="form-control" name="' + prefix + '[sections][' + index + '][header]" value="'
-                + $('<div>').text(title).html().replace(/"/g, '&quot;') + '" /></td>'
+                + escapeAttr(title) + '"'
+                + (fallbackTitle !== '' ? ' placeholder="' + escapeAttr(fallbackTitle) + '" title="' + escapeAttr(fallbackTitle) + '"' : '')
+                + ' /></td>'
                 + '</tr>';
             $tbody.append(row);
         });
@@ -300,7 +314,8 @@ function initNsGoogledocsUi() {
             }
 
             width = 1;
-            $('.ns-googledocs-progressbar-wrap-main').removeClass('hide').fadeIn(500);
+            $('.ns-gd-sections-error').addClass('hide').text('');
+            $('.ns-googledocs-progressbar-wrap-main').stop(true, true).removeClass('hide').show();
             $('.import-footer').addClass('hide');
             progressIntervalId = setInterval(frame, 1000);
 
@@ -323,33 +338,21 @@ function initNsGoogledocsUi() {
                 success: function (result) {
                     clearInterval(progressIntervalId);
                     const obj = parseJsonPayload(result);
-                    const progressElem = document.getElementById('custom-progress-bar');
                     if (obj && obj.status === true) {
                         const importedCount = parseInt(obj.imported || obj.affectedRows || 0, 10);
                         const successDetail = importedCount > 0
                             ? 'The document was imported successfully (' + importedCount + ' content element(s)).'
                             : 'The document was imported successfully.';
                         Notification.success('Well done', successDetail);
-                    } else {
-                        const failMessage = (obj && obj.error)
-                            ? obj.error
-                            : 'The document was not imported successfully.';
-                        Notification.error('Error', failMessage);
-                    }
-                    if (progressElem) {
-                        progressElem.style.width = '100%';
-                        progressElem.innerHTML = '100%';
-                    }
-                    setTimeout(function () {
-                        $('.ns-googledocs-progressbar-wrap-main').fadeOut(500, function () {
-                            if (progressElem) {
-                                progressElem.style.width = '1%';
-                                progressElem.innerHTML = '1';
-                            }
-                            $('.import-footer').removeClass('hide');
+                        setProgress(100);
+                        // Short pause so the editor sees 100%, then close (toast stays visible).
+                        setTimeout(function () {
+                            resetImportProgress();
                             closeModalElement(document.getElementById('importGooleDocsModal'));
-                        });
-                    }, 1000);
+                        }, 400);
+                        return;
+                    }
+                    showImportError((obj && obj.error) ? obj.error : 'The document was not imported successfully.');
                 },
                 error: function (xhr) {
                     clearInterval(progressIntervalId);
@@ -362,12 +365,37 @@ function initNsGoogledocsUi() {
                     } catch (err) {
                         // keep default
                     }
-                    Notification.error('Error', message);
-                    $('.import-footer').removeClass('hide');
-                    $('.ns-googledocs-progressbar-wrap-main').addClass('hide');
+                    showImportError(message);
                 }
             });
         });
+
+    function setProgress(value) {
+        const progressElem = document.getElementById('custom-progress-bar');
+        if (progressElem) {
+            progressElem.style.width = value + '%';
+            progressElem.innerHTML = value + '%';
+        }
+    }
+
+    /**
+     * Hide the progress bar and restore the footer without relying on jQuery
+     * animations (their completion callback is what used to close the modal).
+     */
+    function resetImportProgress() {
+        clearInterval(progressIntervalId);
+        width = 1;
+        $('.ns-googledocs-progressbar-wrap-main').stop(true, true).addClass('hide').hide();
+        setProgress(1);
+        $('.import-footer').removeClass('hide');
+    }
+
+    /** Keep the modal open on failure and show the reason inside it as well as in a toast. */
+    function showImportError(message) {
+        Notification.error('Error', message);
+        resetImportProgress();
+        $('.ns-gd-sections-error').removeClass('hide').text(message);
+    }
 
     $(document).off('submit.nsGdUpdate', '#update-user-info, #update-user-info-global')
         .on('submit.nsGdUpdate', '#update-user-info, #update-user-info-global', function (e) {

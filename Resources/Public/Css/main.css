@@ -726,6 +726,45 @@ body:has(.google-docs-wizard-modal.modal.show) > .modal-backdrop {
     line-height: 1.4;
 }
 
+/*
+ * Section table "Add Content" checkbox.
+ * Not wrapped in .form-check: Bootstrap 4 (vendored) makes .form-check-input
+ * position:absolute with margin-left:-1.25rem, and TYPO3 v12–v14 Core sets
+ * appearance:none and sizes/paints the box only inside .form-check — either way the
+ * checked box ended up invisible. Use a dedicated class with the native control.
+ */
+.google-docs-wizard-modal #ns-gd-sections-table .ns-gd-section-enabled-cell {
+    width: 1%;
+    white-space: nowrap;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.google-docs-wizard-modal #ns-gd-sections-table input[type="checkbox"].ns-gd-section-enabled {
+    -webkit-appearance: checkbox !important;
+    -moz-appearance: checkbox !important;
+    appearance: auto !important;
+    position: static !important;
+    display: inline-block !important;
+    float: none !important;
+    width: 1.125rem !important;
+    height: 1.125rem !important;
+    min-width: 1.125rem;
+    margin: 0 !important;
+    padding: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    background-image: none !important;
+    vertical-align: middle;
+    accent-color: var(--ns-gd-modal-message-accent);
+    cursor: pointer;
+}
+
+.google-docs-wizard-modal #ns-gd-sections-table input[type="checkbox"].ns-gd-section-enabled:focus-visible {
+    outline: 2px solid var(--ns-gd-modal-message-accent);
+    outline-offset: 2px;
+}
+
 .google-docs-wizard-modal .modal-footer {
     display: flex;
     align-items: center;
