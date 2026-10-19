@@ -22,11 +22,24 @@ final class GoogleDocsSectionParser
     /**
      * Remove XML declarations / processing instructions that DOMDocument::loadHTML() serializes as
      * "<!--?xml encoding="UTF-8"-->" (from the common '<?xml encoding' charset hack) or that leak in
-     * from exported markup.
+     * from exported markup. Also normalize void tags so DataHandler / RTE cannot turn
+     * `<hr/>` into the invalid `<hr/ />` that the frontend escapes as literal text.
      */
     public static function stripXmlArtifacts(string $html): string
     {
         $html = (string)(preg_replace('/<!--\?xml[^>]*?-->|<\?xml[^>]*\?>|<\?xml[^>]*>/i', '', $html) ?? $html);
+        return self::normalizeVoidTags($html);
+    }
+
+    /**
+     * Force HTML5 void tags (`<hr>`, `<br>`) so TYPO3 RTE linebreak cleanup cannot emit
+     * malformed markup like `<hr/ />` that parseFunc then escapes onto the page.
+     */
+    public static function normalizeVoidTags(string $html): string
+    {
+        // Collapse already-broken variants first: <hr/ />, <hr / />, <hr/>, <hr />
+        $html = (string)(preg_replace('/<hr\b[^>]*>/i', '<hr>', $html) ?? $html);
+        $html = (string)(preg_replace('/<br\b[^>]*>/i', '<br>', $html) ?? $html);
         return $html;
     }
 

@@ -186,6 +186,18 @@ final class GoogleDocsSectionParserTest extends TestCase
     }
 
     #[Test]
+    public function normalizeVoidTagsFixesMalformedHrFromRte(): void
+    {
+        self::assertSame('<p>A</p><hr><p>B</p>', GoogleDocsSectionParser::normalizeVoidTags('<p>A</p><hr/ /><p>B</p>'));
+        self::assertSame('<hr>', GoogleDocsSectionParser::normalizeVoidTags('<hr style="page-break-before:always;" />'));
+        self::assertSame('<br>', GoogleDocsSectionParser::normalizeVoidTags('<br/>'));
+        self::assertSame(
+            '<p>A</p><hr><p>B</p>',
+            GoogleDocsSectionParser::stripXmlArtifacts('<p>A</p><hr/><p>B</p>')
+        );
+    }
+
+    #[Test]
     public function keepsHeadingThreeAsHeadingTagInBody(): void
     {
         $html = '<h2>Heading 2</h2><p>Intro.</p><h3><span>Heading 3</span></h3><p>More.</p>'

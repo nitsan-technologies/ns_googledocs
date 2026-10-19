@@ -825,17 +825,11 @@ class UserInfoController extends ActionController
             return $element;
         }
 
-        if ($cType === 'textpic') {
-            $element['images'] = $this->findImage($html);
-            $bodyWithoutImages = preg_replace('/<img[^>]+>/i', '', $html) ?? $html;
-            $parsed = $this->findHeaderInBodytext($bodyWithoutImages, 0);
-            $element['bodytext'] = trim((string)($parsed['bodytext'] ?? ''));
-            return $element;
-        }
-
-        // text: keep inline images rewritten to fileadmin URLs
+        // text + textpic: keep images inline in bodytext (Doc order). Stripping them into a
+        // FAL gallery alone puts every image above/below the text and no longer matches the Doc.
         $parsed = $this->updateImageInBodytext($html, 0);
         $element['bodytext'] = trim((string)($parsed['bodytext'] ?? ''));
+        $element['images'] = [];
         return $element;
     }
 
@@ -906,14 +900,15 @@ class UserInfoController extends ActionController
                         $finalElements[$key]['bodytext'] = trim(preg_replace('/\>\s+\</m', '><', $stringbody['bodytext'] ?? '') ?? '');
                         break;
                     default:
+                        // Marker-based textpic: keep images inline (same as Reformation textpic)
+                        // so FE layout matches the Doc; imageorient still stored for compatibility.
                         $finalElements[$key]['CType'] = 'textpic';
-                        $finalElements[$key]['images'] = $this->findImage($elm[1]);
+                        $finalElements[$key]['images'] = [];
                         $finalElements[$key]['imageorient'] = (int)str_replace('textpic-', '', $elm[0]);
-                        $bodytext = preg_replace('/<img[^>]+>/i', '', $elm[1]) ?? '';
-                        $stringbody = $this->findHeaderInBodytext($bodytext, 1);
+                        $stringbody = $this->updateImageInBodytext($elm[1], 1);
                         $finalElements[$key]['header'] = $stringbody['header'] ?? '';
                         $finalElements[$key]['header_layout'] = $stringbody['header_layout'] ?? 0;
-                        $finalElements[$key]['bodytext'] = preg_replace('/<img[^>]+>/i', '', $stringbody['bodytext'] ?? '') ?? '';
+                        $finalElements[$key]['bodytext'] = preg_replace('/\>\s+\</m', '><', $stringbody['bodytext'] ?? '') ?? '';
                         break;
                 }
                 $finalElements[$key]['sorting'] = $sorting;
@@ -966,19 +961,25 @@ class UserInfoController extends ActionController
         }
         $images = $xml->xpath('//img');
         foreach ($images as $img) {
-            $fileName = $folder . 'ns_googledocs_' . random_int(10, 1000000);
             if (!file_exists($folder)) {
                 GeneralUtility::mkdir_deep($folder);
             }
             $src = (string)($img['src'] ?? '');
-            if ($src === '' || !$this->remoteContentFetcher->isAllowedHttpsUrl($src)) {
+            // Google Docs HTML export commonly embeds images as data:image/…;base64,…
+            // (not https://). materializeImageSource handles both forms.
+            $materialized = $this->remoteContentFetcher->materializeImageSource(
+                $src,
+                $folder . 'ns_googledocs_' . random_int(10, 1000000)
+            );
+            if ($materialized === null || !is_file($materialized['path'])) {
                 continue;
             }
-            if (!$this->remoteContentFetcher->downloadToFile($src, $fileName) || !is_file($fileName)) {
-                continue;
-            }
+            $fileName = $materialized['path'];
+            $imageMineType = $this->findImageMimeType($materialized['mime']);
             $exif = @getimagesize($fileName);
-            $imageMineType = $this->findImageMimeType($exif['mime'] ?? '');
+            if (is_array($exif) && !empty($exif['mime'])) {
+                $imageMineType = $this->findImageMimeType((string)$exif['mime']);
+            }
             $newFile = $storage->addFile(
                 $fileName,
                 $storageFolder,
@@ -1243,10 +1244,12 @@ class UserInfoController extends ActionController
         $html = (string)(preg_replace('/<span(.*?)font-weight:700(.*?)>(.*?)<\/span>/si', '<span${1}${2}><b>${3}</b></span>', $html) ?? $html);
         $html = (string)(preg_replace('/<span(.*?)font-style:italic(.*?)>(.*?)<\/span>/si', '<span${1}${2}><i>${3}</i></span>', $html) ?? $html);
         $html = (string)(preg_replace('/<span(.*?)text-decoration:underline(.*?)>(.*?)<\/span>/si', '<span${1}${2}><u>${3}</u></span>', $html) ?? $html);
-        $html = (string)(preg_replace('/(<[^>]+) style=".*?"/i', '$1', $html) ?? $html);
-        $html = (string)(preg_replace('/(<[^>]+) id=".*?"/i', '$1', $html) ?? $html);
+        // Strip style/id attributes without consuming the trailing "/>" of void tags (which
+        // previously left "<hr/" that RTE then expanded to the invalid "<hr/ />").
+        $html = (string)(preg_replace('/\s(?:style|id)="[^"]*"/i', '', $html) ?? $html);
         $html = (string)(preg_replace('/(.*?)<body>(.*?)<\/body>(.*?)/si', '$2', $html) ?? $html);
-        return str_replace('</html>', '', $html);
+        $html = str_replace('</html>', '', $html);
+        return GoogleDocsSectionParser::normalizeVoidTags($html);
     }
 
     /**
