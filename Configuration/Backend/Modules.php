@@ -24,6 +24,7 @@ $module = [
             UserInfoController::class => [
                 'dashboard',
                 'import',
+                'previewSections',
                 'docsImport',
                 'globalSettings',
                 'update',

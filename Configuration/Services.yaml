@@ -8,3 +8,8 @@ services:
     resource: '../Classes/*'
     exclude:
       - '../Classes/Domain/Model'
+
+  NITSAN\NsGoogledocs\Updates\PrefixedBeUsersColumnsUpgradeWizard:
+    tags:
+      - name: install.upgradewizard
+        identifier: nsGoogledocsPrefixedBeUsersColumns

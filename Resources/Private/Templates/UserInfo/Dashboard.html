@@ -7,7 +7,7 @@
 	<div class="ns-googledocs-dashboard-blocks">
 		<f:if condition="!{globalSettings.clientStatus}">
 			<div class="alert alert-danger alert-dismissible show" role="alert">
-				<f:format.raw><f:translate key="error_msg" extensionName="NsGoogledocs" /></f:format.raw>
+				<f:translate key="error_msg" extensionName="NsGoogledocs" />
 				<button type="button" class="close" data-bs-dismiss="alert" aria-label="Close">
 					<span aria-hidden="true">&times;</span>
 				</button>
@@ -28,7 +28,7 @@
 						<h5><f:translate key="dashboard_import_pages" extensionName="NsGoogledocs" /></h5>
 					</div>
 					<div class="card-body">
-						<f:format.raw><f:translate key="dashboard_import_pages_steps" extensionName="NsGoogledocs" /></f:format.raw>
+						<f:format.raw>{f:translate(key: 'dashboard_import_pages_steps', extensionName: 'NsGoogledocs')}</f:format.raw>
 					</div>
 				</div>
 			</div>

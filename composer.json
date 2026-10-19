@@ -20,7 +20,7 @@
         "ext-intl": "*",
         "ext-libxml": "*",
         "ext-simplexml": "*",
-        "php": "^8.1",
+        "php": "^8.1 || ^8.2",
         "google/apiclient": "^2.15",
         "nitsan/ns-license": "^14.5.4",
         "typo3/cms-backend": "^12.4 || ^13.4 || ^14.0",
@@ -33,6 +33,15 @@
         "psr-4": {
             "NITSAN\\NsGoogledocs\\": "Classes/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "NITSAN\\NsGoogledocs\\Tests\\": "Tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5 || ^11.0",
+        "typo3/testing-framework": "^8.2.7 || ^9.0"
     },
     "replace": {
         "typo3-ter/ns-googledocs": "self.version"
@@ -51,7 +60,8 @@
     },
     "extra": {
         "typo3/cms": {
-            "extension-key": "ns_googledocs"
+            "extension-key": "ns_googledocs",
+            "version": "14.0.0"
         },
         "google/apiclient-services": [
             "Drive"

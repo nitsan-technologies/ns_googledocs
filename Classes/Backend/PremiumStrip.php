@@ -9,7 +9,6 @@ use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Imaging\IconSize;
 use TYPO3\CMS\Core\Localization\LanguageService;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Premium strip with a free-trial link to the ns_license module.
@@ -22,13 +21,18 @@ final class PremiumStrip
     private const LICENSE_FREE_SECTION_ANCHOR = '#free-section';
     private const LANGUAGE_FILE = 'LLL:EXT:ns_googledocs/Resources/Private/Language/locallang.xlf:';
 
+    public function __construct(
+        private readonly UriBuilder $uriBuilder,
+        private readonly IconFactory $iconFactory
+    ) {}
+
     /**
      * Returns an empty string when ns_license (and with it the trial route) is not available.
      */
     public function render(): string
     {
         try {
-            $trialUrl = (string)GeneralUtility::makeInstance(UriBuilder::class)
+            $trialUrl = (string)$this->uriBuilder
                 ->buildUriFromRoute(self::LICENSE_MODULE_ROUTE, ['trial' => 'ns_googledocs'])
                 . self::LICENSE_FREE_SECTION_ANCHOR;
         } catch (RouteNotFoundException) {
@@ -36,7 +40,7 @@ final class PremiumStrip
         }
 
         $iconSize = enum_exists(IconSize::class) ? IconSize::SMALL : 'small';
-        $icon = GeneralUtility::makeInstance(IconFactory::class)->getIcon('actions-rocket', $iconSize)->render();
+        $icon = $this->iconFactory->getIcon('actions-rocket', $iconSize)->render();
 
         return '<div class="ns-googledocs-premium-strip d-flex flex-wrap align-items-center justify-content-between gap-3">'
             . '<div class="d-flex align-items-center gap-3">'

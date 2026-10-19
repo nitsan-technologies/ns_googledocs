@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace NITSAN\NsGoogledocs\Domain\Model;
 
 /***
@@ -11,148 +14,70 @@ namespace NITSAN\NsGoogledocs\Domain\Model;
  *  (c) 2020
  *
  ***/
+
+use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
+
 /**
  * UserInfo
  */
-class UserInfo extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity
+class UserInfo extends AbstractEntity
 {
+    protected string $clientId = '';
 
-    /**
-     * clientId
-     *
-     * @var string
-     */
-    protected $clientId = '';
+    protected string $clientSecret = '';
 
-    /**
-     * clientSecret
-     *
-     * @var string
-     */
-    protected $clientSecret = '';
+    protected string $refreshToken = '';
 
-    /**
-     * refreshToken
-     *
-     * @var string
-     */
-    protected $refreshToken = '';
+    protected string $importType = '';
 
-    /**
-     * importType
-     *
-     * @var string
-     */
-    protected $importType = 0;
+    protected int $googleFilesRequest = 10;
 
-    /**
-     * googleFilesRequest
-     *
-     * @var int
-     */
-    protected $googleFilesRequest = 10;
-
-    /**
-     * Returns the clientId
-     *
-     * @return string $clientId
-     */
-    public function getClientId()
+    public function getClientId(): string
     {
         return $this->clientId;
     }
 
-    /**
-     * Sets the clientId
-     *
-     * @param string $clientId
-     * @return void
-     */
-    public function setClientId($clientId)
+    public function setClientId(string $clientId): void
     {
         $this->clientId = $clientId;
     }
 
-    /**
-     * Returns the clientSecret
-     *
-     * @return string $clientSecret
-     */
-    public function getClientSecret()
+    public function getClientSecret(): string
     {
         return $this->clientSecret;
     }
 
-    /**
-     * Sets the clientSecret
-     *
-     * @param string $clientSecret
-     * @return void
-     */
-    public function setClientSecret($clientSecret)
+    public function setClientSecret(string $clientSecret): void
     {
         $this->clientSecret = $clientSecret;
     }
 
-    /**
-     * Returns the refreshToken
-     *
-     * @return string $refreshToken
-     */
-    public function getRefreshToken()
+    public function getRefreshToken(): string
     {
         return $this->refreshToken;
     }
 
-    /**
-     * Sets the refreshToken
-     *
-     * @param string $refreshToken
-     * @return void
-     */
-    public function setRefreshToken($refreshToken)
+    public function setRefreshToken(string $refreshToken): void
     {
         $this->refreshToken = $refreshToken;
     }
 
-    /**
-     * Returns the importType
-     *
-     * @return string importType
-     */
-    public function getImportType()
+    public function getImportType(): string
     {
         return $this->importType;
     }
 
-    /**
-     * Sets the importType
-     *
-     * @param int $importType
-     * @return void
-     */
-    public function setImportType($importType)
+    public function setImportType(string $importType): void
     {
         $this->importType = $importType;
     }
 
-    /**
-     * Returns the googleFilesRequest
-     *
-     * @return int $googleFilesRequest
-     */
-    public function getGoogleFilesRequest()
+    public function getGoogleFilesRequest(): int
     {
         return $this->googleFilesRequest;
     }
 
-    /**
-     * Sets the googleFilesRequest
-     *
-     * @param int $googleFilesRequest
-     * @return void
-     */
-    public function setGoogleFilesRequest($googleFilesRequest)
+    public function setGoogleFilesRequest(int $googleFilesRequest): void
     {
         $this->googleFilesRequest = $googleFilesRequest;
     }

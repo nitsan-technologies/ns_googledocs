@@ -5,8 +5,8 @@ defined('TYPO3') || die();
 $languageFile = 'LLL:EXT:ns_googledocs/Resources/Private/Language/locallang_db.xlf:';
 
 $temporaryColumns = [
-    'client_id' => [
-        'exclude' => 0,
+    'tx_nsgoogledocs_client_id' => [
+        'exclude' => true,
         'label' => $languageFile . 'tx_nsgoogledocs_domain_model_userinfo.client_id',
         'config' => [
             'type' => 'input',
@@ -15,8 +15,9 @@ $temporaryColumns = [
             'max' => 255,
         ],
     ],
-    'client_secret' => [
-        'exclude' => 0,
+    // Keep type=input (not password): Core hashes password fields on be_users, which would break OAuth secrets.
+    'tx_nsgoogledocs_client_secret' => [
+        'exclude' => true,
         'label' => $languageFile . 'tx_nsgoogledocs_domain_model_userinfo.client_secret',
         'config' => [
             'type' => 'input',
@@ -25,8 +26,8 @@ $temporaryColumns = [
             'max' => 255,
         ],
     ],
-    'refresh_token' => [
-        'exclude' => 0,
+    'tx_nsgoogledocs_refresh_token' => [
+        'exclude' => true,
         'label' => $languageFile . 'tx_nsgoogledocs_domain_model_userinfo.refresh_token',
         'config' => [
             'type' => 'input',
@@ -35,7 +36,7 @@ $temporaryColumns = [
             'max' => 255,
         ],
     ],
-    'import_type' => [
+    'tx_nsgoogledocs_import_type' => [
         'exclude' => true,
         'label' => $languageFile . 'tx_nsgoogledocs_domain_model_userinfo.import_type',
         'config' => [
@@ -58,5 +59,5 @@ $temporaryColumns = [
 );
 \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addToAllTCAtypes(
     'be_users',
-    'client_id, client_secret, refresh_token, import_type'
+    'tx_nsgoogledocs_client_id, tx_nsgoogledocs_client_secret, tx_nsgoogledocs_refresh_token, tx_nsgoogledocs_import_type'
 );

@@ -1,0 +1,2 @@
+# cat=basic/enable; type=options[header=Header,text=Text Element,textpic=Text & Image,image=Image Only]; label=Default content element type for each section in the import dialog
+googleDocsContentElementType = textpic

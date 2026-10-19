@@ -1,0 +1,7 @@
+"pages"
+,"uid","pid","sorting","deleted","t3ver_oid","t3_origuid","t3ver_wsid","t3ver_state","t3ver_stage","perms_userid","perms_groupid","perms_user","perms_group","perms_everybody","editlock","doktype","title","slug","is_siteroot"
+,1,0,256,0,0,0,0,0,0,1,0,31,27,1,0,1,"Root","/",1
+
+"be_users"
+,"uid","pid","tstamp","username","password","admin","usergroup","disable","starttime","endtime","options","crdate","workspace_perms","deleted","TSconfig","lastlogin","workspace_id"
+,1,0,0,"admin","$2y$10$bB77lqA2xw4Sox9ZesCweuBeI3.Yle4TRKUi8K6KneXu.GLvr.Kqe",1,,0,0,0,0,0,1,0,"",0,0

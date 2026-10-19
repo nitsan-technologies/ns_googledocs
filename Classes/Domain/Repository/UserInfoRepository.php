@@ -17,17 +17,43 @@ namespace NITSAN\NsGoogledocs\Domain\Repository;
 
 use Doctrine\DBAL\Exception;
 use Doctrine\DBAL\ParameterType;
+use NITSAN\NsGoogledocs\Service\RemoteContentFetcher;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\DataHandling\DataHandler;
+use TYPO3\CMS\Core\Log\LogManager;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\StringUtility;
 use TYPO3\CMS\Extbase\Persistence\Generic\Typo3QuerySettings;
 use TYPO3\CMS\Extbase\Persistence\Repository;
 
 /**
- * The repository for UserInfos
+ * Persistence helpers for Google Docs import configuration and content writes.
+ *
+ * Content elements are created via DataHandler so reference index, permissions
+ * and history stay consistent.
  */
 class UserInfoRepository extends Repository
 {
+    /**
+     * @var list<string>
+     */
+    private array $lastDataHandlerErrors = [];
+
+    public function __construct(
+        private readonly ?RemoteContentFetcher $remoteContentFetcher = null
+    ) {
+        parent::__construct();
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getLastDataHandlerErrors(): array
+    {
+        return $this->lastDataHandlerErrors;
+    }
+
     public function initializeObject(): void
     {
         $querySettings = GeneralUtility::makeInstance(Typo3QuerySettings::class);
@@ -41,88 +67,96 @@ class UserInfoRepository extends Repository
      */
     public function insertPageElement(int $pageID, array $element, array $request): bool
     {
-        $connection = GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable('tt_content');
-        $header = $element['header'] ?? '';
-        $headerLayout = $element['header_layout'] ?? 0;
+        $contentId = StringUtility::getUniqueId('NEW');
+        $header = (string)($element['header'] ?? '');
+        $headerLayout = (int)($element['header_layout'] ?? 0);
         $colPos = (int)($request['colPos'] ?? 0);
+        $cType = (string)($element['CType'] ?? 'text');
+        $sorting = (int)($element['sorting'] ?? 0);
 
-        switch ($element['CType'] ?? '') {
-            case 'image':
-                $connection->insert(
-                    'tt_content',
-                    [
-                        'pid' => $pageID,
-                        'CType' => $element['CType'],
-                        'colPos' => $colPos,
-                        'sys_language_uid' => 0,
-                        'sorting' => $element['sorting'] ?? 0,
-                        'header' => $header,
-                        'header_layout' => $headerLayout,
-                        'image' => count($element['images'] ?? []),
-                        'imageorient' => $element['imageorient'] ?? 0,
-                        'imagecols' => 1,
-                    ]
-                );
-                break;
-            case 'textpic':
-                $connection->insert(
-                    'tt_content',
-                    [
-                        'pid' => $pageID,
-                        'CType' => $element['CType'],
-                        'header' => $header,
-                        'header_layout' => $headerLayout,
-                        'bodytext' => $element['bodytext'] ?? '',
-                        'colPos' => $colPos,
-                        'sys_language_uid' => 0,
-                        'sorting' => $element['sorting'] ?? 0,
-                        'image' => count($element['images'] ?? []),
-                        'imageorient' => $element['imageorient'] ?? 0,
-                        'imagecols' => 1,
-                    ]
-                );
-                break;
-            default:
-                $connection->insert(
-                    'tt_content',
-                    [
-                        'pid' => $pageID,
-                        'CType' => $element['CType'] ?? 'text',
-                        'header' => $header,
-                        'header_layout' => $headerLayout,
-                        'bodytext' => $element['bodytext'] ?? '',
-                        'colPos' => $colPos,
-                        'sys_language_uid' => 0,
-                        'sorting' => $element['sorting'] ?? 0,
-                    ]
-                );
-                break;
+        $record = [
+            'pid' => $pageID,
+            'CType' => $cType,
+            'colPos' => $colPos,
+            'sys_language_uid' => 0,
+            'sorting' => $sorting,
+            'header' => $header,
+            'header_layout' => $headerLayout,
+        ];
+
+        if ($cType === 'image' || $cType === 'textpic') {
+            $record['imageorient'] = (int)($element['imageorient'] ?? 0);
+            $record['imagecols'] = 1;
+        }
+        if ($cType === 'text' || $cType === 'textpic') {
+            $record['bodytext'] = (string)($element['bodytext'] ?? '');
+        }
+        // CType "header" only uses header / header_layout (no bodytext / images).
+
+        $data = [
+            'tt_content' => [
+                $contentId => $record,
+            ],
+        ];
+
+        $imageRefIds = [];
+        if (
+            ($cType === 'image' || $cType === 'textpic')
+            && !empty($element['images'])
+            && is_array($element['images'])
+        ) {
+            foreach ($element['images'] as $key => $fileUid) {
+                $refId = StringUtility::getUniqueId('NEW');
+                $data['sys_file_reference'][$refId] = [
+                    'uid_local' => (int)$fileUid,
+                    'uid_foreign' => $contentId,
+                    'tablenames' => 'tt_content',
+                    'fieldname' => 'image',
+                    'pid' => $pageID,
+                    'sorting_foreign' => 1 + (int)$key,
+                    'table_local' => 'sys_file',
+                ];
+                $imageRefIds[] = $refId;
+            }
+            $data['tt_content'][$contentId]['image'] = implode(',', $imageRefIds);
         }
 
-        $lastUid = (int)$connection->lastInsertId('tt_content');
-        if (
-            ($element['CType'] === 'image' || $element['CType'] === 'textpic')
-            && $lastUid > 0
-            && !empty($element['images'])
-        ) {
-            $refConnection = GeneralUtility::makeInstance(ConnectionPool::class)
-                ->getConnectionForTable('sys_file_reference');
-            foreach ($element['images'] as $key => $img) {
-                $refConnection->insert(
-                    'sys_file_reference',
-                    [
-                        'uid_local' => $img,
-                        'uid_foreign' => $lastUid,
-                        'tablenames' => 'tt_content',
-                        'fieldname' => 'image',
-                        'sorting_foreign' => 1 + (int)$key,
-                        'table_local' => 'sys_file',
-                    ]
-                );
+        $this->lastDataHandlerErrors = [];
+        $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+        if (isset($GLOBALS['BE_USER']) && is_object($GLOBALS['BE_USER'])) {
+            $dataHandler->BE_USER = $GLOBALS['BE_USER'];
+        }
+        $dataHandler->start($data, []);
+        $dataHandler->process_datamap();
+
+        if ($dataHandler->errorLog !== []) {
+            $this->lastDataHandlerErrors = array_values($dataHandler->errorLog);
+            $logger = GeneralUtility::makeInstance(LogManager::class)->getLogger(__CLASS__);
+            foreach ($this->lastDataHandlerErrors as $message) {
+                $logger->warning('ns_googledocs DataHandler: {message}', ['message' => $message]);
+            }
+            return false;
+        }
+
+        $newUid = (int)($dataHandler->substNEWwithIDs[$contentId] ?? 0);
+        if ($newUid > 0) {
+            return true;
+        }
+
+        // Fallback: DataHandler may rewrite NEW keys; accept any substituted tt_content uid.
+        foreach ($dataHandler->substNEWwithIDs as $newIdKey => $uid) {
+            if (str_starts_with((string)$newIdKey, 'NEW') && (int)$uid > 0) {
+                return true;
             }
         }
 
-        return $lastUid > 0;
+        $this->lastDataHandlerErrors[] = 'DataHandler did not create a tt_content record (CType=' . $cType . ', pid=' . $pageID . ').';
+        $logger = GeneralUtility::makeInstance(LogManager::class)->getLogger(__CLASS__);
+        $logger->warning('ns_googledocs DataHandler: no substNEWwithIDs for {id}', [
+            'id' => $contentId,
+            'map' => $dataHandler->substNEWwithIDs,
+        ]);
+        return false;
     }
 
     public function findElementSorting(int $pid): int
@@ -178,25 +212,40 @@ class UserInfoRepository extends Repository
                     $queryBuilder->createNamedParameter($userID, ParameterType::INTEGER)
                 )
             )
-            ->set('client_secret', (string)($request['GoogleDocsSecretKey'] ?? ''), true, ParameterType::STRING)
-            ->set('client_id', (string)($request['GoogleDocsClientId'] ?? ''), true, ParameterType::STRING)
-            ->set('refresh_token', (string)($request['GoogleDocsRefreshToken'] ?? ''), true, ParameterType::STRING);
+            ->set(
+                'tx_nsgoogledocs_client_id',
+                (string)($request['GoogleDocsClientId'] ?? ''),
+                true,
+                ParameterType::STRING
+            )
+            ->set(
+                'tx_nsgoogledocs_client_secret',
+                (string)($request['GoogleDocsSecretKey'] ?? ''),
+                true,
+                ParameterType::STRING
+            )
+            ->set(
+                'tx_nsgoogledocs_refresh_token',
+                (string)($request['GoogleDocsRefreshToken'] ?? ''),
+                true,
+                ParameterType::STRING
+            );
 
         if (!empty($request['importType']) && is_array($request['importType'])) {
             $queryBuilder->set(
-                'import_type',
+                'tx_nsgoogledocs_import_type',
                 implode(',', $request['importType']),
                 true,
                 ParameterType::STRING
             );
         } else {
-            $queryBuilder->set('import_type', '', true, ParameterType::STRING);
+            $queryBuilder->set('tx_nsgoogledocs_import_type', '', true, ParameterType::STRING);
         }
 
         try {
             $queryBuilder->executeStatement();
             return true;
-        } catch (Exception $e) {
+        } catch (Exception) {
             return false;
         }
     }
@@ -205,10 +254,14 @@ class UserInfoRepository extends Repository
     {
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable('tx_nsgoogledocs_domain_model_apidata');
+        $cutoff = (new \DateTimeImmutable('-2 weeks'))->format('Y-m-d');
         $queryBuilder
             ->delete('tx_nsgoogledocs_domain_model_apidata')
             ->where(
-                $queryBuilder->expr()->comparison('last_update', '<', 'DATE_SUB(NOW() , INTERVAL 2 WEEK)')
+                $queryBuilder->expr()->lt(
+                    'last_update',
+                    $queryBuilder->createNamedParameter($cutoff)
+                )
             )
             ->executeStatement();
     }
@@ -229,13 +282,10 @@ class UserInfoRepository extends Repository
 
     public function curlInitCall(string $url): string|false
     {
-        $curlSession = curl_init();
-        curl_setopt($curlSession, CURLOPT_URL, $url);
-        curl_setopt($curlSession, CURLOPT_RETURNTRANSFER, true);
-        $data = curl_exec($curlSession);
-        curl_close($curlSession);
-
-        return $data;
+        $fetcher = $this->remoteContentFetcher
+            ?? GeneralUtility::makeInstance(RemoteContentFetcher::class);
+        $result = $fetcher->fetchText($url);
+        return $result === '' ? false : $result;
     }
 
     /**

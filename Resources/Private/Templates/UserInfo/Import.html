@@ -45,7 +45,7 @@
 																<td>{file.owner}</td>
 																<td class="text-center">
 																	<div class="button-group ns-googledocs-actions-wrap ns-ext-actions-wrap">
-																		<a href="#" data-viewurl="{file.ViewURL}" data-fileID="{file.id}" class="btn btn-gray btn-import" data-bs-toggle="modal" data-pageTitle="{globalSettings.pageTitle}" data-fileName="{file.name}" data-bs-target="#importGooleDocsModal" role="button">
+																		<a href="#" data-viewurl="{file.ViewURL}" data-file-id="{file.id}" data-fileid="{file.id}" class="btn btn-gray btn-import" data-bs-toggle="modal" data-page-title="{globalSettings.pageTitle}" data-file-name="{file.name}" data-bs-target="#importGooleDocsModal" role="button">
 																			<core:icon identifier="actions-download" size="small" alternativeMarkupIdentifier="inline" /><f:translate key="import_tab.btn_import_now" extensionName="NsGoogledocs" />
 																		</a>
 																		<a href="{file.ViewURL}" target="_blank" class="btn btn-gray">
@@ -66,7 +66,7 @@
 					</f:then>
 					<f:else>
 						<div class="alert alert-danger alert-dismissible show" role="alert">
-							<f:format.raw><f:translate key="import_access_error_msg" extensionName="NsGoogledocs" /></f:format.raw>
+							<f:translate key="import_access_error_msg" extensionName="NsGoogledocs" />
 							<button type="button" class="close" data-bs-dismiss="alert" aria-label="Close">
 								<span aria-hidden="true">&times;</span>
 							</button>
@@ -76,7 +76,7 @@
 			</f:then>
 			<f:else>
 				<div class="alert alert-danger alert-dismissible show" role="alert">
-					<f:format.raw><f:translate key="import_access_page_error_msg" extensionName="NsGoogledocs" /></f:format.raw>
+					<f:translate key="import_access_page_error_msg" extensionName="NsGoogledocs" />
 					<button type="button" class="close" data-bs-dismiss="alert" aria-label="Close">
 						<span aria-hidden="true">&times;</span>
 					</button>

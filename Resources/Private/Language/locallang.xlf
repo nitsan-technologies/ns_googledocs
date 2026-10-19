@@ -138,6 +138,33 @@
 			<trans-unit id="select_column">
 				<source>Please select content column</source>
 			</trans-unit>
+			<trans-unit id="import_sections_hint">
+				<source>Each Heading 1 / Heading 2 in the Doc becomes one row. Choose the element type, edit the title, or untick a section to skip it.</source>
+			</trans-unit>
+			<trans-unit id="import_sections_loading">
+				<source>Reading Google Doc sections…</source>
+			</trans-unit>
+			<trans-unit id="import_col_add">
+				<source>Add Content</source>
+			</trans-unit>
+			<trans-unit id="import_col_type">
+				<source>Element Type</source>
+			</trans-unit>
+			<trans-unit id="import_col_title">
+				<source>Element Title</source>
+			</trans-unit>
+			<trans-unit id="element_type.header">
+				<source>Header</source>
+			</trans-unit>
+			<trans-unit id="element_type.text">
+				<source>Text Element</source>
+			</trans-unit>
+			<trans-unit id="element_type.textpic">
+				<source>Text &amp; Image</source>
+			</trans-unit>
+			<trans-unit id="element_type.image">
+				<source>Image Only</source>
+			</trans-unit>
 			<trans-unit id="override_colpos_data">
 				<source>Override existing column content?</source>
 			</trans-unit>

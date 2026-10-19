@@ -2,10 +2,10 @@
 # Table structure for table 'be_users'
 #
 CREATE TABLE be_users (
-	client_id varchar(255) DEFAULT '' NOT NULL,
-	client_secret varchar(255) DEFAULT '' NOT NULL,
-	refresh_token varchar(255) DEFAULT '' NOT NULL,	
-	import_type varchar(255) DEFAULT '1' NOT NULL,
+	tx_nsgoogledocs_client_id varchar(255) DEFAULT '' NOT NULL,
+	tx_nsgoogledocs_client_secret varchar(255) DEFAULT '' NOT NULL,
+	tx_nsgoogledocs_refresh_token varchar(255) DEFAULT '' NOT NULL,
+	tx_nsgoogledocs_import_type varchar(255) DEFAULT '1' NOT NULL
 );
 
 #
