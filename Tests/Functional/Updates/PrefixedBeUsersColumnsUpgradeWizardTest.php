@@ -25,6 +25,7 @@ final class PrefixedBeUsersColumnsUpgradeWizardTest extends FunctionalTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->importCSVDataSet(__DIR__ . '/../Domain/Repository/Fixtures/pages.csv');
         $this->setUpBackendUser(1);
         $this->ensureLegacyColumns();
     }
