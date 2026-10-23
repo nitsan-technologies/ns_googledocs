@@ -63,7 +63,11 @@ jobs:
             "typo3/cms-backend:${{ matrix.typo3 }}" \
             "typo3/cms-extbase:${{ matrix.typo3 }}" \
             "typo3/cms-fluid:${{ matrix.typo3 }}" \
-            "typo3/cms-frontend:${{ matrix.typo3 }}" \
+            "typo3/cms-frontend:${{ matrix.typo3 }}"
+          # Keep install + FSC out of production "require". TYPO3 14 reads those
+          # as hard extension dependencies and functional tests then fail unless
+          # every case also loads them.
+          composer require --dev --no-update \
             "typo3/cms-install:${{ matrix.typo3 }}" \
             "typo3/cms-fluid-styled-content:${{ matrix.typo3 }}"
           composer update --prefer-dist --no-progress --no-interaction --no-audit

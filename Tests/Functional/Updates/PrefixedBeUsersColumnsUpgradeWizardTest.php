@@ -4,29 +4,18 @@ declare(strict_types=1);
 
 namespace NITSAN\NsGoogledocs\Tests\Functional\Updates;
 
+use NITSAN\NsGoogledocs\Tests\Functional\AbstractFunctionalTestCase;
 use NITSAN\NsGoogledocs\Updates\PrefixedBeUsersColumnsUpgradeWizard;
 use PHPUnit\Framework\Attributes\Test;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
-final class PrefixedBeUsersColumnsUpgradeWizardTest extends FunctionalTestCase
+final class PrefixedBeUsersColumnsUpgradeWizardTest extends AbstractFunctionalTestCase
 {
-    protected array $coreExtensionsToLoad = [
-        'install',
-        'extensionmanager',
-    ];
-
-    protected array $testExtensionsToLoad = [
-        'ns_license',
-        'ns_googledocs',
-    ];
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->importCSVDataSet(__DIR__ . '/../Domain/Repository/Fixtures/pages.csv');
-        $this->setUpBackendUser(1);
         $this->ensureLegacyColumns();
     }
 

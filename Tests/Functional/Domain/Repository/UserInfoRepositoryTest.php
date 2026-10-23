@@ -5,34 +5,16 @@ declare(strict_types=1);
 namespace NITSAN\NsGoogledocs\Tests\Functional\Domain\Repository;
 
 use NITSAN\NsGoogledocs\Domain\Repository\UserInfoRepository;
+use NITSAN\NsGoogledocs\Tests\Functional\AbstractFunctionalTestCase;
 use PHPUnit\Framework\Attributes\Test;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Resource\StorageRepository;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
-final class UserInfoRepositoryTest extends FunctionalTestCase
+final class UserInfoRepositoryTest extends AbstractFunctionalTestCase
 {
-    protected array $coreExtensionsToLoad = [
-        'frontend',
-        'fluid_styled_content',
-        'extensionmanager',
-    ];
-
-    protected array $testExtensionsToLoad = [
-        'ns_license',
-        'ns_googledocs',
-    ];
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->importCSVDataSet(__DIR__ . '/Fixtures/pages.csv');
-        $this->setUpBackendUser(1);
-    }
-
     #[Test]
     public function insertPageElementCreatesTextContentViaDataHandler(): void
     {
