@@ -25,16 +25,16 @@ use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Log\LogManager;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
-use TYPO3\CMS\Extbase\Persistence\Generic\Typo3QuerySettings;
-use TYPO3\CMS\Extbase\Persistence\Repository;
+use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 /**
  * Persistence helpers for Google Docs import configuration and content writes.
  *
  * Content elements are created via DataHandler so reference index, permissions
- * and history stay consistent.
+ * and history stay consistent. Not an Extbase repository: there is no
+ * tx_nsgoogledocs_domain_model_userinfo table.
  */
-class UserInfoRepository extends Repository
+final class UserInfoRepository
 {
     /**
      * @var list<string>
@@ -45,9 +45,7 @@ class UserInfoRepository extends Repository
 
     public function __construct(
         private readonly ?RemoteContentFetcher $remoteContentFetcher = null
-    ) {
-        parent::__construct();
-    }
+    ) {}
 
     /**
      * @return list<string>
@@ -63,13 +61,6 @@ class UserInfoRepository extends Repository
     public function getLastInsertedUid(): int
     {
         return $this->lastInsertedUid;
-    }
-
-    public function initializeObject(): void
-    {
-        $querySettings = GeneralUtility::makeInstance(Typo3QuerySettings::class);
-        $querySettings->setRespectStoragePage(false);
-        $this->setDefaultQuerySettings($querySettings);
     }
 
     /**
@@ -171,7 +162,11 @@ class UserInfoRepository extends Repository
             }
         }
 
-        $this->lastDataHandlerErrors[] = 'DataHandler did not create a tt_content record (CType=' . $cType . ', pid=' . $pageID . ').';
+        $this->lastDataHandlerErrors[] = $this->translateLabel(
+            'error.dataHandlerNoRecord',
+            'DataHandler did not create a tt_content record (CType=%s, pid=%s).',
+            [$cType, (string)$pageID]
+        );
         $logger = GeneralUtility::makeInstance(LogManager::class)->getLogger(__CLASS__);
         $logger->warning('ns_googledocs DataHandler: no substNEWwithIDs for {id}', [
             'id' => $contentId,
@@ -210,48 +205,17 @@ class UserInfoRepository extends Repository
         return (int)$uid;
     }
 
-    public function findElementSorting(int $pid): int
-    {
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
-            ->getConnectionForTable('tt_content')
-            ->createQueryBuilder();
-        $result = $queryBuilder
-            ->addSelectLiteral(
-                $queryBuilder->expr()->max('sorting', 'sorting')
-            )
-            ->from('tt_content')
-            ->where(
-                $queryBuilder->expr()->eq(
-                    'pid',
-                    $queryBuilder->createNamedParameter($pid, Connection::PARAM_INT)
-                )
-            )
-            ->executeQuery()
-            ->fetchAssociative();
-
-        if (empty($result['sorting'])) {
-            return 0;
-        }
-
-        return (int)$result['sorting'];
-    }
-
     /**
-     * @param array<string, mixed> $request
+     * @param list<string> $importTypes
      */
-    public function updateDocsConfig(int $userID, array $request): bool
+    public function updateDocsConfig(
+        int $userID,
+        string $clientId,
+        string $clientSecret,
+        string $refreshToken,
+        array $importTypes
+    ): bool
     {
-        if (!isset($request['GoogleDocsClientId']) && !isset($request['GoogleDocsSecretKey'])) {
-            foreach ($request as $value) {
-                if (is_array($value) && (
-                    isset($value['GoogleDocsClientId']) || isset($value['GoogleDocsSecretKey'])
-                )) {
-                    $request = $value;
-                    break;
-                }
-            }
-        }
-
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable('be_users');
 
@@ -265,33 +229,28 @@ class UserInfoRepository extends Repository
             )
             ->set(
                 'tx_nsgoogledocs_client_id',
-                (string)($request['GoogleDocsClientId'] ?? ''),
+                $clientId,
                 true,
                 ParameterType::STRING
             )
             ->set(
                 'tx_nsgoogledocs_client_secret',
-                (string)($request['GoogleDocsSecretKey'] ?? ''),
+                $clientSecret,
                 true,
                 ParameterType::STRING
             )
             ->set(
                 'tx_nsgoogledocs_refresh_token',
-                (string)($request['GoogleDocsRefreshToken'] ?? ''),
+                $refreshToken,
                 true,
                 ParameterType::STRING
-            );
-
-        if (!empty($request['importType']) && is_array($request['importType'])) {
-            $queryBuilder->set(
+            )
+            ->set(
                 'tx_nsgoogledocs_import_type',
-                implode(',', $request['importType']),
+                implode(',', $importTypes),
                 true,
                 ParameterType::STRING
             );
-        } else {
-            $queryBuilder->set('tx_nsgoogledocs_import_type', '', true, ParameterType::STRING);
-        }
 
         try {
             $queryBuilder->executeStatement();
@@ -315,6 +274,7 @@ class UserInfoRepository extends Repository
                 )
             )
             ->executeStatement();
+        $this->deleteEmptyApiData();
     }
 
     /**
@@ -324,18 +284,41 @@ class UserInfoRepository extends Repository
     {
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable('tx_nsgoogledocs_domain_model_apidata');
-        return $queryBuilder
+        $cutoff = (new \DateTimeImmutable('-2 weeks'))->format('Y-m-d');
+        $row = $queryBuilder
             ->select('*')
             ->from('tx_nsgoogledocs_domain_model_apidata')
+            ->where(
+                $queryBuilder->expr()->eq(
+                    'extension_key',
+                    $queryBuilder->createNamedParameter('ns_googledocs')
+                )
+            )
+            ->andWhere(
+                $queryBuilder->expr()->gte(
+                    'last_update',
+                    $queryBuilder->createNamedParameter($cutoff)
+                )
+            )
+            ->orderBy('id', 'DESC')
+            ->setMaxResults(1)
             ->executeQuery()
             ->fetchAssociative();
+
+        if ($row === false || !$this->apiRowHasContent($row)) {
+            return false;
+        }
+        return $row;
     }
 
-    public function curlInitCall(string $url): string|false
+    /**
+     * Marketing snippets only — keep a short timeout so a down API cannot stall the module.
+     */
+    public function curlInitCall(string $url, int $timeout = 2): string|false
     {
         $fetcher = $this->remoteContentFetcher
             ?? GeneralUtility::makeInstance(RemoteContentFetcher::class);
-        $result = $fetcher->fetchText($url);
+        $result = $fetcher->fetchText($url, $timeout);
         return $result === '' ? false : $result;
     }
 
@@ -352,5 +335,61 @@ class UserInfoRepository extends Repository
             ->executeStatement();
 
         return $queryBuilder->getConnection()->lastInsertId();
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    public function apiRowHasContent(array $row): bool
+    {
+        foreach (['support_html', 'footer_html'] as $field) {
+            if (trim((string)($row[$field] ?? '')) !== '') {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function deleteEmptyApiData(): void
+    {
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getQueryBuilderForTable('tx_nsgoogledocs_domain_model_apidata');
+        $rows = $queryBuilder
+            ->select('id', 'support_html', 'footer_html')
+            ->from('tx_nsgoogledocs_domain_model_apidata')
+            ->executeQuery()
+            ->fetchAllAssociative();
+        foreach ($rows as $row) {
+            if ($this->apiRowHasContent($row)) {
+                continue;
+            }
+            $delete = GeneralUtility::makeInstance(ConnectionPool::class)
+                ->getQueryBuilderForTable('tx_nsgoogledocs_domain_model_apidata');
+            $delete
+                ->delete('tx_nsgoogledocs_domain_model_apidata')
+                ->where(
+                    $delete->expr()->eq(
+                        'id',
+                        $delete->createNamedParameter((int)($row['id'] ?? 0), ParameterType::INTEGER)
+                    )
+                )
+                ->executeStatement();
+        }
+    }
+
+    /**
+     * @param list<int|string>|array<int, int|string> $arguments
+     */
+    private function translateLabel(string $key, string $fallback, array $arguments = []): string
+    {
+        try {
+            $label = LocalizationUtility::translate($key, 'ns_googledocs', $arguments !== [] ? $arguments : null);
+        } catch (\Throwable) {
+            $label = null;
+        }
+        if (!is_string($label) || $label === '' || $label === $key) {
+            return $arguments !== [] ? sprintf($fallback, ...$arguments) : $fallback;
+        }
+        return $label;
     }
 }

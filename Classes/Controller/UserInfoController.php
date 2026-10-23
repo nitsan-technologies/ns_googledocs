@@ -19,7 +19,10 @@ use NITSAN\NsGoogledocs\Backend\PremiumStrip;
 use NITSAN\NsGoogledocs\Domain\Repository\UserInfoRepository;
 use NITSAN\NsGoogledocs\Service\GoogleDocsSectionParser;
 use NITSAN\NsGoogledocs\Service\GoogleTokenHelper;
+use NITSAN\NsGoogledocs\Service\ImportContentElementTypeResolver;
 use NITSAN\NsGoogledocs\Service\ImportPageTypeGuard;
+use NITSAN\NsGoogledocs\Service\ImportRequestMapper;
+use NITSAN\NsGoogledocs\Service\ImportSectionSplitter;
 use NITSAN\NsGoogledocs\Service\RemoteContentFetcher;
 use NITSAN\NsGoogledocs\Service\RemoteHtmlSanitizer;
 use NITSAN\NsGoogledocs\Service\RemoteSnippetValidator;
@@ -29,18 +32,23 @@ use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility as BackendUtilityCore;
 use TYPO3\CMS\Backend\View\BackendLayoutView;
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Core\Environment;
+use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Page\PageRenderer;
+use TYPO3\CMS\Core\Resource\Exception\ExistingTargetFolderException;
 use TYPO3\CMS\Core\Resource\FileInterface;
+use TYPO3\CMS\Core\Resource\Folder;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
+use TYPO3\CMS\Core\Resource\ResourceStorage;
 use TYPO3\CMS\Core\Resource\StorageRepository;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
-use TYPO3\CMS\Extbase\Utility\LocalizationUtility as transalte;
+use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 /**
  * UserInfoController
@@ -64,11 +72,17 @@ class UserInfoController extends ActionController
     protected RemoteHtmlSanitizer $remoteHtmlSanitizer;
     protected RemoteContentFetcher $remoteContentFetcher;
     protected GoogleDocsSectionParser $sectionParser;
+    protected ImportSectionSplitter $sectionSplitter;
     protected bool $apiContentLoaded = false;
     protected string $refreshToken = '';
     protected string $tokenError = '';
 
     private const PREVIEW_SESSION_KEY = 'ns_googledocs_import_preview';
+
+    /**
+     * @var list<string>|null
+     */
+    private ?array $removedContentTypes = null;
 
     public function __construct(
         UserInfoRepository $userInfoRepository,
@@ -79,7 +93,8 @@ class UserInfoController extends ActionController
         PageRenderer $pageRenderer,
         RemoteHtmlSanitizer $remoteHtmlSanitizer,
         RemoteContentFetcher $remoteContentFetcher,
-        GoogleDocsSectionParser $sectionParser
+        GoogleDocsSectionParser $sectionParser,
+        ImportSectionSplitter $sectionSplitter
     ) {
         $this->userInfoRepository = $userInfoRepository;
         $this->moduleTemplateFactory = $moduleTemplateFactory;
@@ -90,6 +105,7 @@ class UserInfoController extends ActionController
         $this->remoteHtmlSanitizer = $remoteHtmlSanitizer;
         $this->remoteContentFetcher = $remoteContentFetcher;
         $this->sectionParser = $sectionParser;
+        $this->sectionSplitter = $sectionSplitter;
     }
 
     /**
@@ -98,7 +114,7 @@ class UserInfoController extends ActionController
      */
     protected function ensureGoogleClientAutoload(): void
     {
-        if (class_exists(\Google\Client::class) || class_exists(\Google_Client::class)) {
+        if (class_exists(\Google\Client::class)) {
             return;
         }
         $extensionAutoload = ExtensionManagementUtility::extPath('ns_googledocs') . 'vendor/autoload.php';
@@ -115,9 +131,8 @@ class UserInfoController extends ActionController
         $this->ensureGoogleClientAutoload();
         $this->currentVersion = GeneralUtility::makeInstance(Typo3Version::class);
         $this->globalSettings['siteRoot'] = Environment::getPublicPath() . '/';
-        $this->userData = $GLOBALS['BE_USER']->user ?? [];
+        $this->userData = $this->getBackendUser()->user ?? [];
         $this->apiContent = [
-            'googleDocsSetupWizard' => '',
             'dashboardSupportData' => '',
             'generalFooterData' => '',
         ];
@@ -129,34 +144,27 @@ class UserInfoController extends ActionController
 
         if (($this->userData['uid'] ?? 0) > 0 && $clientId !== '') {
             try {
-                $this->client = new \Google_Client();
+                $this->client = new \Google\Client();
                 $this->client->setClientId($clientId);
                 $this->client->setClientSecret($clientSecret);
                 $this->client->setAccessType('offline');
                 $this->refreshToken = $refreshToken;
                 $this->refreshAccessToken();
-                $this->service = new \Google_Service_Drive($this->client);
+                $this->service = new \Google\Service\Drive($this->client);
                 $this->globalSettings['clientException'] = false;
             } catch (\Exception $e) {
                 $this->tokenError = GoogleTokenHelper::explain($e->getMessage());
-                $this->globalSettings['clientException'] = transalte::translate('service.exception', 'ns_googledocs');
+                $this->globalSettings['clientException'] = LocalizationUtility::translate('service.exception', 'ns_googledocs');
             }
             $this->globalSettings['clientStatus'] = true;
             $this->globalSettings['clientInfo']['client_id'] = $clientId;
             $this->globalSettings['clientInfo']['client_secret'] = $clientSecret;
             $this->globalSettings['clientInfo']['refresh_token'] = $refreshToken;
-            $this->globalSettings['clientInfo']['google_files_request'] = $this->userData['google_files_request'] ?? 10;
         } else {
             $this->globalSettings['clientStatus'] = false;
             $this->globalSettings['clientInfo']['client_id'] = '';
             $this->globalSettings['clientInfo']['client_secret'] = '';
             $this->globalSettings['clientInfo']['refresh_token'] = '';
-            $sessionKey = 'ns_googledocs';
-            $sessionData = $GLOBALS['BE_USER']->getSessionData($sessionKey);
-            if (!is_array($sessionData) || empty($sessionData['firstTimeLoad'])) {
-                $GLOBALS['BE_USER']->setAndSaveSessionData($sessionKey, ['firstTimeLoad' => true]);
-                $this->redirect('globalSettings');
-            }
         }
 
         $this->globalSettings['clientInfo']['uid'] = $this->userData['uid'] ?? 0;
@@ -164,7 +172,7 @@ class UserInfoController extends ActionController
             $importType = explode(',', $importTypeRaw);
             $importTypeInfo = [];
             foreach ($importType as $type) {
-                $importTypeInfo[$type] = transalte::translate('import_type.' . $type, 'ns_googledocs');
+                $importTypeInfo[$type] = LocalizationUtility::translate('import_type.' . $type, 'ns_googledocs');
             }
             $this->globalSettings['clientInfo']['import_type'] = $importTypeInfo;
         }
@@ -172,31 +180,19 @@ class UserInfoController extends ActionController
             ? $this->userData['realName']
             : ($this->userData['username'] ?? '');
 
-        $queryParams = $this->request->getQueryParams();
-        $parsedBody = $this->request->getParsedBody();
-        $this->pageUid = (int)($queryParams['id'] ?? 0);
-        if ($this->pageUid <= 0 && is_array($parsedBody)) {
-            foreach ($parsedBody as $value) {
-                if (is_array($value) && isset($value['pageId'])) {
-                    $this->pageUid = (int)$value['pageId'];
-                    break;
-                }
-            }
-            if ($this->pageUid <= 0) {
-                $this->pageUid = (int)($parsedBody['id'] ?? $parsedBody['pageId'] ?? 0);
-            }
-        }
+        $mapped = $this->getPluginRequestArguments();
+        $this->pageUid = (int)$mapped['pageId'];
         $this->pageInformation = BackendUtilityCore::readPageAccess(
             $this->pageUid,
-            $GLOBALS['BE_USER']->getPagePermsClause(1)
+            $this->getBackendUser()->getPagePermsClause(1)
         );
         parent::initializeAction();
     }
 
     /**
      * Apply the stored credential: a ya29.* value is used as an access token directly;
-     * otherwise it is treated as a refresh token and exchanged via Google_Client::refreshToken().
-     * Google_Client::refreshToken() does not throw on OAuth errors but returns
+     * otherwise it is treated as a refresh token and exchanged via Google\Client::refreshToken().
+     * Google\Client::refreshToken() does not throw on OAuth errors but returns
      * ['error' => 'invalid_grant', ...], so the result is inspected.
      */
     protected function refreshAccessToken(): bool
@@ -206,7 +202,10 @@ class UserInfoController extends ActionController
         }
         $this->tokenError = '';
         if ($this->refreshToken === '') {
-            $this->tokenError = 'No refresh token is configured. Add it under Global Settings.';
+            $this->tokenError = $this->translateLabel(
+                'error.noRefreshToken',
+                'No refresh token is configured. Add it under Global Settings.'
+            );
             return false;
         }
         $formatError = GoogleTokenHelper::validateRefreshToken($this->refreshToken);
@@ -268,8 +267,26 @@ class UserInfoController extends ActionController
 
     protected function getPageTypeDeniedMessage(): string
     {
-        return (string)(transalte::translate('import_access_error_msg', 'ns_googledocs')
-            ?: 'You do not have access to import Google docs on this page type, Go to Global Settings');
+        return $this->translateLabel(
+            'import_access_error_msg',
+            'You do not have access to import Google docs on this page type, Go to Global Settings'
+        );
+    }
+
+    /**
+     * @param list<int|string>|array<int, int|string> $arguments
+     */
+    protected function translateLabel(string $key, string $fallback, array $arguments = []): string
+    {
+        try {
+            $label = LocalizationUtility::translate($key, 'ns_googledocs', $arguments !== [] ? $arguments : null);
+        } catch (\Throwable) {
+            $label = null;
+        }
+        if (!is_string($label) || $label === '' || $label === $key) {
+            return $arguments !== [] ? sprintf($fallback, ...$arguments) : $fallback;
+        }
+        return $label;
     }
 
     /**
@@ -282,32 +299,30 @@ class UserInfoController extends ActionController
         }
         $this->apiContentLoaded = true;
 
+        $this->userInfoRepository->deleteOldApiData();
         $checkApiData = $this->userInfoRepository->checkApiData();
         if (!$checkApiData) {
-            $this->userInfoRepository->deleteOldApiData();
             // composer.t3terminal.com answers with "301 Moved Permanently" to this host.
             $apiBase = 'https://composer.t3planet.cloud/API/ExtBackendModuleAPI.php?extKey=ns_googledocs&blockName=';
 
-            $this->apiContent['googleDocsSetupWizard'] = RemoteSnippetValidator::filter((string)$this->userInfoRepository->curlInitCall($apiBase . 'GoogleDocsSetupWizard'));
             $this->apiContent['dashboardSupportData'] = RemoteSnippetValidator::filter((string)$this->userInfoRepository->curlInitCall($apiBase . 'DashboardSupport'));
             $this->apiContent['generalFooterData'] = RemoteSnippetValidator::filter((string)$this->userInfoRepository->curlInitCall($apiBase . 'GeneralFooter'));
 
             $data = [
-                'googleDocsSetupWizard' => $this->apiContent['googleDocsSetupWizard'],
                 'support_html' => $this->apiContent['dashboardSupportData'],
                 'footer_html' => $this->apiContent['generalFooterData'],
-                'premuim_extension_html' => '',
                 'extension_key' => 'ns_googledocs',
                 'last_update' => date('Y-m-d'),
             ];
-            $this->userInfoRepository->insertNewData($data);
+            if ($this->userInfoRepository->apiRowHasContent($data)) {
+                $this->userInfoRepository->insertNewData($data);
+            }
         } else {
-            $this->apiContent['googleDocsSetupWizard'] = (string)($checkApiData['googleDocsSetupWizard'] ?? '');
             $this->apiContent['dashboardSupportData'] = (string)($checkApiData['support_html'] ?? '');
             $this->apiContent['generalFooterData'] = (string)($checkApiData['footer_html'] ?? '');
         }
 
-        foreach (['googleDocsSetupWizard', 'dashboardSupportData', 'generalFooterData'] as $key) {
+        foreach (['dashboardSupportData', 'generalFooterData'] as $key) {
             // Cached rows may still hold error pages (e.g. "301 Moved Permanently") from older versions.
             $value = RemoteSnippetValidator::filter((string)($this->apiContent[$key] ?? ''));
             $this->apiContent[$key] = $value === '' ? '' : $this->remoteHtmlSanitizer->sanitize($value);
@@ -327,15 +342,36 @@ class UserInfoController extends ActionController
         return (string)($this->userData[$field] ?? '');
     }
 
+    /**
+     * First module visit without Google credentials should open Global Settings.
+     * Must be returned from the action (initializeAction cannot redirect since v12).
+     */
+    protected function redirectToGlobalSettingsOnFirstVisit(): ?ResponseInterface
+    {
+        if (!empty($this->globalSettings['clientStatus'])) {
+            return null;
+        }
+        $sessionKey = 'ns_googledocs';
+        $sessionData = $this->getBackendUser()->getSessionData($sessionKey);
+        if (is_array($sessionData) && !empty($sessionData['firstTimeLoad'])) {
+            return null;
+        }
+        $this->getBackendUser()->setAndSaveSessionData($sessionKey, ['firstTimeLoad' => true]);
+        return $this->redirect('globalSettings');
+    }
+
     public function dashboardAction(): ResponseInterface
     {
+        $firstVisitRedirect = $this->redirectToGlobalSettingsOnFirstVisit();
+        if ($firstVisitRedirect !== null) {
+            return $firstVisitRedirect;
+        }
         $this->ensureApiContentLoaded();
         $assign = [
             'globalSettings' => $this->globalSettings,
             'activePage' => $this->actionMethodName,
             'pageInformation' => $this->pageInformation,
             'sidebarData' => $this->apiContent['dashboardSupportData'] ?? '',
-            'googleDocsSetupWizard' => $this->apiContent['googleDocsSetupWizard'] ?? '',
             'bootstrapVariable' => 'data-bs',
             'version' => $this->currentVersion->getMajorVersion(),
         ];
@@ -346,6 +382,10 @@ class UserInfoController extends ActionController
 
     public function importAction(): ResponseInterface
     {
+        $firstVisitRedirect = $this->redirectToGlobalSettingsOnFirstVisit();
+        if ($firstVisitRedirect !== null) {
+            return $firstVisitRedirect;
+        }
         $this->ensureApiContentLoaded();
         if (!$this->globalSettings['clientStatus']) {
             return $this->redirect('dashboard');
@@ -360,7 +400,7 @@ class UserInfoController extends ActionController
                 'activePage' => $this->actionMethodName,
                 'pageStatus' => false,
                 'version' => $this->currentVersion->getMajorVersion(),
-                'defaultElementType' => $this->getDefaultContentElementType(),
+                'defaultElementType' => $this->normalizeContentElementType($this->getDefaultContentElementType()),
                 'elementTypeOptionsJson' => '{}',
                 'previewSectionsUri' => '',
                 'pageColPos' => [],
@@ -371,7 +411,7 @@ class UserInfoController extends ActionController
             // Only standard pages (configurable allowlist) — no sysfolder, spacer, shortcut, link, mount point, recycler …
             if ($this->isImportAllowedOnCurrentPage()) {
                 $pageColPos = $this->getBackendLayoutColumns((int)$this->pageUid);
-                $this->globalSettings['docsImportType'] = transalte::translate('reports_import_type.1', 'ns_googledocs');
+                $this->globalSettings['docsImportType'] = LocalizationUtility::translate('reports_import_type.1', 'ns_googledocs');
                 $this->globalSettings['docsImportTypeID'] = 1;
                 if (isset($this->globalSettings['clientInfo']['import_type'][1])) {
                     $this->globalSettings['importStatus'] = true;
@@ -388,28 +428,26 @@ class UserInfoController extends ActionController
                     $results = $this->service->files->listFiles($optParams);
                     if (count($results->getFiles()) > 0) {
                         foreach ($results->getFiles() as $key => $file) {
-                            if ($this->findDocsType($file->getMimeType()) === 'Docs'
-                                || $this->findDocsType($file->getMimeType()) === 'Document'
-                            ) {
-                                $docsFields[$key]['id'] = $file->getId();
-                                $docsFields[$key]['name'] = $file->getName();
-                                $docsFields[$key]['lastModified'] = $file->getModifiedTime();
-                                $docsFields[$key]['docType'] = $this->findDocsType($file->getMimeType());
-                                $owners = $file->getOwners();
-                                $docsFields[$key]['owner'] = (!empty($owners) && isset($owners[0]))
-                                    ? $owners[0]->getDisplayName()
-                                    : '';
-                                $exportLinks = $file->getExportLinks();
-                                $docsFields[$key]['importURL'] = is_array($exportLinks)
-                                    ? ($exportLinks['text/html'] ?? '')
-                                    : '';
-                                $docsFields[$key]['ViewURL'] = $file->getWebViewLink();
+                            if ($file->getMimeType() !== 'application/vnd.google-apps.document') {
+                                continue;
                             }
+                            $docsFields[$key]['id'] = $file->getId();
+                            $docsFields[$key]['name'] = $file->getName();
+                            $docsFields[$key]['lastModified'] = $file->getModifiedTime();
+                            $owners = $file->getOwners();
+                            $docsFields[$key]['owner'] = (!empty($owners) && isset($owners[0]))
+                                ? $owners[0]->getDisplayName()
+                                : '';
+                            $exportLinks = $file->getExportLinks();
+                            $docsFields[$key]['importURL'] = is_array($exportLinks)
+                                ? ($exportLinks['text/html'] ?? '')
+                                : '';
+                            $docsFields[$key]['ViewURL'] = $file->getWebViewLink();
                         }
                     }
                     $msgException = false;
                 } catch (\Throwable $e) {
-                    $msgException = transalte::translate('listFiles.exception', 'ns_googledocs');
+                    $msgException = LocalizationUtility::translate('listFiles.exception', 'ns_googledocs');
                     if ($this->tokenError !== '') {
                         $msgException .= ' ' . $this->tokenError;
                     } elseif (GoogleTokenHelper::isInvalidGrant($e->getMessage()) || $e->getCode() === 401) {
@@ -420,16 +458,15 @@ class UserInfoController extends ActionController
 
             $assign = [
                 'pageColPos' => $pageColPos,
-                'docsFiels' => $docsFields,
+                'docsFiles' => $docsFields,
                 'activePage' => $this->actionMethodName,
                 'globalSettings' => $this->globalSettings,
                 'pageStatus' => true,
                 'msgException' => $msgException,
-                'googleDocsSetupWizard' => $this->apiContent['googleDocsSetupWizard'] ?? '',
                 'bootstrapVariable' => 'data-bs',
                 'pageId' => (int)($this->pageInformation['uid'] ?? $this->pageUid),
                 'version' => $this->currentVersion->getMajorVersion(),
-                'defaultElementType' => $this->getDefaultContentElementType(),
+                'defaultElementType' => $this->normalizeContentElementType($this->getDefaultContentElementType()),
                 'elementTypeOptionsJson' => json_encode(
                     $this->getElementTypeOptions(),
                     JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE
@@ -452,11 +489,14 @@ class UserInfoController extends ActionController
     public function previewSectionsAction(): ResponseInterface
     {
         $request = $this->getPluginRequestArguments();
-        $googleDocsId = $this->extractGoogleDocsIdFromArguments($request);
+        $googleDocsId = (string)$request['googleDocsID'];
         if ($this->service === null || $googleDocsId === '') {
             return new JsonResponse([
                 'status' => false,
-                'error' => $this->tokenError !== '' ? $this->tokenError : 'Missing Google Docs id or client.',
+                'error' => $this->tokenError !== '' ? $this->tokenError : $this->translateLabel(
+                    'error.missingDocIdOrClient',
+                    'Missing Google Docs id or client.'
+                ),
             ]);
         }
         $pageDenied = $this->denyImportForPageType($request);
@@ -468,7 +508,7 @@ class UserInfoController extends ActionController
             $sections = $this->fetchAndParseSectionsWithRetry($googleDocsId);
             $defaultType = $this->normalizeContentElementType($this->getDefaultContentElementType());
             $payload = [];
-            $untitledLabel = (string)(transalte::translate('import_section_untitled', 'ns_googledocs') ?: 'Untitled section');
+            $untitledLabel = (string)(LocalizationUtility::translate('import_section_untitled', 'ns_googledocs') ?: 'Untitled section');
             foreach ($sections as $section) {
                 $fallbackTitle = trim((string)($section['fallbackTitle'] ?? ''));
                 $payload[] = [
@@ -491,7 +531,11 @@ class UserInfoController extends ActionController
         } catch (\Throwable $e) {
             return new JsonResponse([
                 'status' => false,
-                'error' => 'Could not read document sections: ' . $this->describeGoogleError($e),
+                'error' => $this->translateLabel(
+                    'error.readSections',
+                    'Could not read document sections: %s',
+                    [$this->describeGoogleError($e)]
+                ),
             ]);
         }
     }
@@ -516,11 +560,14 @@ class UserInfoController extends ActionController
             $this->pageUid = $pageID;
             $this->pageInformation = BackendUtilityCore::readPageAccess(
                 $pageID,
-                $GLOBALS['BE_USER']->getPagePermsClause(1)
+                $this->getBackendUser()->getPagePermsClause(1)
             );
         }
         if (!is_array($this->pageInformation) || !isset($this->pageInformation['uid'])) {
-            return new JsonResponse(['status' => false, 'error' => 'You do not have access to this page.']);
+            return new JsonResponse(['status' => false, 'error' => $this->translateLabel(
+                'error.noPageAccess',
+                'You do not have access to this page.'
+            )]);
         }
         if (!$this->isImportAllowedOnCurrentPage()) {
             return new JsonResponse(['status' => false, 'error' => $this->getPageTypeDeniedMessage()]);
@@ -545,7 +592,7 @@ class UserInfoController extends ActionController
             if (!$this->refreshAccessToken()) {
                 throw new \RuntimeException($this->tokenError, 1760854510, $first);
             }
-            $this->service = new \Google_Service_Drive($this->client);
+            $this->service = new \Google\Service\Drive($this->client);
             return $this->fetchAndParseSections($googleDocsId);
         }
     }
@@ -556,12 +603,16 @@ class UserInfoController extends ActionController
             return $this->tokenError;
         }
         $message = trim($e->getMessage());
-        if ($e instanceof \Google_Service_Exception || $e instanceof \Google\Service\Exception) {
+        if ($e instanceof \Google\Service\Exception) {
             $errors = $e->getErrors();
             if (is_array($errors) && isset($errors[0]['message'])) {
                 $message = (string)$errors[0]['message'];
             }
-            $message = sprintf('Google API error %d: %s', (int)$e->getCode(), $message);
+            $message = $this->translateLabel(
+                'error.googleApi',
+                'Google API error %d: %s',
+                [(int)$e->getCode(), $message]
+            );
         }
         if ($message === '') {
             $message = get_class($e);
@@ -581,7 +632,7 @@ class UserInfoController extends ActionController
         if ($pageID > 0 && (!is_array($this->pageInformation) || !isset($this->pageInformation['uid']))) {
             $this->pageInformation = BackendUtilityCore::readPageAccess(
                 $pageID,
-                $GLOBALS['BE_USER']->getPagePermsClause(1)
+                $this->getBackendUser()->getPagePermsClause(1)
             );
         }
 
@@ -589,50 +640,55 @@ class UserInfoController extends ActionController
         $docFolder = 'ns_googledocs/pages/' . $googleDocsFolderName . '/';
         $this->globalSettings['googleDocsFolderName'] = $docFolder;
 
-        $arr = ['status' => false, 'affectedRows' => 0];
-        $googleDocsId = $this->extractGoogleDocsIdFromArguments($request);
+        $arr = ['status' => false, 'imported' => 0];
+        $googleDocsId = (string)$request['googleDocsID'];
 
         if ($this->service === null) {
             return new JsonResponse([
                 'status' => false,
-                'error' => $this->tokenError !== '' ? $this->tokenError : 'Google client is not configured for this backend user.',
+                'error' => $this->tokenError !== '' ? $this->tokenError : $this->translateLabel(
+                    'error.clientNotConfigured',
+                    'Google client is not configured for this backend user.'
+                ),
             ]);
         }
         if ($googleDocsId === '') {
-            return new JsonResponse(['status' => false, 'error' => 'Missing Google Docs file id.']);
+            return new JsonResponse(['status' => false, 'error' => $this->translateLabel(
+                'error.missingDocId',
+                'Missing Google Docs file id.'
+            )]);
         }
         if ($pageID <= 0) {
-            return new JsonResponse(['status' => false, 'error' => 'Missing page id. Select a page in the page tree and try again.']);
+            return new JsonResponse(['status' => false, 'error' => $this->translateLabel(
+                'error.missingPageId',
+                'Missing page id. Select a page in the page tree and try again.'
+            )]);
         }
         $pageDenied = $this->denyImportForPageType($request);
         if ($pageDenied !== null) {
             return $pageDenied;
         }
 
-        $preview = $GLOBALS['BE_USER']->getSessionData(self::PREVIEW_SESSION_KEY);
-        $cachedSections = [];
-        if (is_array($preview)
-            && ($preview['googleDocsId'] ?? '') === $googleDocsId
-            && !empty($preview['sections'])
-            && is_array($preview['sections'])
-        ) {
-            $cachedSections = $preview['sections'];
-        } else {
-            // Session can drop between preview and import — rebuild sections from the Doc.
-            try {
-                $cachedSections = $this->fetchAndParseSectionsWithRetry($googleDocsId);
-            } catch (\Throwable $e) {
-                return new JsonResponse([
-                    'status' => false,
-                    'error' => 'Could not read document sections: ' . $this->describeGoogleError($e),
-                ]);
-            }
+        try {
+            $cachedSections = $this->fetchAndParseSectionsWithRetry($googleDocsId);
+        } catch (\Throwable $e) {
+            return new JsonResponse([
+                'status' => false,
+                'error' => $this->translateLabel(
+                    'error.readSections',
+                    'Could not read document sections: %s',
+                    [$this->describeGoogleError($e)]
+                ),
+            ]);
         }
 
         if ($cachedSections === []) {
             return new JsonResponse([
                 'status' => false,
-                'error' => 'No importable sections found in this Google Doc. Add Heading 1 / Heading 2 sections and try again.',
+                'error' => $this->translateLabel(
+                    'error.noImportableSections',
+                    'No importable sections found in this Google Doc. Add Heading 1 / Heading 2 sections and try again.'
+                ),
             ]);
         }
 
@@ -661,36 +717,43 @@ class UserInfoController extends ActionController
                     (string)($choice['CType'] ?? $this->getDefaultContentElementType())
                 );
                 $header = trim((string)($choice['header'] ?? $section['title'] ?? ''));
-                $element = $this->buildElementFromSection($section, $cType, $header);
-
-                $result = $this->userInfoRepository->insertPageElement($pageID, $element, $request, $insertAfterUid);
-                if (!$result) {
-                    $errors = $this->userInfoRepository->getLastDataHandlerErrors();
-                    return new JsonResponse([
-                        'status' => false,
-                        'affectedRows' => $imported,
-                        'error' => $errors !== []
-                            ? implode('; ', $errors)
-                            : 'The document was not imported successfully.',
-                    ]);
+                $elements = $this->buildElementsFromSection($section, $cType, $header);
+                foreach ($elements as $element) {
+                    $result = $this->userInfoRepository->insertPageElement($pageID, $element, $request, $insertAfterUid);
+                    if (!$result) {
+                        $this->deleteImportedFiles(is_array($element['images'] ?? null) ? $element['images'] : []);
+                        $errors = $this->userInfoRepository->getLastDataHandlerErrors();
+                        return new JsonResponse([
+                            'status' => false,
+                            'imported' => $imported,
+                            'error' => $errors !== []
+                                ? implode('; ', $errors)
+                                : $this->translateLabel(
+                                    'error.importFailed',
+                                    'The document was not imported successfully.'
+                                ),
+                        ]);
+                    }
+                    $imported++;
+                    $newUid = $this->userInfoRepository->getLastInsertedUid();
+                    $insertAfterUid = $newUid > 0
+                        ? $newUid
+                        : $this->userInfoRepository->findLastContentElementUidInColumn($pageID, $colPos);
                 }
-                $imported++;
-                $newUid = $this->userInfoRepository->getLastInsertedUid();
-                $insertAfterUid = $newUid > 0
-                    ? $newUid
-                    : $this->userInfoRepository->findLastContentElementUidInColumn($pageID, $colPos);
             }
 
             if ($imported === 0) {
                 return new JsonResponse([
                     'status' => false,
-                    'error' => 'No sections were selected for import.',
+                    'error' => $this->translateLabel(
+                        'error.noSectionsSelected',
+                        'No sections were selected for import.'
+                    ),
                 ]);
             }
 
             $arr['status'] = true;
             $arr['imported'] = $imported;
-            $GLOBALS['BE_USER']->setAndSaveSessionData(self::PREVIEW_SESSION_KEY, null);
         } catch (\Throwable $e) {
             $arr['status'] = false;
             $arr['error'] = GoogleTokenHelper::explain($e->getMessage());
@@ -704,6 +767,8 @@ class UserInfoController extends ActionController
      */
     protected function fetchAndParseSections(string $googleDocsId): array
     {
+        // Drop any leftover preview blob from older versions (full HTML in be_sessions).
+        $this->clearImportPreviewSession();
         $rawHtml = $this->readGoogleDocsExportHtml($googleDocsId);
         if (trim($rawHtml) === '') {
             throw new \RuntimeException('Google Docs export returned empty HTML for this file.', 1760854500);
@@ -725,11 +790,22 @@ class UserInfoController extends ActionController
                 'hasImages' => (bool)preg_match('/<img\b/i', $stringbody),
             ]];
         }
-        $GLOBALS['BE_USER']->setAndSaveSessionData(self::PREVIEW_SESSION_KEY, [
-            'googleDocsId' => $googleDocsId,
-            'sections' => $sections,
-        ]);
         return $sections;
+    }
+
+    /**
+     * Older versions stored the full parsed Doc (including base64 images) in be_sessions.
+     * Clear it whenever we re-read a Doc so leftover multi-MB session rows shrink.
+     */
+    protected function clearImportPreviewSession(): void
+    {
+        try {
+            $backendUser = $GLOBALS['BE_USER'] ?? null;
+            if ($backendUser instanceof BackendUserAuthentication) {
+                $backendUser->setAndSaveSessionData(self::PREVIEW_SESSION_KEY, null);
+            }
+        } catch (\Throwable) {
+        }
     }
 
     protected function readGoogleDocsExportHtml(string $googleDocsId): string
@@ -785,53 +861,168 @@ class UserInfoController extends ActionController
     }
 
     /**
-     * Prefer CTypes that typical site packages keep enabled (text / textpic).
+     * Keep the editor's CType when the target page allows it. Otherwise fall back
+     * (header → text, image → textpic) so DataHandler still succeeds.
      */
     protected function normalizeContentElementType(string $cType): string
     {
-        if (!in_array($cType, ['header', 'text', 'textpic', 'image'], true)) {
-            $cType = $this->getDefaultContentElementType();
+        return ImportContentElementTypeResolver::normalize(
+            $cType,
+            fn(string $type): bool => $this->isCTypeAvailable($type)
+        );
+    }
+
+    protected function isCTypeAvailable(string $cType): bool
+    {
+        return ImportContentElementTypeResolver::isAllowed(
+            $cType,
+            $this->cTypeExistsInTca($cType),
+            $this->getRemovedContentTypes()
+        );
+    }
+
+    protected function cTypeExistsInTca(string $cType): bool
+    {
+        if (class_exists(\TYPO3\CMS\Core\Schema\TcaSchemaFactory::class)) {
+            try {
+                $factory = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Schema\TcaSchemaFactory::class);
+                if ($factory->has('tt_content') && $factory->get('tt_content')->hasSubSchema($cType)) {
+                    return true;
+                }
+            } catch (\Throwable) {
+            }
         }
-        // Many distributions (incl. theme_camino) remove header/image from the wizard;
-        // map to still-available equivalents so DataHandler can create records.
-        return match ($cType) {
-            'header' => 'text',
-            'image' => 'textpic',
-            default => $cType,
-        };
+        foreach ($GLOBALS['TCA']['tt_content']['columns']['CType']['config']['items'] ?? [] as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $value = $item['value'] ?? $item[1] ?? null;
+            if ((string)$value === $cType) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
-     * @param array{index: int, title: string, fallbackTitle?: string, headingLevel: int, html: string, hasImages: bool} $section
-     * @return array<string, mixed>
+     * @return list<string>
      */
-    protected function buildElementFromSection(array $section, string $cType, string $header): array
+    protected function getRemovedContentTypes(): array
+    {
+        if ($this->removedContentTypes !== null) {
+            return $this->removedContentTypes;
+        }
+        $pageId = (int)$this->pageUid;
+        if ($pageId <= 0) {
+            $this->removedContentTypes = ['header', 'image'];
+            return $this->removedContentTypes;
+        }
+        try {
+            $removeItems = BackendUtilityCore::getPagesTSconfig($pageId)['TCEFORM.']['tt_content.']['CType.']['removeItems'] ?? '';
+            $this->removedContentTypes = ImportContentElementTypeResolver::parseRemoveItems($removeItems);
+        } catch (\Throwable) {
+            $this->removedContentTypes = ['header', 'image'];
+        }
+        return $this->removedContentTypes;
+    }
+
+    protected function resolveImageElementType(string $selectedCType): string
+    {
+        if ($selectedCType === 'image') {
+            return $this->normalizeContentElementType('image');
+        }
+        return $this->normalizeContentElementType('textpic');
+    }
+
+    /**
+     * One enabled section can become several CEs so images are FAL-tracked while
+     * surrounding text stays in Google Doc order. HTML without images still
+     * yields a single CE (same as before).
+     *
+     * @param array{index: int, title: string, fallbackTitle?: string, headingLevel: int, html: string, hasImages: bool} $section
+     * @return list<array<string, mixed>>
+     */
+    protected function buildElementsFromSection(array $section, string $cType, string $header): array
     {
         $html = (string)($section['html'] ?? '');
         $headingLevel = (int)($section['headingLevel'] ?? 1);
-        $element = [
-            'CType' => $cType,
-            'header' => $header,
-            'header_layout' => $headingLevel > 0 ? $headingLevel : 1,
-            'imageorient' => 0,
-        ];
+        $headerLayout = $headingLevel > 0 ? $headingLevel : 1;
 
         if ($cType === 'header') {
-            return $element;
+            return [[
+                'CType' => $cType,
+                'header' => $header,
+                'header_layout' => $headerLayout,
+                'imageorient' => 0,
+            ]];
         }
 
-        if ($cType === 'image') {
-            $element['images'] = $this->findImage($html);
-            $element['bodytext'] = '';
-            return $element;
+        $chunks = $this->sectionSplitter->split($html);
+        $elements = [];
+        $isFirst = true;
+        foreach ($chunks as $chunk) {
+            $elementHeader = $isFirst ? $header : '';
+            $chunkHtml = (string)($chunk['html'] ?? '');
+            if (($chunk['type'] ?? 'text') === 'image') {
+                $images = $this->findImage($chunkHtml);
+                if ($images === []) {
+                    continue;
+                }
+                $elements[] = [
+                    'CType' => $this->resolveImageElementType($cType),
+                    'header' => $elementHeader,
+                    'header_layout' => $headerLayout,
+                    'imageorient' => 0,
+                    'images' => $images,
+                    'bodytext' => '',
+                ];
+                $isFirst = false;
+                continue;
+            }
+
+            $parsed = $this->updateImageInBodytext($chunkHtml, 0);
+            $elements[] = [
+                'CType' => $cType === 'image' ? $this->normalizeContentElementType('text') : $cType,
+                'header' => $elementHeader,
+                'header_layout' => $headerLayout,
+                'imageorient' => 0,
+                'bodytext' => trim((string)($parsed['bodytext'] ?? '')),
+                'images' => [],
+            ];
+            $isFirst = false;
         }
 
-        // text + textpic: keep images inline in bodytext (Doc order). Stripping them into a
-        // FAL gallery alone puts every image above/below the text and no longer matches the Doc.
-        $parsed = $this->updateImageInBodytext($html, 0);
-        $element['bodytext'] = trim((string)($parsed['bodytext'] ?? ''));
-        $element['images'] = [];
-        return $element;
+        if ($elements === []) {
+            $parsed = $this->updateImageInBodytext($html, 0);
+            $elements[] = [
+                'CType' => $cType === 'image' ? $this->normalizeContentElementType('text') : $cType,
+                'header' => $header,
+                'header_layout' => $headerLayout,
+                'imageorient' => 0,
+                'bodytext' => trim((string)($parsed['bodytext'] ?? '')),
+                'images' => [],
+            ];
+        }
+
+        return $elements;
+    }
+
+    /**
+     * @param list<int|string> $fileUids
+     */
+    protected function deleteImportedFiles(array $fileUids): void
+    {
+        foreach ($fileUids as $uid) {
+            $uid = (int)$uid;
+            if ($uid <= 0) {
+                continue;
+            }
+            try {
+                $this->resourceFactory->getFileObject($uid)->delete();
+            } catch (\Throwable) {
+                // File may already be gone; never fail the import error response because of cleanup.
+            }
+        }
     }
 
     protected function getDefaultContentElementType(): string
@@ -850,83 +1041,16 @@ class UserInfoController extends ActionController
      */
     protected function getElementTypeOptions(): array
     {
-        return [
-            'header' => (string)(transalte::translate('element_type.header', 'ns_googledocs') ?: 'Header'),
-            'text' => (string)(transalte::translate('element_type.text', 'ns_googledocs') ?: 'Text Element'),
-            'textpic' => (string)(transalte::translate('element_type.textpic', 'ns_googledocs') ?: 'Text & Image'),
-            'image' => (string)(transalte::translate('element_type.image', 'ns_googledocs') ?: 'Image Only'),
+        $labels = [
+            'header' => (string)(LocalizationUtility::translate('element_type.header', 'ns_googledocs') ?: 'Header'),
+            'text' => (string)(LocalizationUtility::translate('element_type.text', 'ns_googledocs') ?: 'Text Element'),
+            'textpic' => (string)(LocalizationUtility::translate('element_type.textpic', 'ns_googledocs') ?: 'Text & Image'),
+            'image' => (string)(LocalizationUtility::translate('element_type.image', 'ns_googledocs') ?: 'Image Only'),
         ];
-    }
-
-    /**
-     * @return array<int, array<string, mixed>>
-     */
-    public function findAndReplace(string $body): array
-    {
-        $elementSorting = $this->userInfoRepository->findElementSorting((int)($this->pageInformation['uid'] ?? 0));
-
-        $body = preg_replace('/<a href="(.*?)q=(.*?)&sa(.*?)">/si', '<a href="$2">', $body) ?? $body;
-        $body = str_replace('<p><span>###TEXT###</span></p>', '||text::', $body);
-        $body = str_replace('<p><span>###TEXTIMAGELEFT###</span></p>', '||textpic-18::', $body);
-        $body = str_replace('<p><span>###TEXTIMAGERIGHT###</span></p>', '||textpic-17::', $body);
-        $body = str_replace('<p><span>###TEXTIMAGETOP###</span></p>', '||textpic-0::', $body);
-        $body = str_replace('<p><span>###TEXTIMAGEBOTTOM###</span></p>', '||textpic-8::', $body);
-        $body = str_replace('<p><span>###IMAGES###</span></p>', '||image::', $body);
-        $body = str_replace('<span>', '', $body);
-        $body = str_replace('</span>', '', $body);
-        $body = str_replace('<p></p>', '', $body);
-
-        $elements = explode('||', $body);
-        $finalElements = [];
-        $i = 1;
-        foreach ($elements as $key => $value) {
-            $elm = explode('::', $value);
-            if (count($elm) > 1) {
-                $sorting = ($i * 256) + $elementSorting;
-                $elm[1] = preg_replace('/\>\s+\</m', '><', $elm[1]) ?? $elm[1];
-                switch (trim($elm[0])) {
-                    case 'image':
-                        $finalElements[$key]['CType'] = 'image';
-                        $finalElements[$key]['images'] = $this->findImage($elm[1]);
-                        $finalElements[$key]['imageorient'] = 0;
-                        $stringbody = $this->updateImageInBodytext($elm[1], 1);
-                        $finalElements[$key]['header'] = $stringbody['header'] ?? '';
-                        $finalElements[$key]['header_layout'] = $stringbody['header_layout'] ?? 0;
-                        break;
-                    case 'text':
-                        $stringbody = $this->updateImageInBodytext($elm[1], 1);
-                        $finalElements[$key]['CType'] = 'text';
-                        $finalElements[$key]['header'] = $stringbody['header'] ?? '';
-                        $finalElements[$key]['header_layout'] = $stringbody['header_layout'] ?? 0;
-                        $finalElements[$key]['bodytext'] = trim(preg_replace('/\>\s+\</m', '><', $stringbody['bodytext'] ?? '') ?? '');
-                        break;
-                    default:
-                        // Marker-based textpic: keep images inline (same as Reformation textpic)
-                        // so FE layout matches the Doc; imageorient still stored for compatibility.
-                        $finalElements[$key]['CType'] = 'textpic';
-                        $finalElements[$key]['images'] = [];
-                        $finalElements[$key]['imageorient'] = (int)str_replace('textpic-', '', $elm[0]);
-                        $stringbody = $this->updateImageInBodytext($elm[1], 1);
-                        $finalElements[$key]['header'] = $stringbody['header'] ?? '';
-                        $finalElements[$key]['header_layout'] = $stringbody['header_layout'] ?? 0;
-                        $finalElements[$key]['bodytext'] = preg_replace('/\>\s+\</m', '><', $stringbody['bodytext'] ?? '') ?? '';
-                        break;
-                }
-                $finalElements[$key]['sorting'] = $sorting;
-                $i++;
-            } elseif (strlen($elements[$key]) > 2) {
-                $stringbody = $this->updateImageInBodytext($elm[0], 1);
-                $sorting = ($i * 256) + $elementSorting;
-                $finalElements[$key]['CType'] = 'text';
-                $finalElements[$key]['header'] = $stringbody['header'] ?? '';
-                $finalElements[$key]['header_layout'] = $stringbody['header_layout'] ?? 0;
-                $finalElements[$key]['bodytext'] = trim(preg_replace('/\>\s+\</m', '><', $stringbody['bodytext'] ?? '') ?? '');
-                $finalElements[$key]['sorting'] = $sorting;
-                $i++;
-            }
-        }
-
-        return $finalElements;
+        return ImportContentElementTypeResolver::filterOptions(
+            $labels,
+            fn(string $type): bool => $this->isCTypeAvailable($type)
+        );
     }
 
     /**
@@ -942,16 +1066,11 @@ class UserInfoController extends ActionController
         if ($storage === null) {
             return $imagesUids;
         }
-        $storageFolder = $storage->getRootLevelFolder();
-        if (!file_exists($this->globalSettings['siteRoot'] . 'fileadmin/')) {
-            GeneralUtility::mkdir_deep($this->globalSettings['siteRoot'] . 'fileadmin/');
-        }
         $targetFolderName = (string)($this->globalSettings['googleDocsFolderName'] ?? 'ns_googledocs/');
-        if (!file_exists($this->globalSettings['siteRoot'] . 'fileadmin/' . $targetFolderName)) {
-            $storage->createFolder($targetFolderName);
+        $storageFolder = $this->ensureStorageFolder($storage, $targetFolderName);
+        if ($storageFolder === null) {
+            return $imagesUids;
         }
-        $folder = $this->globalSettings['siteRoot'] . 'typo3temp/assets/images/ns_googledocs/';
-        $storageFolder = $storage->getFolder($targetFolderName);
         $doc = $this->createDomDocumentFromHtml($content);
         if ($doc === null) {
             return $imagesUids;
@@ -961,34 +1080,74 @@ class UserInfoController extends ActionController
             return $imagesUids;
         }
         $images = $xml->xpath('//img');
+        $tempDir = Environment::getVarPath() . '/transient';
+        GeneralUtility::mkdir_deep($tempDir);
         foreach ($images as $img) {
-            if (!file_exists($folder)) {
-                GeneralUtility::mkdir_deep($folder);
+            $tempPath = '';
+            try {
+                $src = (string)($img['src'] ?? '');
+                // Google Docs HTML export commonly embeds images as data:image/…;base64,…
+                // (not https://). materializeImageSource handles both forms.
+                $materialized = $this->remoteContentFetcher->materializeImageSource(
+                    $src,
+                    $tempDir . '/ns_googledocs_' . bin2hex(random_bytes(8))
+                );
+                if ($materialized === null || !is_file($materialized['path'])) {
+                    continue;
+                }
+                $tempPath = $materialized['path'];
+                $imageMimeType = $this->findImageMimeType($materialized['mime']);
+                $exif = @getimagesize($tempPath);
+                if (is_array($exif) && !empty($exif['mime'])) {
+                    $imageMimeType = $this->findImageMimeType((string)$exif['mime']);
+                }
+                $newFile = $storage->addFile(
+                    $tempPath,
+                    $storageFolder,
+                    'ns_googledocs_' . random_int(10, 1000000) . '.' . $imageMimeType
+                );
+                $imagesUids[] = $newFile->getUid();
+            } catch (\Throwable) {
+                // Skip this image; remaining images and the text import still proceed.
+            } finally {
+                if ($tempPath !== '' && is_file($tempPath)) {
+                    @unlink($tempPath);
+                }
             }
-            $src = (string)($img['src'] ?? '');
-            // Google Docs HTML export commonly embeds images as data:image/…;base64,…
-            // (not https://). materializeImageSource handles both forms.
-            $materialized = $this->remoteContentFetcher->materializeImageSource(
-                $src,
-                $folder . 'ns_googledocs_' . random_int(10, 1000000)
-            );
-            if ($materialized === null || !is_file($materialized['path'])) {
-                continue;
-            }
-            $fileName = $materialized['path'];
-            $imageMineType = $this->findImageMimeType($materialized['mime']);
-            $exif = @getimagesize($fileName);
-            if (is_array($exif) && !empty($exif['mime'])) {
-                $imageMineType = $this->findImageMimeType((string)$exif['mime']);
-            }
-            $newFile = $storage->addFile(
-                $fileName,
-                $storageFolder,
-                'ns_googledocs_' . random_int(10, 1000000) . '.' . $imageMineType
-            );
-            $imagesUids[] = $newFile->getUid();
         }
         return $imagesUids;
+    }
+
+    /**
+     * Resolve/create the import folder on the default FAL storage (not a hard-coded fileadmin path).
+     */
+    protected function ensureStorageFolder(ResourceStorage $storage, string $folderPath): ?Folder
+    {
+        $folderPath = trim(str_replace('\\', '/', $folderPath), '/');
+        if ($folderPath === '') {
+            return $storage->getRootLevelFolder();
+        }
+        $candidates = [$folderPath . '/', '/' . $folderPath . '/'];
+        foreach ($candidates as $identifier) {
+            try {
+                if ($storage->hasFolder($identifier)) {
+                    return $storage->getFolder($identifier);
+                }
+            } catch (\Throwable) {
+            }
+        }
+        try {
+            return $storage->createFolder($folderPath);
+        } catch (ExistingTargetFolderException) {
+            foreach ($candidates as $identifier) {
+                try {
+                    return $storage->getFolder($identifier);
+                } catch (\Throwable) {
+                }
+            }
+        } catch (\Throwable) {
+        }
+        return null;
     }
 
     /**
@@ -1023,39 +1182,6 @@ class UserInfoController extends ActionController
                     $this->normalizeImportedImageDimensions($src, $file);
                 }
             }
-        }
-        $bodies = $dom->getElementsByTagName('body');
-        $body = $bodies->item(0);
-        $string = ['bodytext' => ''];
-        if ($body instanceof \DOMElement && $findHeader && $body->childNodes->length > 0) {
-            $first = $body->childNodes->item(0);
-            if ($first instanceof \DOMElement) {
-                $tagName = $first->tagName;
-                if (in_array($tagName, ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'], true)) {
-                    $string['header_layout'] = (int)substr($tagName, 1);
-                    $string['header'] = $first->textContent;
-                    $body->removeChild($first);
-                }
-            }
-        }
-        $stringbody = $body instanceof \DOMNode ? $dom->saveHTML($body) : '';
-        $stringbody = preg_replace('/<body>(.*?)<\/body>/si', '${1}', (string)$stringbody) ?? '';
-        $string['bodytext'] = GoogleDocsSectionParser::stripXmlArtifacts(html_entity_decode($stringbody, ENT_QUOTES, 'UTF-8'));
-        return $string;
-    }
-
-    /**
-     * @return array{header?: string, header_layout?: int, bodytext: string}
-     */
-    public function findHeaderInBodytext(string $content, int $findHeader): array
-    {
-        $content = preg_replace("/<p[^>]*>(?:\s|&nbsp;)*<\/p>/", '', $content) ?? $content;
-        if (trim($content) === '') {
-            return ['bodytext' => ''];
-        }
-        $dom = $this->createDomDocumentFromHtml($content);
-        if ($dom === null) {
-            return ['bodytext' => $content];
         }
         $bodies = $dom->getElementsByTagName('body');
         $body = $bodies->item(0);
@@ -1117,7 +1243,7 @@ class UserInfoController extends ActionController
         }
     }
 
-    public function findImageMimeType(string $docType): string
+    public function findImageMimeType(string $mimeType): string
     {
         $filesType = [
             'image/apng' => 'apng',
@@ -1130,37 +1256,7 @@ class UserInfoController extends ActionController
             'image/tiff' => 'tif',
             'image/webp' => 'webp',
         ];
-        return $filesType[$docType] ?? 'jpg';
-    }
-
-    public function findDocsType(string $docType): string
-    {
-        $filesType = [
-            'application/vnd.google-apps.audio' => 'Audio',
-            'application/vnd.google-apps.document' => 'Document',
-            'application/vnd.google-apps.drawing' => 'Drive file',
-            'application/vnd.google-apps.file' => 'Drive folder',
-            'application/vnd.google-apps.folder' => 'Folder',
-            'application/vnd.google-apps.form' => 'Forms',
-            'application/vnd.google-apps.fusiontable' => 'Fusion Tables',
-            'application/vnd.google-apps.map' => 'My Maps',
-            'application/vnd.google-apps.photo' => 'photo',
-            'application/vnd.google-apps.presentation' => 'Slides',
-            'application/vnd.google-apps.script' => 'Apps Scripts',
-            'application/vnd.google-apps.site' => 'Sites',
-            'application/vnd.google-apps.spreadsheet' => 'Sheets',
-            'application/vnd.google-apps.unknown' => 'Unknown',
-            'application/vnd.google-apps.video' => 'Video',
-            'application/vnd.google-apps.drive-sdk' => '3rd party shortcut',
-            'application/zip' => 'ZIP',
-            'application/pdf' => 'PDF',
-            'application/msword' => 'Docs',
-            'image/x-photoshop' => 'Image',
-            'image/jpeg' => 'Image',
-            'image/png' => 'Image',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'Sheet',
-        ];
-        return $filesType[$docType] ?? 'Unknown';
+        return $filesType[$mimeType] ?? 'jpg';
     }
 
     public function globalSettingsAction(): ResponseInterface
@@ -1169,7 +1265,6 @@ class UserInfoController extends ActionController
         $assign = [
             'globalSettings' => $this->globalSettings,
             'activePage' => $this->actionMethodName,
-            'googleDocsSetupWizard' => $this->apiContent['googleDocsSetupWizard'] ?? '',
             'bootstrapVariable' => 'data-bs',
             'version' => $this->currentVersion->getMajorVersion(),
         ];
@@ -1182,25 +1277,19 @@ class UserInfoController extends ActionController
     {
         $request = $this->getPluginRequestArguments();
         $arr = ['status' => false];
+        $parsedBody = $this->request->getParsedBody();
 
-        if ($request !== []) {
-            $token = (string)($request['GoogleDocsRefreshToken'] ?? '');
-            if ($token === '') {
-                foreach ($request as $value) {
-                    if (is_array($value) && isset($value['GoogleDocsRefreshToken'])) {
-                        $token = (string)$value['GoogleDocsRefreshToken'];
-                        break;
-                    }
-                }
-            }
-            $tokenError = GoogleTokenHelper::validateRefreshToken($token);
+        if (is_array($parsedBody) && $parsedBody !== []) {
+            $tokenError = GoogleTokenHelper::validateRefreshToken($request['GoogleDocsRefreshToken']);
             if ($tokenError !== null) {
                 return new JsonResponse(['status' => false, 'error' => $tokenError]);
             }
-            // Access tokens (ya29.*) and refresh tokens (1//…) are both accepted.
             $result = $this->userInfoRepository->updateDocsConfig(
                 (int)($this->globalSettings['clientInfo']['uid'] ?? 0),
-                $request
+                $request['GoogleDocsClientId'],
+                $request['GoogleDocsSecretKey'],
+                $request['GoogleDocsRefreshToken'],
+                $request['importType']
             );
             $arr['status'] = (bool)$result;
         }
@@ -1233,10 +1322,10 @@ class UserInfoController extends ActionController
     protected function resolveBackendLayoutColumnLabel(string $label, bool $isSingleColumn = false): string
     {
         if (str_starts_with($label, 'LLL:')) {
-            $label = $GLOBALS['LANG']->sL($label) ?: $label;
+            $label = $this->getLanguageService()->sL($label) ?: $label;
         }
 
-        $contentLabel = (string)(transalte::translate('content_column', 'ns_googledocs') ?: 'Content');
+        $contentLabel = (string)(LocalizationUtility::translate('content_column', 'ns_googledocs') ?: 'Content');
 
         if ($isSingleColumn) {
             return $contentLabel;
@@ -1252,6 +1341,12 @@ class UserInfoController extends ActionController
     protected function initializeModuleTemplate(ServerRequestInterface $request): ModuleTemplate
     {
         $moduleTemplate = $this->moduleTemplateFactory->create($request);
+        $this->pageRenderer->addCssFile('EXT:ns_googledocs/Resources/Public/Css/main.css');
+        $this->pageRenderer->addInlineLanguageLabelFile(
+            'EXT:ns_googledocs/Resources/Private/Language/locallang.xlf',
+            'js.'
+        );
+        $this->pageRenderer->loadJavaScriptModule('@nitsan/ns-googledocs/Main.js');
         $premiumStrip = $this->premiumStrip->render();
         if ($premiumStrip !== '') {
             $this->pageRenderer->addCssFile(PremiumStrip::STYLESHEET);
@@ -1320,119 +1415,45 @@ class UserInfoController extends ActionController
     }
 
     /**
-     * Collect Extbase plugin arguments from parsed body / query / Extbase args.
-     *
-     * Prefer the payload that still has a string googleDocsID. When section fields
-     * are posted with a wrong name prefix, PHP can turn googleDocsID into an array
-     * and the file id string is lost — recover by scanning the full body.
-     *
-     * @return array<string, mixed>
+     * @return array{
+     *     googleDocsID: string,
+     *     pageId: int,
+     *     id: int,
+     *     colPos: int,
+     *     sections: array<int|string, mixed>,
+     *     googleDocsName: string,
+     *     GoogleDocsClientId: string,
+     *     GoogleDocsSecretKey: string,
+     *     GoogleDocsRefreshToken: string,
+     *     importType: list<string>
+     * }
      */
     protected function getPluginRequestArguments(): array
     {
         $parsedBody = $this->request->getParsedBody();
-        $candidates = [];
-        if (is_array($parsedBody)) {
-            foreach ($parsedBody as $value) {
-                if (is_array($value) && (
-                    array_key_exists('GoogleDocsClientId', $value)
-                    || array_key_exists('googleDocsID', $value)
-                    || array_key_exists('googleDocsId', $value)
-                    || array_key_exists('GoogleDocsSecretKey', $value)
-                    || array_key_exists('importType', $value)
-                    || array_key_exists('colPos', $value)
-                    || array_key_exists('sections', $value)
-                    || array_key_exists('pageId', $value)
-                )) {
-                    $candidates[] = $value;
-                }
-            }
-            if (
-                array_key_exists('GoogleDocsClientId', $parsedBody)
-                || array_key_exists('googleDocsID', $parsedBody)
-                || array_key_exists('googleDocsId', $parsedBody)
-                || array_key_exists('GoogleDocsSecretKey', $parsedBody)
-                || array_key_exists('sections', $parsedBody)
-            ) {
-                $candidates[] = $parsedBody;
-            }
-        }
-
-        $best = [];
-        foreach ($candidates as $candidate) {
-            $docId = $this->extractGoogleDocsIdFromArguments($candidate);
-            if ($docId !== '') {
-                $candidate['googleDocsID'] = $docId;
-                return $candidate;
-            }
-            if ($best === [] || (isset($candidate['sections']) && !isset($best['sections']))) {
-                $best = $candidate;
-            }
-        }
-
-        if ($best !== []) {
-            $docId = $this->extractGoogleDocsIdFromArguments(is_array($parsedBody) ? $parsedBody : []);
-            if ($docId !== '') {
-                $best['googleDocsID'] = $docId;
-            }
-            return $best;
-        }
-
+        $extbase = [];
         try {
             $arguments = $this->request->getArguments();
-            if (is_array($arguments) && $arguments !== []) {
-                $docId = $this->extractGoogleDocsIdFromArguments($arguments);
-                if ($docId !== '') {
-                    $arguments['googleDocsID'] = $docId;
-                }
-                return $arguments;
+            if (is_array($arguments)) {
+                $extbase = $arguments;
             }
         } catch (\Throwable) {
-            // Fall through
         }
 
-        return [];
+        return ImportRequestMapper::map(
+            is_array($parsedBody) ? $parsedBody : null,
+            $this->request->getQueryParams(),
+            $extbase
+        );
     }
 
-    /**
-     * @param array<string, mixed> $arguments
-     */
-    protected function extractGoogleDocsIdFromArguments(array $arguments): string
+    protected function getBackendUser(): BackendUserAuthentication
     {
-        foreach (['googleDocsID', 'googleDocsId'] as $key) {
-            if (!array_key_exists($key, $arguments)) {
-                continue;
-            }
-            $value = $arguments[$key];
-            if (is_string($value) || is_numeric($value)) {
-                $id = trim((string)$value);
-                if ($id !== '') {
-                    return $id;
-                }
-            }
-            // Corrupted by colliding section field names: googleDocsID became an array.
-            if (is_array($value)) {
-                foreach (['id', 'value', 'googleDocsID', 'googleDocsId'] as $nestedKey) {
-                    if (isset($value[$nestedKey]) && (is_string($value[$nestedKey]) || is_numeric($value[$nestedKey]))) {
-                        $id = trim((string)$value[$nestedKey]);
-                        if ($id !== '') {
-                            return $id;
-                        }
-                    }
-                }
-            }
-        }
+        return $GLOBALS['BE_USER'];
+    }
 
-        foreach ($arguments as $value) {
-            if (!is_array($value)) {
-                continue;
-            }
-            $nested = $this->extractGoogleDocsIdFromArguments($value);
-            if ($nested !== '') {
-                return $nested;
-            }
-        }
-
-        return '';
+    protected function getLanguageService(): LanguageService
+    {
+        return $GLOBALS['LANG'];
     }
 }

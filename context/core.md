@@ -44,12 +44,12 @@
 
 - Extbase backend module with `ModuleTemplateFactory` and `renderResponse()`.
 - Labels from `locallang.xlf` / `locallang_googledocs.xlf` via `<f:translate>` or `LanguageService::sL()`.
-- Backend CSS: `Resources/Public/Css/main.css` plus `backend-premium-strip.css` for the trial strip; Bootstrap 4 is vendored in the layout.
+- Backend CSS: `Resources/Public/Css/main.css` plus `backend-premium-strip.css` for the trial strip; markup uses TYPO3 backend Bootstrap 5.
 - Google client is loaded from project Composer when available, otherwise `EXT:ns_googledocs/vendor/autoload.php`.
 
 ## Known issues (existing, not fixed)
 
 - `lastInsertId('tt_content')` still passes a table name; harmless on MySQL (arg ignored on v13+), wrong for PostgreSQL sequences ([Breaking #102875](https://docs.typo3.org/c/typo3/cms-core/main/en-us/Changelog/13.0/Breaking-102875-ChangedConnectionMethodSignaturesAndBehaviour.html)). Prefer `$connection->lastInsertId()`.
 - Direct `tt_content` / `sys_file_reference` inserts omit `tstamp` / `crdate`.
-- Remote marketing HTML (`composer.t3terminal.com` API blocks) is cached in `tx_nsgoogledocs_domain_model_apidata` for two weeks.
+- Remote marketing HTML (`composer.t3planet.cloud` API blocks) is cached in `tx_nsgoogledocs_domain_model_apidata` for two weeks; empty/failed fetches are not stored.
 - `Premium.html` template remains but the Premium tab/action is not registered in `Modules.php` (free product surface).

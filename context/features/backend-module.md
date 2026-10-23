@@ -11,7 +11,7 @@ target page before Import.
 
 | Action | Template | Purpose |
 |---|---|---|
-| `dashboard` | `UserInfo/Dashboard.html` | Status, setup wizard CTA, support blocks |
+| `dashboard` | `UserInfo/Dashboard.html` | Status and support blocks |
 | `import` | `UserInfo/Import.html` | Lists Drive docs, column (`colPos`) select, Import Now |
 | `globalSettings` | `UserInfo/GlobalSettings.html` | Google OAuth client id / secret / refresh token, import types |
 | `docsImport` | JSON only | Performs the import (see `features/import.md`) |

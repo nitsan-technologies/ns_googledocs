@@ -1,17 +1,22 @@
 # Feature — Google Docs import
 
-*Status: Done (free markers + plain-document fallback).*
+*Status: Done (heading-based section import, H1/H2).*
 
 ## Flow
 
 1. `importAction` lists Drive files (`mimeType=application/vnd.google-apps.document`) owned by the connected user.
 2. Editor picks a backend-layout column (`BackendLayoutView::getBackendLayoutForPage`) and clicks Import Now.
-3. `docsImportAction` (AJAX / `JsonResponse`) exports the doc as `text/html`, normalizes markup, parses
-   `###TEXT###` / `###TEXTIMAGE*###` / `###IMAGES###` markers into `tt_content` elements (`text`, `textpic`,
-   `image`). Plain docs without markers become a single `text` CE.
-4. Images are copied into FAL (`fileadmin/ns_googledocs/pages/<pid>-<slug>/`) and referenced from bodytext /
-   `sys_file_reference`. Public URLs must stay absolute-path (`/fileadmin/...`), never protocol-relative
-   (`//fileadmin/...`).
+3. `docsImportAction` (AJAX / `JsonResponse`) exports the doc as `text/html` again (no session cache of
+   the parsed HTML), normalizes markup, and splits on Heading 1 / Heading 2 via `GoogleDocsSectionParser`.
+   Each section becomes one or more `tt_content` elements (`text` / `textpic`; `header` / `image` only when
+   the target page still allows those CTypes).
+4. Images are copied into the **default FAL storage** (`ns_googledocs/pages/<pid>-<slug>/`, usually
+   `fileadmin/` but not assumed). Temp downloads go to `Environment::getVarPath()/transient/` and are
+   unlinked after `addFile()`. A section that mixes text and images is split into consecutive
+   CEs (`text` → `textpic` → `text` …) so Filelist tracks the files and Google Doc order is kept.
+   HTML without images is still one CE. Images inside tables/lists stay inline (not split). Public URLs
+   must stay absolute-path (`/fileadmin/...`), never protocol-relative (`//fileadmin/...`).
+   If DataHandler rejects a CE, files uploaded for that CE are deleted.
 
 ## Section import (v14 dialog) — rules
 
@@ -27,6 +32,9 @@
 - Headings exported as `<span>Title</span><span>Body…</span>` (no `<br>`) use the first run as title
   when the rest reads like body copy (> 40 chars or ends with sentence punctuation).
 - `<!--?xml …-->` / `<?xml …?>` artifacts are stripped (`GoogleDocsSectionParser::stripXmlArtifacts`).
+- Import CTypes (`header` / `text` / `textpic` / `image`) are offered only when the target page
+  allows them (TCA + `TCEFORM.tt_content.CType.removeItems`). Unavailable `header`/`image`
+  still fall back to `text`/`textpic` so DataHandler does not fail (e.g. theme_camino).
 
 ## Page type restriction
 
@@ -38,7 +46,7 @@
 
 - Global Settings accepts either a refresh token (usually `1//…`) or an access token (`ya29.…`).
   Access tokens are applied with `setAccessToken()` and work until they expire (~1h).
-- `Google_Client::refreshToken()` returns `['error' => 'invalid_grant']` instead of throwing; the
+- `Google\Client::refreshToken()` returns `['error' => 'invalid_grant']` instead of throwing; the
   result is checked and explained to the editor. Section reading retries once after a token refresh.
 
 ## Remote marketing blocks

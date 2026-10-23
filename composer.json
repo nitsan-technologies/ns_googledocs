@@ -20,7 +20,7 @@
         "ext-intl": "*",
         "ext-libxml": "*",
         "ext-simplexml": "*",
-        "php": "^8.1 || ^8.2",
+        "php": "^8.1",
         "google/apiclient": "^2.15",
         "nitsan/ns-license": "^14.5.4",
         "typo3/cms-backend": "^12.4 || ^13.4 || ^14.0",
@@ -46,25 +46,17 @@
     "replace": {
         "typo3-ter/ns-googledocs": "self.version"
     },
-    "scripts": {
-        "pre-autoload-dump": "Google\\Task\\Composer::cleanup"
-    },
-    "config": {
-        "vendor-dir": "vendor",
-        "bin-dir": "bin",
-        "sort-packages": true,
-        "allow-plugins": {
-            "typo3/class-alias-loader": true,
-            "typo3/cms-composer-installers": true
-        }
-    },
     "extra": {
         "typo3/cms": {
+            "app-dir": ".Build",
+            "web-dir": ".Build/public",
             "extension-key": "ns_googledocs",
-            "version": "14.0.0"
-        },
-        "google/apiclient-services": [
-            "Drive"
-        ]
+            "version": "14.0.0",
+            "Package": {
+                "providesPackages": {
+                    "google/apiclient": ""
+                }
+            }
+        }
     }
 }

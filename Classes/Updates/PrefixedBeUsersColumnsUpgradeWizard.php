@@ -7,6 +7,8 @@ namespace NITSAN\NsGoogledocs\Updates;
 use Doctrine\DBAL\Exception as DbalException;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
+use TYPO3\CMS\Core\Log\LogManager;
 use TYPO3\CMS\Core\Upgrades\DatabaseUpdatedPrerequisite;
 use TYPO3\CMS\Core\Upgrades\UpgradeWizardInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -76,18 +78,14 @@ final class PrefixedBeUsersColumnsUpgradeWizard implements UpgradeWizardInterfac
                 continue;
             }
             try {
-                $connection->executeStatement(
-                    sprintf(
-                        'UPDATE be_users SET %s = %s WHERE (%s = \'\' OR %s IS NULL) AND %s <> \'\' AND %s IS NOT NULL',
-                        $prefixed,
-                        $legacy,
-                        $prefixed,
-                        $prefixed,
-                        $legacy,
-                        $legacy
-                    )
-                );
-            } catch (DbalException) {
+                $this->copyLegacyColumn($connection, $legacy, $prefixed);
+            } catch (DbalException $exception) {
+                GeneralUtility::makeInstance(LogManager::class)
+                    ->getLogger(self::class)
+                    ->warning('ns_googledocs upgrade wizard failed for {legacy}: {message}', [
+                        'legacy' => $legacy,
+                        'message' => $exception->getMessage(),
+                    ]);
                 return false;
             }
         }
@@ -97,36 +95,66 @@ final class PrefixedBeUsersColumnsUpgradeWizard implements UpgradeWizardInterfac
 
     public function getPrerequisites(): array
     {
-        // Prefer the real EXT:install class on v12/v13: the v14 name is only an alias there
-        // and would bypass DI, breaking the prerequisite constructor.
-        if (class_exists(\TYPO3\CMS\Install\Updates\DatabaseUpdatedPrerequisite::class, false)
-            || !class_exists(DatabaseUpdatedPrerequisite::class)
-        ) {
-            if (class_exists(\TYPO3\CMS\Install\Updates\DatabaseUpdatedPrerequisite::class)) {
-                return [\TYPO3\CMS\Install\Updates\DatabaseUpdatedPrerequisite::class];
-            }
-            return [];
+        // On v12/v13 the Core class name is only an alias; returning it skips DI.
+        if (class_exists(\TYPO3\CMS\Install\Updates\DatabaseUpdatedPrerequisite::class, false)) {
+            return [\TYPO3\CMS\Install\Updates\DatabaseUpdatedPrerequisite::class];
         }
-        return [DatabaseUpdatedPrerequisite::class];
+        if (class_exists(DatabaseUpdatedPrerequisite::class)) {
+            return [DatabaseUpdatedPrerequisite::class];
+        }
         return [];
     }
 
     private function hasRowsNeedingMigration(Connection $connection, string $legacy, string $prefixed): bool
     {
         try {
-            $count = (int)$connection->executeQuery(
-                sprintf(
-                    'SELECT COUNT(*) FROM be_users WHERE (%s = \'\' OR %s IS NULL) AND %s <> \'\' AND %s IS NOT NULL',
-                    $prefixed,
-                    $prefixed,
-                    $legacy,
-                    $legacy
-                )
-            )->fetchOne();
+            $queryBuilder = $this->createUnrestrictedQueryBuilder($connection);
+            $count = (int)$queryBuilder
+                ->count('*')
+                ->from('be_users')
+                ->where(...$this->needsMigrationPredicates($queryBuilder, $legacy, $prefixed))
+                ->executeQuery()
+                ->fetchOne();
             return $count > 0;
         } catch (DbalException) {
             return false;
         }
+    }
+
+    private function copyLegacyColumn(Connection $connection, string $legacy, string $prefixed): void
+    {
+        $queryBuilder = $this->createUnrestrictedQueryBuilder($connection);
+        $queryBuilder
+            ->update('be_users')
+            ->set($prefixed, $queryBuilder->quoteIdentifier($legacy), false)
+            ->where(...$this->needsMigrationPredicates($queryBuilder, $legacy, $prefixed))
+            ->executeStatement();
+    }
+
+    /**
+     * @return list<string|\TYPO3\CMS\Core\Database\Query\Expression\CompositeExpression>
+     */
+    private function needsMigrationPredicates(QueryBuilder $queryBuilder, string $legacy, string $prefixed): array
+    {
+        $expr = $queryBuilder->expr();
+        $prefixedEmpty = $expr->eq($prefixed, $queryBuilder->createNamedParameter(''));
+        $prefixedNull = $expr->isNull($prefixed);
+        $emptyPrefixed = method_exists($expr, 'or')
+            ? $expr->or($prefixedEmpty, $prefixedNull)
+            : $expr->orX($prefixedEmpty, $prefixedNull);
+
+        return [
+            $emptyPrefixed,
+            $expr->neq($legacy, $queryBuilder->createNamedParameter('')),
+            $expr->isNotNull($legacy),
+        ];
+    }
+
+    private function createUnrestrictedQueryBuilder(Connection $connection): QueryBuilder
+    {
+        $queryBuilder = $connection->createQueryBuilder();
+        $queryBuilder->getRestrictions()->removeAll();
+        return $queryBuilder;
     }
 
     private function getConnection(): Connection

@@ -35,7 +35,7 @@ Agent router for the Google Docs free extension. Load only what your task needs.
 | Feature | Status | Agent entry |
 |---|---|---|
 | Backend module: Dashboard, Import list, Global Settings (OAuth credentials) | Done | `context/features/backend-module.md` |
-| One-click Google Docs → `tt_content` import (free markers + plain docs) | Done | `context/features/import.md` |
+| One-click Google Docs → `tt_content` import (heading-based H1/H2 sections) | Done | `context/features/import.md` |
 | Premium strip + ns_license free-trial deep link | Done (needs ns_license 14.5.4 release) | `context/features/premium-cta.md` |
 
 ---

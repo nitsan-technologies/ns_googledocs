@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace NITSAN\NsGoogledocs\Service;
 
 /**
- * Remote marketing blocks (setup wizard, support, footer) must be small HTML snippets.
+ * Remote marketing blocks (support, footer) must be small HTML snippets.
  * Full documents and server error / redirect pages (e.g. "301 Moved Permanently") are rejected
  * so they are never injected into the backend module.
  */

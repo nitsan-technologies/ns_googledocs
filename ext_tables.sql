@@ -14,8 +14,6 @@ CREATE TABLE be_users (
 CREATE TABLE tx_nsgoogledocs_domain_model_apidata (
    id int(11) NOT NULL auto_increment,
    extension_key varchar(255) DEFAULT '',
-   googleDocsSetupWizard text,
-   premuim_extension_html text,
    support_html text,
    footer_html text,
    last_update date,

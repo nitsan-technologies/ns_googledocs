@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+      - name: PHP syntax
+        run: |
+          find Classes Tests Configuration -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: XLIFF well-formed
+        run: |
+          php -r '
+          $files = glob("Resources/Private/Language/*.xlf") ?: [];
+          if ($files === []) { fwrite(STDERR, "no xlf files\n"); exit(1); }
+          foreach ($files as $file) {
+              $xml = simplexml_load_file($file);
+              if ($xml === false) { fwrite(STDERR, "invalid xlf: $file\n"); exit(1); }
+          }
+          echo "xlf ok (" . count($files) . ")\n";
+          '
+
+  tests:
+    name: Tests PHP ${{ matrix.php }} / TYPO3 ${{ matrix.typo3 }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { php: '8.1', typo3: '^12.4' }
+          - { php: '8.2', typo3: '^13.4' }
+          - { php: '8.2', typo3: '^14.0' }
+          - { php: '8.3', typo3: '^14.0' }
+          - { php: '8.5', typo3: '^14.0' }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          extensions: intl, mbstring, sqlite3, xml, zip
+      - name: Install dependencies
+        run: |
+          composer config --no-interaction allow-plugins.typo3/class-alias-loader true
+          composer config --no-interaction allow-plugins.typo3/cms-composer-installers true
+          composer require --no-update \
+            "typo3/cms-core:${{ matrix.typo3 }}" \
+            "typo3/cms-backend:${{ matrix.typo3 }}" \
+            "typo3/cms-extbase:${{ matrix.typo3 }}" \
+            "typo3/cms-fluid:${{ matrix.typo3 }}" \
+            "typo3/cms-frontend:${{ matrix.typo3 }}" \
+            "typo3/cms-install:${{ matrix.typo3 }}" \
+            "typo3/cms-fluid-styled-content:${{ matrix.typo3 }}"
+          composer update --prefer-dist --no-progress --no-interaction
+      - name: Unit tests
+        run: composer exec phpunit -- -c Build/UnitTests.xml
+      - name: Functional tests (SQLite)
+        env:
+          typo3DatabaseDriver: pdo_sqlite
+        run: composer exec phpunit -- -c Build/FunctionalTests.xml

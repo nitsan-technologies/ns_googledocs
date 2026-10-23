@@ -175,7 +175,7 @@ All of the following **Pass**; no Blockers:
 ## Out of scope (unless asked)
 
 - Premium-only: Page/List toolbar import, page-tree “create subpage”, news/blog-specific flows, override-column delete
-- Marker-based `###TEXT###` / `###TEXTIMAGELEFT###` docs (legacy prepare path — not Reformation)
+- Legacy marker-based prepare path (pre-Reformation; markers are no longer supported — import is heading-based H1/H2 only)
 - PHPUnit / CI pipeline greenness (unit tests exist under `Tests/` for developers)
 
 ---

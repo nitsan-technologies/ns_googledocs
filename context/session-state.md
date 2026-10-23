@@ -1,5 +1,46 @@
 # Session state
 
+## 2026-10-23 — Drop bundled jQuery / DataTables 1.10.21
+
+- Module JS/CSS load through PageRenderer (CSP nonce, Core jQuery ES module).
+- DataTables init removed (import list is already ≤ 10 rows). Bundled Jquery.js / Datatables.js deleted.
+
+## 2026-10-23 — First-visit redirect to Global Settings
+
+- `initializeAction()` no longer discards `$this->redirect()` (no-op since TYPO3 v12).
+- `dashboardAction` / `importAction` return the redirect. AJAX actions are unchanged.
+
+## 2026-10-23 — Marketing HTML cache actually expires
+
+- `deleteOldApiData()` runs before the cache lookup; rows older than 2 weeks and empty rows are dropped.
+- `checkApiData()` requires `extension_key = ns_googledocs`, a fresh `last_update`, and non-empty HTML.
+- Failed fetches are not inserted. Marketing HTTP timeout is 2s (image downloads stay 10s).
+
+## 2026-10-23 — Do not store parsed Doc HTML in be_sessions
+
+- Preview no longer writes section HTML (incl. base64 images) into `BE_USER` session data.
+- Import always re-exports the Doc from Drive (same path as the old cache-miss fallback).
+- `clearImportPreviewSession()` drops leftover blobs from older versions.
+
+## 2026-10-23 — findImage uses FAL folders, not hard-coded fileadmin
+
+- `findImage()` creates the target folder via `hasFolder` / `createFolder` / `getFolder` on the default storage.
+- Temp images go to `var/transient/` (not public `typo3temp/assets/`) and are unlinked in `finally`.
+
+## 2026-10-23 — Import CType Header / Image Only
+
+- Dialog options and DataHandler CType now follow TCA + page TSconfig `removeItems`.
+- On theme_camino (`header`/`image` removed) the dropdown only shows Text / Text & Image;
+  POSTed header/image still map to text/textpic (same as before, import still works).
+- Sites that keep `header`/`image` get real header / image CEs.
+
+## 2026-10-23 — FAL image references on import
+
+- Mixed text/image sections split at `<img>` (`ImportSectionSplitter`); image pieces become `textpic`
+  with `sys_file_reference`. Text-only HTML is unchanged (no DOM round-trip).
+- Failed DataHandler inserts delete the files uploaded for that CE.
+- Unit: `Tests/Unit/Service/ImportSectionSplitterTest.php`. Functional: `insertPageElementCreatesSysFileReferenceForImages`.
+
 ## 2026-10-16 — Agent context, ns_license, premium strip, export-ignore
 
 - Branch `feature/v14`.

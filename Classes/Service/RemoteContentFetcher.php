@@ -43,33 +43,6 @@ final class RemoteContentFetcher
     }
 
     /**
-     * Download a remote binary resource to a local path. Only https:// URLs are allowed.
-     */
-    public function downloadToFile(string $url, string $targetPath, int $timeout = self::DEFAULT_TIMEOUT): bool
-    {
-        if (!RemoteUrlGuard::isAllowedHttpsUrl($url)) {
-            return false;
-        }
-
-        try {
-            $response = $this->requestFactory->request($url, 'GET', [
-                'timeout' => $timeout,
-                'allow_redirects' => true,
-            ]);
-            if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 300) {
-                return false;
-            }
-            $body = (string)$response->getBody();
-            if ($body === '' || strlen($body) > self::MAX_BODY_BYTES) {
-                return false;
-            }
-            return (bool)file_put_contents($targetPath, $body);
-        } catch (\Throwable) {
-            return false;
-        }
-    }
-
-    /**
      * Materialize an <img src> value (https:// or data:image/…;base64,…) to a local file.
      * Google Docs HTML export often embeds images as data URIs, not remote URLs.
      *
@@ -136,15 +109,5 @@ final class RemoteContentFetcher
         }
 
         return ['path' => $targetPath, 'mime' => $mime];
-    }
-
-    public function isAllowedHttpsUrl(string $url): bool
-    {
-        return RemoteUrlGuard::isAllowedHttpsUrl($url);
-    }
-
-    public function isAllowedHttpUrl(string $url): bool
-    {
-        return RemoteUrlGuard::isAllowedHttpUrl($url);
     }
 }

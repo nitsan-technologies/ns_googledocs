@@ -8,17 +8,13 @@
 		<f:if condition="!{globalSettings.clientStatus}">
 			<div class="alert alert-danger alert-dismissible show" role="alert">
 				<f:translate key="error_msg" extensionName="NsGoogledocs" />
-				<button type="button" class="close" data-bs-dismiss="alert" aria-label="Close">
-					<span aria-hidden="true">&times;</span>
-				</button>
+				<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 			</div>
 		</f:if>
 		<f:if condition="{globalSettings.clientException}">
 			<div class="alert alert-danger alert-dismissible show" role="alert">
 				{globalSettings.clientException}
-				<button type="button" class="close" data-bs-dismiss="alert" aria-label="Close">
-					<span aria-hidden="true">&times;</span>
-				</button>
+				<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 			</div>
 		</f:if>
 		<div class="row">

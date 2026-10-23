@@ -24,6 +24,22 @@ TYPO3 8–11 are no longer supported. Use an older release branch if you need th
 composer require nitsan/ns-googledocs
 ```
 
+Composer only runs `scripts`, `config` and `extra.google/apiclient-services` on the **project root**.
+To keep only the Drive service (optional; import still works with the full client):
+
+```json
+{
+    "scripts": {
+        "pre-autoload-dump": "Google\\Task\\Composer::cleanup"
+    },
+    "extra": {
+        "google/apiclient-services": ["Drive"]
+    }
+}
+```
+
+Then run `composer dump-autoload` in the TYPO3 project.
+
 ### Classic (non-Composer) TYPO3
 
 This extension ships a local `vendor/` with `google/apiclient` (Drive service only).
@@ -35,6 +51,12 @@ COMPOSER=composer.libraries.json composer install --no-dev
 
 ## Features (free)
 
-- Backend module: Dashboard, Import, Global Settings, Premium overview
-- Google Docs → TYPO3 page content elements (`text` / `textpic` / `image`)
+- Backend module: Dashboard, Import, Global Settings
+- Heading-based Google Docs → TYPO3 page content (`text` / `textpic`; `header` / `image` when the page allows them)
 - Per-backend-user Google OAuth client configuration (`be_users` fields)
+
+## Upgrade note
+
+Docs prepared with the old TEXT / TEXTIMAGE / IMAGES marker syntax are no longer split by those markers. Use Heading 1 / Heading 2 to define import sections.
+
+Existing databases may still have unused columns on `tx_nsgoogledocs_domain_model_apidata` (old setup-wizard HTML and a misspelled premium HTML column). The Install Tool Database Analyzer can drop unused columns; do not drop that table itself (marketing HTML cache).

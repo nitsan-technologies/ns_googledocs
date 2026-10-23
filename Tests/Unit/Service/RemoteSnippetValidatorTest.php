@@ -23,7 +23,7 @@ final class RemoteSnippetValidatorTest extends TestCase
     #[Test]
     public function acceptsSnippet(): void
     {
-        $html = '<div class="ns-googledocs-wizards-stpes-block"><p>Step 1: Login</p></div>';
+        $html = '<div class="ns-googledocs-support-block"><p>Need help with Google Docs import?</p></div>';
         self::assertSame($html, RemoteSnippetValidator::filter($html));
     }
 }

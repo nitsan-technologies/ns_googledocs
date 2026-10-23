@@ -50,6 +50,17 @@ body {
     color: var(--typo3-text-color-base, var(--module-color, inherit)) !important;
 }
 
+#typo3-inner-docbody {
+    padding: 24px;
+    margin-top: 0;
+    transition: border .2s ease;
+}
+
+/* BS4 .hide was provided by the removed vendor sheet; import JS still toggles this class */
+.hide {
+    display: none !important;
+}
+
 #typo3-inner-docbody,
 .typo3-fullDoc {
     font-size: var(--typo3-font-size, 12px);
@@ -166,8 +177,10 @@ div#typo3-docbody {
 
 .ns-googledocs-navigation .navbar-collapse,
 .ns-ext-navigation .navbar-collapse {
+    display: flex;
     flex-grow: 1;
     width: 100%;
+    height: auto;
 }
 
 .ns-googledocs-navigation .navbar .navbar-nav,
@@ -529,43 +542,27 @@ body:has(.google-docs-wizard-modal.modal.show) > .modal-backdrop {
     color: var(--ns-gd-modal-text);
 }
 
-.google-docs-wizard-modal .modal-header .close {
+.google-docs-wizard-modal .modal-header .btn-close {
     position: absolute !important;
     top: 50%;
     right: 0.75rem;
     left: auto !important;
     float: none !important;
     flex-shrink: 0;
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
     width: 2rem;
     height: 2rem;
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 0.5rem;
     transform: translateY(-50%);
-    background: transparent;
-    border: 0;
-    border-radius: var(--typo3-component-border-radius, .375rem);
-    font-size: 1.35rem;
-    font-weight: 400;
-    line-height: 1;
     opacity: 0.65;
-    color: var(--ns-gd-modal-text);
     cursor: pointer;
     transition: background-color 0.15s ease, opacity 0.15s ease;
 }
 
-.google-docs-wizard-modal .modal-header .close span {
-    display: block;
-    line-height: 1;
-    margin-top: -1px;
-}
-
-.google-docs-wizard-modal .modal-header .close:hover,
-.google-docs-wizard-modal .modal-header .close:focus {
+.google-docs-wizard-modal .modal-header .btn-close:hover,
+.google-docs-wizard-modal .modal-header .btn-close:focus {
     opacity: 1;
-    background: rgba(0, 0, 0, 0.06);
+    background-color: rgba(0, 0, 0, 0.06);
     outline: none;
 }
 
@@ -878,7 +875,7 @@ label {
     left: 0;
 }
 
-.googledocs-form-wrap .form-group>.btn-danger {
+.googledocs-form-wrap .mb-3>.btn-danger {
     margin-bottom: 15px;
     margin-right: 15px;
 }
@@ -889,6 +886,10 @@ label {
 
 .ns-googledocs-progressbar-wrap {
     margin: 7px 0 15px;
+}
+
+#custom-progress-bar {
+    width: 1%;
 }
 
 .ns-googledocs-actions-wrap .btn:not(:last-child) {
@@ -1137,15 +1138,6 @@ img {
     height: auto;
 }
 
-.ns-googledocs-wizards-stpes-block img {
-    max-width: 210px;
-    margin-bottom: 20px;
-}
-
-.ns-googledocs-wizards-stpes-block p {
-    font-size: 14px;
-}
-
 .ns-googledocs-dashboard-blocks .alert.alert-danger {
     margin-bottom: 25px;
 }
@@ -1267,7 +1259,7 @@ em.field-info-trigger {
 }
 
 @media(min-width:576px) {
-    .googledocs-form-wrap .form-group>.btn-danger {
+    .googledocs-form-wrap .mb-3>.btn-danger {
         margin-bottom: 0;
     }
 }
@@ -1276,8 +1268,8 @@ em.field-info-trigger {
     .google-docs-wizard-modal .modal-dialog {
         max-width: 560px;
     }
-    .googledocs-form-wrap .form-group:not(:last-child) {
-        margin-bottom: 20px;
+    .googledocs-form-wrap .mb-3:not(:last-child) {
+        margin-bottom: 20px !important;
     }
     .ns-googledocs-table-block-wrap .card-header h5 {
         margin-bottom: 0;
@@ -1394,8 +1386,8 @@ em.field-info-trigger {
     .google-docs-wizard-modal .modal-dialog {
         max-width: 560px;
     }
-    .googledocs-form-wrap .form-group:not(:last-child) {
-        margin-bottom: 30px;
+    .googledocs-form-wrap .mb-3:not(:last-child) {
+        margin-bottom: 30px !important;
     }
     .ns-googledocs-actions-wrap .btn:not(:last-child) {
         margin-right: 15px;
@@ -1421,8 +1413,8 @@ em.field-info-trigger {
     .ns-ext-modal .modal-dialog {
         max-width: 750px;
     }
-    .ns-ext-form-wrap .form-group:not(:last-child) {
-        margin-bottom: 25px;
+    .ns-ext-form-wrap .mb-3:not(:last-child) {
+        margin-bottom: 25px !important;
     }
 }
 
@@ -2647,8 +2639,6 @@ html[data-bs-theme=dark] .ns-ext-form .field-info-trigger:hover,
 
 [data-color-scheme=dark] .google-docs-wizard-modal .modal-header .modal-title,
 [data-bs-theme=dark] .google-docs-wizard-modal .modal-header .modal-title,
-[data-color-scheme=dark] .google-docs-wizard-modal .modal-header .close,
-[data-bs-theme=dark] .google-docs-wizard-modal .modal-header .close,
 [data-color-scheme=dark] .google-docs-wizard-modal .modal-body label,
 [data-bs-theme=dark] .google-docs-wizard-modal .modal-body label,
 [data-color-scheme=dark] .google-docs-wizard-modal .modal-body p,
@@ -2721,9 +2711,9 @@ html[data-bs-theme=dark] .google-docs-wizard-modal .ns-gd-select:focus-within::a
     opacity: 1 !important;
 }
 
-[data-color-scheme=dark] .google-docs-wizard-modal .modal-header .close:hover,
-[data-bs-theme=dark] .google-docs-wizard-modal .modal-header .close:hover {
-    background: rgba(255, 255, 255, 0.08) !important;
+[data-color-scheme=dark] .google-docs-wizard-modal .modal-header .btn-close:hover,
+[data-bs-theme=dark] .google-docs-wizard-modal .modal-header .btn-close:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 [data-color-scheme=dark] .google-docs-wizard-modal .modal-footer .btn-default,

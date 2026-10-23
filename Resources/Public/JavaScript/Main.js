@@ -1,11 +1,5 @@
+import $ from 'jquery';
 import Notification from '@typo3/backend/notification.js';
-
-function getJquery() {
-    if (typeof window !== 'undefined' && window.jQuery) {
-        return window.jQuery;
-    }
-    return null;
-}
 
 function getBootstrapModalApi() {
     if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
@@ -83,11 +77,23 @@ function parseJsonPayload(result) {
     }
 }
 
+function translate(key, fallback) {
+    const table = (window.TYPO3 && window.TYPO3.lang)
+        || (typeof top !== 'undefined' && top.TYPO3 && top.TYPO3.lang)
+        || {};
+    const value = table[key];
+    return (typeof value === 'string' && value !== '') ? value : fallback;
+}
+
+function translateFormat(key, fallback, replacements) {
+    let value = translate(key, fallback);
+    (replacements || []).forEach((replacement) => {
+        value = value.replace(/%[sdf]/, String(replacement));
+    });
+    return value;
+}
+
 function initNsGoogledocsUi() {
-    const $ = getJquery();
-    if (!$) {
-        return;
-    }
 
     /**
      * Extbase plugin field prefix, e.g. tx_nsgoogledocs_…[…] —
@@ -95,14 +101,23 @@ function initNsGoogledocsUi() {
      * when section fields are posted (string value would be lost).
      */
     function getPluginFieldPrefix() {
+        const $form = $('#docsImport');
+        const fromData = String($form.attr('data-plugin-namespace') || '').trim();
+        if (fromData) {
+            return fromData;
+        }
         const name = String(
             $('#google-docs-page-id').attr('name')
             || $('#google-docs-id').attr('name')
-            || $('#docsImport').find('input[name*="[pageId]"]').attr('name')
+            || $form.find('input[name*="[pageId]"]').attr('name')
             || ''
         );
         const stripped = name.replace(/\[[^\]]+]$/, '');
-        return stripped !== '' ? stripped : name;
+        const prefix = stripped !== '' ? stripped : name;
+        if (prefix) {
+            $form.attr('data-plugin-namespace', prefix);
+        }
+        return prefix;
     }
 
     function resolveGoogleDocsFileId($btn) {
@@ -206,7 +221,9 @@ function initNsGoogledocsUi() {
         const previewUrl = String($form.attr('data-preview-action') || '').trim();
         const googleDocsId = getStoredGoogleDocsFileId($form);
         if (!previewUrl || !googleDocsId) {
-            $('.ns-gd-sections-error').removeClass('hide').text('Missing preview URL or Google Docs id.');
+            $('.ns-gd-sections-error').removeClass('hide').text(
+                translate('js.preview.missingUrl', 'Missing preview URL or Google Docs id.')
+            );
             return;
         }
 
@@ -229,7 +246,7 @@ function initNsGoogledocsUi() {
                     renderSections(obj.sections, obj.defaultElementType);
                 } else {
                     $('.ns-gd-sections-error').removeClass('hide').text(
-                        (obj && obj.error) ? obj.error : 'Could not read document sections.'
+                        (obj && obj.error) ? obj.error : translate('js.preview.readFailed', 'Could not read document sections.')
                     );
                 }
             },
@@ -240,8 +257,12 @@ function initNsGoogledocsUi() {
                     return;
                 }
                 $('.ns-gd-sections-loading').addClass('hide');
-                let message = 'Could not read document sections'
-                    + (xhr.status ? ' (HTTP ' + xhr.status + ')' : (textStatus ? ' (' + textStatus + ')' : '')) + '.';
+                const suffix = xhr.status ? ' (HTTP ' + xhr.status + ')' : (textStatus ? ' (' + textStatus + ')' : '');
+                let message = translateFormat(
+                    'js.preview.readFailedHttp',
+                    'Could not read document sections%s.',
+                    [suffix]
+                );
                 try {
                     const obj = parseJsonPayload(xhr.responseText);
                     if (obj && obj.error) {
@@ -255,8 +276,8 @@ function initNsGoogledocsUi() {
         });
     }
 
-    $(document).off('click.nsGdImportOpen', '[data-bs-target="#importGooleDocsModal"]')
-        .on('click.nsGdImportOpen', '[data-bs-target="#importGooleDocsModal"]', function (e) {
+    $(document).off('click.nsGdImportOpen', '[data-bs-target="#importGoogleDocsModal"]')
+        .on('click.nsGdImportOpen', '[data-bs-target="#importGoogleDocsModal"]', function (e) {
             e.preventDefault();
             e.stopPropagation();
 
@@ -264,20 +285,20 @@ function initNsGoogledocsUi() {
             const fileId = resolveGoogleDocsFileId($btn);
             const fileName = $btn.attr('data-file-name') || $btn.attr('data-fileName') || $btn.attr('data-filename') || '';
             const pageTitle = $btn.attr('data-page-title') || $btn.attr('data-pageTitle') || $btn.attr('data-pagetitle') || '';
-            $('.import-doc-Name').html(fileName);
-            $('.import-page-Name').html(pageTitle);
+            $('.import-doc-Name').text(fileName);
+            $('.import-page-Name').text(pageTitle);
             $('#google-docs-name').val(fileName);
             $('#google-docs-url').val($btn.attr('data-viewurl') || '');
             setGoogleDocsFileId(fileId);
 
             resetSectionsUi();
             setGoogleDocsFileId(fileId);
-            showImportModal(document.getElementById('importGooleDocsModal'));
+            showImportModal(document.getElementById('importGoogleDocsModal'));
             loadDocSections();
         });
 
-    $(document).off('click.nsGdImportClose', '.modal .close, .modal [data-bs-dismiss="modal"]')
-        .on('click.nsGdImportClose', '.modal .close, .modal [data-bs-dismiss="modal"]', function (e) {
+    $(document).off('click.nsGdImportClose', '.modal .btn-close, .modal [data-bs-dismiss="modal"]')
+        .on('click.nsGdImportClose', '.modal .btn-close, .modal [data-bs-dismiss="modal"]', function (e) {
             e.preventDefault();
             closeModalElement(this.closest('.modal'));
         });
@@ -290,7 +311,7 @@ function initNsGoogledocsUi() {
         });
 
     $('.field-info-trigger').off('click.nsGdInfo').on('click.nsGdInfo', function () {
-        $(this).parents('.form-group').find('.field-info-text').slideToggle();
+        $(this).parents('.mb-3').find('.field-info-text').slideToggle();
     });
 
     let progressIntervalId;
@@ -317,7 +338,10 @@ function initNsGoogledocsUi() {
             const $form = $(this);
             const googleDocsId = setGoogleDocsFileId(getStoredGoogleDocsFileId($form));
             if (!googleDocsId) {
-                Notification.error('Error', 'Missing Google Docs file id. Please click Import Now again.');
+                Notification.error(
+                    translate('js.notification.errorTitle', 'Error'),
+                    translate('js.import.missingDocId', 'Missing Google Docs file id. Please click Import Now again.')
+                );
                 return;
             }
 
@@ -347,24 +371,31 @@ function initNsGoogledocsUi() {
                     clearInterval(progressIntervalId);
                     const obj = parseJsonPayload(result);
                     if (obj && obj.status === true) {
-                        const importedCount = parseInt(obj.imported || obj.affectedRows || 0, 10);
+                        const importedCount = parseInt(obj.imported || 0, 10);
                         const successDetail = importedCount > 0
-                            ? 'The document was imported successfully (' + importedCount + ' content element(s)).'
-                            : 'The document was imported successfully.';
-                        Notification.success('Well done', successDetail);
+                            ? translateFormat(
+                                'js.import.successCount',
+                                'The document was imported successfully (%d content element(s)).',
+                                [importedCount]
+                            )
+                            : translate('js.import.success', 'The document was imported successfully.');
+                        Notification.success(
+                            translate('js.notification.successTitle', 'Well done'),
+                            successDetail
+                        );
                         setProgress(100);
                         // Short pause so the editor sees 100%, then close (toast stays visible).
                         setTimeout(function () {
                             resetImportProgress();
-                            closeModalElement(document.getElementById('importGooleDocsModal'));
+                            closeModalElement(document.getElementById('importGoogleDocsModal'));
                         }, 400);
                         return;
                     }
-                    showImportError((obj && obj.error) ? obj.error : 'The document was not imported successfully.');
+                    showImportError((obj && obj.error) ? obj.error : translate('js.import.failed', 'The document was not imported successfully.'));
                 },
                 error: function (xhr) {
                     clearInterval(progressIntervalId);
-                    let message = 'The document was not imported successfully.';
+                    let message = translate('js.import.failed', 'The document was not imported successfully.');
                     try {
                         const obj = parseJsonPayload(xhr.responseText);
                         if (obj && obj.error) {
@@ -400,13 +431,13 @@ function initNsGoogledocsUi() {
 
     /** Keep the modal open on failure and show the reason inside it as well as in a toast. */
     function showImportError(message) {
-        Notification.error('Error', message);
+        Notification.error(translate('js.notification.errorTitle', 'Error'), message);
         resetImportProgress();
         $('.ns-gd-sections-error').removeClass('hide').text(message);
     }
 
-    $(document).off('submit.nsGdUpdate', '#update-user-info, #update-user-info-global')
-        .on('submit.nsGdUpdate', '#update-user-info, #update-user-info-global', function (e) {
+    $(document).off('submit.nsGdUpdate', '#update-user-info-global')
+        .on('submit.nsGdUpdate', '#update-user-info-global', function (e) {
             e.preventDefault();
             const $form = $(this);
             $.ajax({
@@ -417,36 +448,26 @@ function initNsGoogledocsUi() {
                 success: function (result) {
                     const obj = parseJsonPayload(result);
                     if (obj && obj.status === true) {
-                        Notification.success('Well done', 'Your Configuration was setup successfully.');
+                        Notification.success(
+                            translate('js.notification.successTitle', 'Well done'),
+                            translate('js.settings.success', 'Your Configuration was setup successfully.')
+                        );
                         window.location.reload();
                     } else {
-                        Notification.error('Error', (obj && obj.error) ? obj.error : 'Your Configuration was not setup successfully.');
+                        Notification.error(
+                            translate('js.notification.errorTitle', 'Error'),
+                            (obj && obj.error) ? obj.error : translate('js.settings.failed', 'Your Configuration was not setup successfully.')
+                        );
                     }
                 },
                 error: function () {
-                    Notification.error('Error', 'Your Configuration was not setup successfully.');
+                    Notification.error(
+                        translate('js.notification.errorTitle', 'Error'),
+                        translate('js.settings.failed', 'Your Configuration was not setup successfully.')
+                    );
                 }
             });
         });
-
-    if ($.fn.DataTable && $('.ns-googledocs-datatable').length && !$.fn.DataTable.isDataTable('.ns-googledocs-datatable')) {
-        $('.ns-googledocs-datatable').DataTable({
-            language: {
-                lengthMenu: 'Show _MENU_ entries',
-                zeroRecords: 'No records found!',
-                info: 'Showing page _PAGE_ of _PAGES_',
-                infoEmpty: 'No records available',
-                infoFiltered: '(filtered from _MAX_ total records)',
-                paginate: {
-                    previous: '<<',
-                    next: '>>'
-                }
-            },
-            ordering: false
-        });
-        $('.ns-googledocs-table-wrap .dataTables_length select, .ns-googledocs-table-wrap .dataTables_filter input')
-            .addClass('form-control');
-    }
 }
 
 if (document.readyState === 'loading') {
