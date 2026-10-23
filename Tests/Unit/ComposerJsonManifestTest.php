@@ -76,9 +76,15 @@ final class ComposerJsonManifestTest extends TestCase
     }
 
     #[Test]
-    public function googleApiclientServicesExtraIsUnchanged(): void
+    public function googleApiclientServicesExtraLivesOnLibrariesManifestOnly(): void
     {
         $extra = $this->composerManifest()['extra'];
-        self::assertSame(['Drive'], $extra['google/apiclient-services']);
+        self::assertArrayNotHasKey('google/apiclient-services', $extra);
+
+        $librariesPath = self::EXTENSION_ROOT . '/composer.libraries.json';
+        self::assertFileExists($librariesPath);
+        $libraries = json_decode((string)file_get_contents($librariesPath), true);
+        self::assertIsArray($libraries);
+        self::assertSame(['Drive'], $libraries['extra']['google/apiclient-services'] ?? null);
     }
 }

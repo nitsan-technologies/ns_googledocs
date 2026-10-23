@@ -54,6 +54,10 @@ jobs:
         run: |
           composer config --no-interaction allow-plugins.typo3/class-alias-loader true
           composer config --no-interaction allow-plugins.typo3/cms-composer-installers true
+          # Composer 2.9+ blocks packages with Packagist advisories. CI still needs
+          # TYPO3 12.4/13.4/14.x even when core has published CVEs.
+          composer config --no-interaction audit.block-insecure false
+          composer config --no-interaction audit.abandoned ignore
           composer require --no-update \
             "typo3/cms-core:${{ matrix.typo3 }}" \
             "typo3/cms-backend:${{ matrix.typo3 }}" \
@@ -62,7 +66,7 @@ jobs:
             "typo3/cms-frontend:${{ matrix.typo3 }}" \
             "typo3/cms-install:${{ matrix.typo3 }}" \
             "typo3/cms-fluid-styled-content:${{ matrix.typo3 }}"
-          composer update --prefer-dist --no-progress --no-interaction
+          composer update --prefer-dist --no-progress --no-interaction --no-audit
       - name: Unit tests
         run: composer exec phpunit -- -c Build/UnitTests.xml
       - name: Functional tests (SQLite)
