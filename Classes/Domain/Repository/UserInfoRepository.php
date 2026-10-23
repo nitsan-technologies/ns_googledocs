@@ -121,7 +121,6 @@ final class UserInfoRepository
                     'fieldname' => 'image',
                     'pid' => $pageID,
                     'sorting_foreign' => 1 + (int)$key,
-                    'table_local' => 'sys_file',
                 ];
                 $imageRefIds[] = $refId;
             }

@@ -14,6 +14,7 @@ final class PrefixedBeUsersColumnsUpgradeWizardTest extends FunctionalTestCase
 {
     protected array $coreExtensionsToLoad = [
         'install',
+        'extensionmanager',
     ];
 
     protected array $testExtensionsToLoad = [

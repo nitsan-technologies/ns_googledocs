@@ -18,6 +18,7 @@ final class UserInfoRepositoryTest extends FunctionalTestCase
     protected array $coreExtensionsToLoad = [
         'frontend',
         'fluid_styled_content',
+        'extensionmanager',
     ];
 
     protected array $testExtensionsToLoad = [
