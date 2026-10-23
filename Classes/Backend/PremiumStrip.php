@@ -1,0 +1,65 @@
+<?php
+
+declare(strict_types=1);
+
+namespace NITSAN\NsGoogledocs\Backend;
+
+use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
+use TYPO3\CMS\Backend\Routing\UriBuilder;
+use TYPO3\CMS\Core\Imaging\IconFactory;
+use TYPO3\CMS\Core\Imaging\IconSize;
+use TYPO3\CMS\Core\Localization\LanguageService;
+
+/**
+ * Premium strip with a free-trial link to the ns_license module.
+ */
+final class PremiumStrip
+{
+    public const STYLESHEET = 'EXT:ns_googledocs/Resources/Public/Css/backend-premium-strip.css';
+
+    private const LICENSE_MODULE_ROUTE = 'nitsan_nslicensemodule';
+    private const LICENSE_FREE_SECTION_ANCHOR = '#free-section';
+    private const LANGUAGE_FILE = 'LLL:EXT:ns_googledocs/Resources/Private/Language/locallang.xlf:';
+
+    public function __construct(
+        private readonly UriBuilder $uriBuilder,
+        private readonly IconFactory $iconFactory
+    ) {}
+
+    /**
+     * Returns an empty string when ns_license (and with it the trial route) is not available.
+     */
+    public function render(): string
+    {
+        try {
+            $trialUrl = (string)$this->uriBuilder
+                ->buildUriFromRoute(self::LICENSE_MODULE_ROUTE, ['trial' => 'ns_googledocs'])
+                . self::LICENSE_FREE_SECTION_ANCHOR;
+        } catch (RouteNotFoundException) {
+            return '';
+        }
+
+        $iconSize = enum_exists(IconSize::class) ? IconSize::SMALL : 'small';
+        $icon = $this->iconFactory->getIcon('actions-rocket', $iconSize)->render();
+
+        return '<div class="ns-googledocs-premium-strip d-flex flex-wrap align-items-center justify-content-between gap-3">'
+            . '<div class="d-flex align-items-center gap-3">'
+            . '<span class="ns-googledocs-premium-strip-icon">' . $icon . '</span>'
+            . '<div>'
+            . '<div class="ns-googledocs-premium-strip-headline">' . $this->translate('premium.strip.headline') . '</div>'
+            . '<div class="ns-googledocs-premium-strip-description">' . $this->translate('premium.strip.description') . '</div>'
+            . '</div>'
+            . '</div>'
+            . '<a href="' . htmlspecialchars($trialUrl) . '" class="btn btn-primary">'
+            . $this->translate('premium.strip.trial') . ' <span aria-hidden="true">&rarr;</span></a>'
+            . '</div>';
+    }
+
+    private function translate(string $key): string
+    {
+        $languageService = $GLOBALS['LANG'] ?? null;
+        $label = $languageService instanceof LanguageService ? $languageService->sL(self::LANGUAGE_FILE . $key) : '';
+
+        return htmlspecialchars($label);
+    }
+}

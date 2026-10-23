@@ -1,0 +1,13 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  NITSAN\NsGoogledocs\:
+    resource: '../Classes/*'
+
+  NITSAN\NsGoogledocs\Updates\PrefixedBeUsersColumnsUpgradeWizard:
+    tags:
+      - name: install.upgradewizard
+        identifier: nsGoogledocsPrefixedBeUsersColumns

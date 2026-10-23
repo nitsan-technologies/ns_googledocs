@@ -80,13 +80,16 @@
 				<source>Documentaiton</source>
 			</trans-unit>
 			<trans-unit id="help_support" xml:space="preserve">
-				<source><![CDATA[Help & Support]]></source>
+				<source>Do you need any help &amp; Support?</source>
+			</trans-unit>
+			<trans-unit id="help_support_link">
+				<source>Get Support</source>
 			</trans-unit>
 			<trans-unit id="donate">
 				<source>Donate</source>
 			</trans-unit>
 			<trans-unit id="ns_google_docs">
-				<source>NS Google Docs</source>
+				<source>Google Docs</source>
 			</trans-unit>
 			<trans-unit id="dashboard">
 				<source>Dashboard</source>
@@ -100,40 +103,41 @@
 			<trans-unit id="premium_extension">
 				<source>Premium Extension</source>
 			</trans-unit>
-			<trans-unit id="ns_google_docs_setup_wizard">
-				<source>NS Google Docs Setup Wizard</source>
-			</trans-unit>
-			<trans-unit id="enter_secret_key">
-				<source>Enter your Google docs secret key</source>
-			</trans-unit>
-			<trans-unit id="enter_client_id">
-				<source>Enter your Google docs Client ID</source>
-			</trans-unit>
-			<trans-unit id="enter_refresh_token">
-				<source>Enter your Google docs Refresh Token</source>
-			</trans-unit>
-			<trans-unit id="where_import">
-				<source>Where do you want to import Google docs?</source>
-			</trans-unit>
-			<trans-unit id="btn_save_settings">
-				<source>Save Settings</source>
-			</trans-unit>
-			<trans-unit id="ns_skip">
-				<source>Skip Setup Wizard For Now</source>
-			</trans-unit>
-			<trans-unit id="btn_skip">
-				<source>Cancel</source>
-			</trans-unit>
-			<trans-unit id="stpes-block" xml:space="preserve">
-				<source><![CDATA[<p>Step 1: Login to https://drive.google.com/drive/</p>
-					<p>Step 2: Go to application</p>
-					<p>Step 3: Get secret keya and API key</p>]]></source>
-			</trans-unit>
 			<trans-unit id="import_about">
 				<source><![CDATA[Import <span class="import-doc-Name">Doc-Name</span> to <span class="import-page-Name">About</span>]]></source>
 			</trans-unit>
 			<trans-unit id="select_column">
 				<source>Please select content column</source>
+			</trans-unit>
+			<trans-unit id="import_sections_hint">
+				<source>Each Heading 1 / Heading 2 in the Doc becomes one row. Choose the element type, edit the title, or untick a section to skip it.</source>
+			</trans-unit>
+			<trans-unit id="import_sections_loading">
+				<source>Reading Google Doc sections…</source>
+			</trans-unit>
+			<trans-unit id="import_col_add">
+				<source>Add Content</source>
+			</trans-unit>
+			<trans-unit id="import_col_type">
+				<source>Element Type</source>
+			</trans-unit>
+			<trans-unit id="import_col_title">
+				<source>Element Title</source>
+			</trans-unit>
+			<trans-unit id="import_section_untitled">
+				<source>Untitled section</source>
+			</trans-unit>
+			<trans-unit id="element_type.header">
+				<source>Header</source>
+			</trans-unit>
+			<trans-unit id="element_type.text">
+				<source>Text Element</source>
+			</trans-unit>
+			<trans-unit id="element_type.textpic">
+				<source>Text &amp; Image</source>
+			</trans-unit>
+			<trans-unit id="element_type.image">
+				<source>Image Only</source>
 			</trans-unit>
 			<trans-unit id="override_colpos_data">
 				<source>Override existing column content?</source>
@@ -277,12 +281,98 @@
 			<trans-unit id="premium_tab">
 				<source>Premium Extension</source>
 			</trans-unit>
-			<!-- Google_Service_Exception -->
+			<trans-unit id="premium.strip.headline">
+				<source>You're using the free version of Google Docs</source>
+			</trans-unit>
+			<trans-unit id="premium.strip.description">
+				<source>Unlock premium features and get more out of Google Docs.</source>
+			</trans-unit>
+			<trans-unit id="premium.strip.trial">
+				<source>Start Free Trial</source>
+			</trans-unit>
 			<trans-unit id="service.exception">
 				<source>Something went wrong with Google Drive configurations in Global settings or check your Internet connection.</source>
 			</trans-unit>
 			<trans-unit id="listFiles.exception">
 				<source>Something went wrong while fetching Docs from Google Drive. Please verify configuration set at Global Settings.</source>
+			</trans-unit>
+			<trans-unit id="error.noRefreshToken">
+				<source>No refresh token is configured. Add it under Global Settings.</source>
+			</trans-unit>
+			<trans-unit id="error.missingDocIdOrClient">
+				<source>Missing Google Docs id or client.</source>
+			</trans-unit>
+			<trans-unit id="error.readSections">
+				<source>Could not read document sections: %s</source>
+			</trans-unit>
+			<trans-unit id="error.noPageAccess">
+				<source>You do not have access to this page.</source>
+			</trans-unit>
+			<trans-unit id="error.clientNotConfigured">
+				<source>Google client is not configured for this backend user.</source>
+			</trans-unit>
+			<trans-unit id="error.missingDocId">
+				<source>Missing Google Docs file id.</source>
+			</trans-unit>
+			<trans-unit id="error.missingPageId">
+				<source>Missing page id. Select a page in the page tree and try again.</source>
+			</trans-unit>
+			<trans-unit id="error.noImportableSections">
+				<source>No importable sections found in this Google Doc. Add Heading 1 / Heading 2 sections and try again.</source>
+			</trans-unit>
+			<trans-unit id="error.importFailed">
+				<source>The document was not imported successfully.</source>
+			</trans-unit>
+			<trans-unit id="error.noSectionsSelected">
+				<source>No sections were selected for import.</source>
+			</trans-unit>
+			<trans-unit id="error.googleApi">
+				<source>Google API error %d: %s</source>
+			</trans-unit>
+			<trans-unit id="error.tokenWhitespace">
+				<source>The token must not contain spaces or line breaks.</source>
+			</trans-unit>
+			<trans-unit id="error.invalidGrant" xml:space="preserve">
+				<source><![CDATA[Google rejected the stored token (invalid_grant). It may have expired or been revoked. Generate a new token and save it under Global Settings. Note: OAuth apps in "Testing" publishing status expire refresh tokens after 7 days; access tokens (starting with "ya29.") expire after about one hour.]]></source>
+			</trans-unit>
+			<trans-unit id="error.unauthenticated" xml:space="preserve">
+				<source><![CDATA[Google did not accept the access credentials (401). Check Client ID, Client Secret and the refresh token under Global Settings.]]></source>
+			</trans-unit>
+			<trans-unit id="error.dataHandlerNoRecord">
+				<source>DataHandler did not create a tt_content record (CType=%s, pid=%s).</source>
+			</trans-unit>
+			<trans-unit id="js.notification.successTitle">
+				<source>Well done</source>
+			</trans-unit>
+			<trans-unit id="js.notification.errorTitle">
+				<source>Error</source>
+			</trans-unit>
+			<trans-unit id="js.preview.missingUrl">
+				<source>Missing preview URL or Google Docs id.</source>
+			</trans-unit>
+			<trans-unit id="js.preview.readFailed">
+				<source>Could not read document sections.</source>
+			</trans-unit>
+			<trans-unit id="js.preview.readFailedHttp">
+				<source>Could not read document sections%s.</source>
+			</trans-unit>
+			<trans-unit id="js.import.missingDocId">
+				<source>Missing Google Docs file id. Please click Import Now again.</source>
+			</trans-unit>
+			<trans-unit id="js.import.success">
+				<source>The document was imported successfully.</source>
+			</trans-unit>
+			<trans-unit id="js.import.successCount">
+				<source>The document was imported successfully (%d content element(s)).</source>
+			</trans-unit>
+			<trans-unit id="js.import.failed">
+				<source>The document was not imported successfully.</source>
+			</trans-unit>
+			<trans-unit id="js.settings.success">
+				<source>Your Configuration was setup successfully.</source>
+			</trans-unit>
+			<trans-unit id="js.settings.failed">
+				<source>Your Configuration was not setup successfully.</source>
 			</trans-unit>
 		</body>
 	</file>

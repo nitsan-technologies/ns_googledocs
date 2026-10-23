@@ -1,0 +1,5 @@
+# cat=basic/enable; type=options[header=Header,text=Text Element,textpic=Text & Image,image=Image Only]; label=Default content element type for each section in the import dialog
+googleDocsContentElementType = textpic
+
+# cat=basic/enable; type=string; label=Page types (doktype) that allow Google Docs import (comma-separated). Default "1" = standard page. Sysfolder, spacer, shortcut, link, mount point, backend user section and recycler are always blocked.
+allowedImportDoktypes = 1

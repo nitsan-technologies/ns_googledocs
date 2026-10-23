@@ -1,0 +1,14 @@
+/.crowdin.yml export-ignore
+/.gitattributes export-ignore
+/.github export-ignore
+/.gitignore export-ignore
+/AGENTS.md export-ignore
+/Build export-ignore
+/CLAUDE.md export-ignore
+/CODE_REVIEW.md export-ignore
+/QA_TEST_BRIEF.md export-ignore
+/Tests export-ignore
+/composer.libraries.json export-ignore
+/composer.libraries.lock export-ignore
+/context export-ignore
+/tasks export-ignore

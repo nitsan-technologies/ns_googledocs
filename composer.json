@@ -1,9 +1,9 @@
 {
     "name": "nitsan/ns-googledocs",
     "type": "typo3-cms-extension",
-    "description": "Manually transferring all content from Google Docs to your TYPO3 website can be a boring task, right? We understand your concerns, which is why we've created an efficient solution to simplify this migration process for TYPO3 users. Our innovative solution allows you to import your Google Docs directly into your TYPO3 pages, news, and blogs with just one click, saving you valuable time.",
-    "homepage": "https://demo.t3planet.com/t3-extensions/googledocs",
-    "license": "GPL-2.0+",
+    "description": "Google Docs - Manually transferring all content from Google Docs to your TYPO3 website can be a boring task, right? We understand your concerns, which is why we've created an efficient solution to simplify this migration process for TYPO3 users. Our innovative solution allows you to import your Google Docs directly into your TYPO3 pages with just one click, saving you valuable time.",
+    "homepage": "https://t3planet.com/ns-google-docs-typo3-extension",
+    "license": "GPL-2.0-or-later",
     "keywords": [
         "TYPO3 CMS",
         "Site",
@@ -16,25 +16,49 @@
         "issues": "https://github.com/nitsan-technologies/ns_googledocs/issues"
     },
     "require": {
-        "typo3/cms-core": "^8.0  || ^9.0 || ^10.0 "
+        "ext-dom": "*",
+        "ext-intl": "*",
+        "ext-libxml": "*",
+        "ext-simplexml": "*",
+        "php": "^8.1",
+        "google/apiclient": "^2.15",
+        "nitsan/ns-license": "^14.5.4",
+        "typo3/cms-backend": "^12.4 || ^13.4 || ^14.0",
+        "typo3/cms-core": "^12.4 || ^13.4 || ^14.0",
+        "typo3/cms-extbase": "^12.4 || ^13.4 || ^14.0",
+        "typo3/cms-fluid": "^12.4 || ^13.4 || ^14.0",
+        "typo3/cms-frontend": "^12.4 || ^13.4 || ^14.0"
     },
     "autoload": {
         "psr-4": {
-            "NITSAN\\NsGoogledocs\\": "Classes"
+            "NITSAN\\NsGoogledocs\\": "Classes/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "NITSAN\\NsGoogledocs\\Tests\\": "Tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5 || ^11.0",
+        "typo3/cms-fluid-styled-content": "^12.4 || ^13.4 || ^14.0",
+        "typo3/cms-install": "^12.4 || ^13.4 || ^14.0",
+        "typo3/testing-framework": "^8.2.7 || ^9.0"
     },
     "replace": {
         "typo3-ter/ns-googledocs": "self.version"
     },
-    "config": {
-        "vendor-dir": ".Build/vendor/",
-        "bin-dir": ".Build/bin/"
-    },
     "extra": {
         "typo3/cms": {
-            "cms-package-dir": "{$vendor-dir}/typo3/cms",
+            "app-dir": ".Build",
             "web-dir": ".Build/public",
-            "extension-key": "ns_googledocs"
+            "extension-key": "ns_googledocs",
+            "version": "14.0.0",
+            "Package": {
+                "providesPackages": {
+                    "google/apiclient": ""
+                }
+            }
         }
     }
 }

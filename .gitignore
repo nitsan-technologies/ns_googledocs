@@ -1,2 +1,4 @@
-/vendor/
+# Composer: Classic installs ship vendor/ (google/apiclient). Reinstall with:
+#   COMPOSER=composer.libraries.json composer install --no-dev
 .php_cs.cache
+/bin/

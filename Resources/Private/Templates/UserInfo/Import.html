@@ -1,8 +1,10 @@
-<html xmlns:f="https://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers" data-namespace-typo3-fluid="true">
+<html xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers"
+	  xmlns:core="http://typo3.org/ns/TYPO3/CMS/Core/ViewHelpers"
+	  data-namespace-typo3-fluid="true">
 <f:layout name="Default" />
 <f:section name="content">
 	<f:flashMessages />
-	<div class="ns-googledocs-table-block-wrap">
+	<div class="ns-googledocs-table-block-wrap ns-ext-table-block-wrap">
 		<f:if condition="{pageStatus}">
 			<f:then>
 				<f:if condition="{globalSettings.importStatus}">
@@ -11,49 +13,49 @@
 							<f:then>
 								<div class="alert alert-danger alert-dismissible show" role="alert">
 									{msgException}
-									<button type="button" class="close" {bootstrapVariable}-dismiss="alert" aria-label="Close">
-										<span aria-hidden="true">&times;</span>
-									</button>
+									<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 								</div>
 							</f:then>
 							<f:else>
-								<div class="card">
+								<div class="card custom-card">
 									<div class="card-header">
 										<div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center">
 											<h5><f:translate key="import_tab" extensionName="NsGoogledocs" /> {globalSettings.pageTitle}</h5>
 										</div>
 									</div>
 									<div class="card-body">
-										<div class="ns-googledocs-table-wrap">
-											<table class="table ns-googledocs-datatable">
-												<thead class="thead-light">
-													<tr>
-														<th scope="col" width="30%"><f:translate key="import_tab.document_name" extensionName="NsGoogledocs" /></th>
-														<th scope="col" width="15%"><f:translate key="import_tab.last_modified" extensionName="NsGoogledocs" /></th>
-														<th scope="col" width="20%"><f:translate key="import_tab.owner" extensionName="NsGoogledocs" /></th>
-														<th scope="col" width="35%"><f:translate key="import_tab.actions" extensionName="NsGoogledocs" /></th>
-													</tr>
-												</thead>
-												<tbody>
-													<f:for each="{docsFiels}" as="file">
-														<tr data-id="{file.id}">
-															<td>{file.name}</td>
-															<td><f:format.date format="d M. Y - H:i">{file.lastModified}</f:format.date></td>
-															<td>{file.owner}</td>
-															<td>
-																<div class="button-group ns-googledocs-actions-wrap ns-ext-actions-wrap">
-																	<a href="#" data-viewurl="{file.ViewURL}" data-fileID="{file.id}" target="_blank" class="btn btn-gray btn-import" {bootstrapVariable}-toggle="modal" data-pageTitle="{globalSettings.pageTitle}" data-fileName="{file.name}" {bootstrapVariable}-target="#importGooleDocsModal">
-																		<em class="fa fa-download" aria-hidden="true"></em><f:translate key="import_tab.btn_import_now" extensionName="NsGoogledocs" />
-																	</a>
-																	<a href="{file.ViewURL}" target="_blank" class="btn btn-gray">
-																		<em class="fa fa-pencil" aria-hidden="true"></em><f:translate key="import_tab.btn_edit" extensionName="NsGoogledocs" />
-																	</a>
-																</div>
-															</td>
+										<div class="ns-googledocs-table-wrap ns-ext-table-wrap ns-ext-list-table-wrap">
+											<div class="ns-googledocs-table">
+												<table class="ns-ext-datatable table ns-googledocs-datatable">
+													<thead class="thead-light">
+														<tr>
+															<th scope="col" width="30%"><f:translate key="import_tab.document_name" extensionName="NsGoogledocs" /></th>
+															<th scope="col" width="15%"><f:translate key="import_tab.last_modified" extensionName="NsGoogledocs" /></th>
+															<th scope="col" width="20%"><f:translate key="import_tab.owner" extensionName="NsGoogledocs" /></th>
+															<th scope="col" width="35%" class="text-center"><f:translate key="import_tab.actions" extensionName="NsGoogledocs" /></th>
 														</tr>
-													</f:for>
-												</tbody>
-											</table>
+													</thead>
+													<tbody>
+														<f:for each="{docsFiles}" as="file">
+															<tr data-id="{file.id}">
+																<td>{file.name}</td>
+																<td><f:format.date format="d M. Y - H:i">{file.lastModified}</f:format.date></td>
+																<td>{file.owner}</td>
+																<td class="text-center">
+																	<div class="button-group ns-googledocs-actions-wrap ns-ext-actions-wrap">
+																		<a href="#" data-viewurl="{file.ViewURL}" data-file-id="{file.id}" data-fileid="{file.id}" class="btn btn-gray btn-import" data-bs-toggle="modal" data-page-title="{globalSettings.pageTitle}" data-file-name="{file.name}" data-bs-target="#importGoogleDocsModal" role="button">
+																			<core:icon identifier="actions-download" size="small" alternativeMarkupIdentifier="inline" /><f:translate key="import_tab.btn_import_now" extensionName="NsGoogledocs" />
+																		</a>
+																		<a href="{file.ViewURL}" target="_blank" class="btn btn-gray">
+																			<core:icon identifier="actions-open" size="small" alternativeMarkupIdentifier="inline" /><f:translate key="import_tab.btn_edit" extensionName="NsGoogledocs" />
+																		</a>
+																	</div>
+																</td>
+															</tr>
+														</f:for>
+													</tbody>
+												</table>
+											</div>
 										</div>
 									</div>
 								</div>
@@ -62,24 +64,19 @@
 					</f:then>
 					<f:else>
 						<div class="alert alert-danger alert-dismissible show" role="alert">
-							<f:format.html><f:translate key="import_access_error_msg" extensionName="NsGoogledocs" /></f:format.html>
-							<button type="button" class="close" {bootstrapVariable}-dismiss="alert" aria-label="Close">
-								<span aria-hidden="true">&times;</span>
-							</button>
+							<f:translate key="import_access_error_msg" extensionName="NsGoogledocs" />
+							<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 						</div>
 					</f:else>
 				</f:if>
 			</f:then>
 			<f:else>
 				<div class="alert alert-danger alert-dismissible show" role="alert">
-					<f:format.html><f:translate key="import_access_page_error_msg" extensionName="NsGoogledocs" /></f:format.html>
-					<button type="button" class="close" {bootstrapVariable}-dismiss="alert" aria-label="Close">
-						<span aria-hidden="true">&times;</span>
-					</button>
+					<f:translate key="import_access_page_error_msg" extensionName="NsGoogledocs" />
+					<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 				</div>
 			</f:else>
 		</f:if>
 	</div>
 </f:section>
-
 </html>
